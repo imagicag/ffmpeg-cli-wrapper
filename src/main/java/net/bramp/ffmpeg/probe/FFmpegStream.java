@@ -62,6 +62,11 @@ public class FFmpegStream {
   public int channels;
   public String channel_layout;
 
+  public String color_range;
+  public String color_space;
+  public String color_transfer;
+  public String color_primaries;
+
   public FFmpegDisposition disposition;
 
   public Map<String, String> tags;

@@ -39,7 +39,7 @@ public class FFprobeTest {
         .thenAnswer(new NewProcessAnswer("ffprobe-big_buck_bunny_720p_1mb.mp4"));
 
     when(runFunc.run(argThatHasItem(Samples.always_on_my_mind)))
-        .thenAnswer(new NewProcessAnswer("ffprobe-Always On My Mind [Program Only] - Adelén.mp4"));
+        .thenAnswer(new NewProcessAnswer("ffprobe-always_on_my_mind.mp4"));
 
     when(runFunc.run(argThatHasItem(Samples.start_pts_test)))
         .thenAnswer(new NewProcessAnswer("ffprobe-start_pts_test"));

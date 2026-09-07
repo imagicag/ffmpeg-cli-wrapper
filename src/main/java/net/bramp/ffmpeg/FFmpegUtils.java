@@ -78,6 +78,10 @@ public final class FFmpegUtils {
    */
   public static long fromTimecode(String time) {
     checkNotEmpty(time, "time must not be empty string");
+    if (time.equalsIgnoreCase("N/A")) {
+      return 0;
+    }
+
     Matcher m = TIME_REGEX.matcher(time);
     if (!m.find()) {
       throw new IllegalArgumentException("invalid time '" + time + "'");

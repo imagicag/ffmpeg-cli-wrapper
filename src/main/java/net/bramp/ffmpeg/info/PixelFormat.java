@@ -1,7 +1,6 @@
 package net.bramp.ffmpeg.info;
 
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
+import java.util.Objects;
 
 public class PixelFormat {
     private final String name;
@@ -33,12 +32,34 @@ public class PixelFormat {
 
     @Override
     public boolean equals(Object obj) {
-        return EqualsBuilder.reflectionEquals(this, obj);
+        if (this == obj) {
+            return true;
+        }
+        if (!(obj instanceof PixelFormat)) {
+            return false;
+        }
+        PixelFormat other = (PixelFormat) obj;
+        return numberOfComponents == other.numberOfComponents
+                && bitsPerPixel == other.bitsPerPixel
+                && canDecode == other.canDecode
+                && canEncode == other.canEncode
+                && hardwareAccelerated == other.hardwareAccelerated
+                && palettedFormat == other.palettedFormat
+                && bitstreamFormat == other.bitstreamFormat
+                && Objects.equals(name, other.name);
     }
 
     @Override
     public int hashCode() {
-        return HashCodeBuilder.reflectionHashCode(this);
+        return Objects.hash(
+                name,
+                numberOfComponents,
+                bitsPerPixel,
+                canDecode,
+                canEncode,
+                hardwareAccelerated,
+                palettedFormat,
+                bitstreamFormat);
     }
 
     public String getName() {

@@ -11,12 +11,11 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import net.bramp.ffmpeg.modelmapper.Mapper;
+import net.bramp.ffmpeg.nut.Fraction;
 import net.bramp.ffmpeg.options.AudioEncodingOptions;
 import net.bramp.ffmpeg.options.EncodingOptions;
 import net.bramp.ffmpeg.options.MainEncodingOptions;
 import net.bramp.ffmpeg.options.VideoEncodingOptions;
-import org.apache.commons.lang3.SystemUtils;
-import org.apache.commons.lang3.math.Fraction;
 
 /**
  * This abstract class holds flags that are both applicable to input and output streams in the
@@ -50,8 +49,6 @@ import org.apache.commons.lang3.math.Fraction;
  * @param <T> A concrete class that extends from the AbstractFFmpegStreamBuilder
  */
 public abstract class AbstractFFmpegStreamBuilder<T extends AbstractFFmpegStreamBuilder<T>> {
-
-    private static final String DEVNULL = SystemUtils.IS_OS_WINDOWS ? "NUL" : "/dev/null";
 
     final FFmpegBuilder parent;
 
@@ -586,7 +583,7 @@ public abstract class AbstractFFmpegStreamBuilder<T extends AbstractFFmpegStream
 
         // Output
         if (pass == 1) {
-            args.add(DEVNULL);
+            args.add(isWindows() ? "NUL" : "/dev/null");
         } else if (filename != null) {
             args.add(filename);
         } else if (uri != null) {
@@ -596,6 +593,14 @@ public abstract class AbstractFFmpegStreamBuilder<T extends AbstractFFmpegStream
         }
 
         return List.copyOf(args);
+    }
+
+    /**
+     * Very basic windows detection,
+     * if you need more sophisticated windows detection then override this method.
+     */
+    protected boolean isWindows() {
+        return String.valueOf(System.getProperty("os.name")).toLowerCase().contains("windows");
     }
 
     protected void addGlobalFlags(FFmpegBuilder parent, List<String> args) {

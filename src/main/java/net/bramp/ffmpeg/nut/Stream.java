@@ -1,7 +1,6 @@
 package net.bramp.ffmpeg.nut;
 
 import java.io.IOException;
-import org.apache.commons.lang3.math.Fraction;
 
 public class Stream {
     final StreamHeaderPacket header;

@@ -4,7 +4,7 @@ import static net.bramp.ffmpeg.FFmpegUtils.fromTimecode;
 
 import java.util.Objects;
 import net.bramp.ffmpeg.FFmpegUtils;
-import org.apache.commons.lang3.math.Fraction;
+import net.bramp.ffmpeg.nut.Fraction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

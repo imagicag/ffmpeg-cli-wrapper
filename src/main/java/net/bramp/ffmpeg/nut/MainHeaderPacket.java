@@ -3,7 +3,6 @@ package net.bramp.ffmpeg.nut;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import org.apache.commons.lang3.math.Fraction;
 
 public class MainHeaderPacket extends Packet {
 

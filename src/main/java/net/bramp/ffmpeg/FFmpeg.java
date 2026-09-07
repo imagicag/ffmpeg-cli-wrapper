@@ -12,10 +12,10 @@ import net.bramp.ffmpeg.builder.FFmpegBuilder;
 import net.bramp.ffmpeg.info.Codec;
 import net.bramp.ffmpeg.info.Format;
 import net.bramp.ffmpeg.info.PixelFormat;
+import net.bramp.ffmpeg.nut.Fraction;
 import net.bramp.ffmpeg.progress.ProgressListener;
 import net.bramp.ffmpeg.progress.ProgressParser;
 import net.bramp.ffmpeg.progress.TcpProgressParser;
-import org.apache.commons.lang3.math.Fraction;
 
 /**
  * Wrapper around FFmpeg

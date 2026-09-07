@@ -8,11 +8,11 @@ import com.google.gson.GsonBuilder;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import net.bramp.commons.lang3.math.gson.FractionAdapter;
+import net.bramp.ffmpeg.gson.FractionAdapter;
 import net.bramp.ffmpeg.gson.LowercaseEnumTypeAdapterFactory;
 import net.bramp.ffmpeg.gson.NamedBitsetAdapter;
+import net.bramp.ffmpeg.nut.Fraction;
 import net.bramp.ffmpeg.probe.FFmpegDisposition;
-import org.apache.commons.lang3.math.Fraction;
 
 /** Helper class with commonly used methods */
 public final class FFmpegUtils {

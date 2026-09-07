@@ -1,7 +1,7 @@
 package net.bramp.ffmpeg.probe;
 
 import java.util.Map;
-import org.apache.commons.lang3.math.Fraction;
+import net.bramp.ffmpeg.nut.Fraction;
 
 public class FFmpegStream {
 

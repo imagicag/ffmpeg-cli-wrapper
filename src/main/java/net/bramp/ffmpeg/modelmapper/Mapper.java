@@ -20,82 +20,79 @@ import org.modelmapper.convention.NameTokenizers;
  */
 public class Mapper {
 
-  private Mapper() {
-    throw new InstantiationError("Must not instantiate this class");
-  }
-
-  private static final ModelMapper mapper = newModelMapper();
-
-  private static <S, D> TypeMap<S, D> createTypeMap(
-      ModelMapper mapper, Class<S> sourceType, Class<D> destinationType, Configuration config) {
-
-    return mapper
-        .createTypeMap(sourceType, destinationType, config)
-        // We setPropertyCondition because ModelMapper seems to ignore this in
-        // the config
-        .setPropertyCondition(config.getPropertyCondition());
-  }
-
-  private static ModelMapper newModelMapper() {
-    final ModelMapper mapper = new ModelMapper();
-
-    Configuration config =
-        mapper
-            .getConfiguration()
-            .copy()
-            .setFieldMatchingEnabled(true)
-            .setPropertyCondition(notDefault)
-            .setSourceNameTokenizer(NameTokenizers.UNDERSCORE);
-
-    createTypeMap(mapper, MainEncodingOptions.class, FFmpegOutputBuilder.class, config);
-    createTypeMap(mapper, AudioWrapper.class, FFmpegOutputBuilder.class, config);
-    createTypeMap(mapper, VideoWrapper.class, FFmpegOutputBuilder.class, config);
-
-    return mapper;
-  }
-
-  /** Simple wrapper object, to inject the word "audio" in the property name */
-  static class AudioWrapper {
-    public final AudioEncodingOptions audio;
-
-    AudioWrapper(AudioEncodingOptions audio) {
-      this.audio = audio;
+    private Mapper() {
+        throw new InstantiationError("Must not instantiate this class");
     }
-  }
 
-  /** Simple wrapper object, to inject the word "video" in the property name */
-  static class VideoWrapper {
-    public final VideoEncodingOptions video;
+    private static final ModelMapper mapper = newModelMapper();
 
-    VideoWrapper(VideoEncodingOptions video) {
-      this.video = video;
+    private static <S, D> TypeMap<S, D> createTypeMap(
+            ModelMapper mapper, Class<S> sourceType, Class<D> destinationType, Configuration config) {
+
+        return mapper.createTypeMap(sourceType, destinationType, config)
+                // We setPropertyCondition because ModelMapper seems to ignore this in
+                // the config
+                .setPropertyCondition(config.getPropertyCondition());
     }
-  }
 
-  public static <T extends AbstractFFmpegStreamBuilder<T>> void map(
-      MainEncodingOptions opts, AbstractFFmpegStreamBuilder<T> dest) {
-    mapper.map(opts, dest);
-  }
+    private static ModelMapper newModelMapper() {
+        final ModelMapper mapper = new ModelMapper();
 
-  public static <T extends AbstractFFmpegStreamBuilder<T>> void map(
-      AudioEncodingOptions opts, AbstractFFmpegStreamBuilder<T> dest) {
-    mapper.map(new AudioWrapper(opts), dest);
-  }
+        Configuration config = mapper.getConfiguration()
+                .copy()
+                .setFieldMatchingEnabled(true)
+                .setPropertyCondition(notDefault)
+                .setSourceNameTokenizer(NameTokenizers.UNDERSCORE);
 
-  public static <T extends AbstractFFmpegStreamBuilder<T>> void map(
-      VideoEncodingOptions opts, AbstractFFmpegStreamBuilder<T> dest) {
-    mapper.map(new VideoWrapper(opts), dest);
-  }
+        createTypeMap(mapper, MainEncodingOptions.class, FFmpegOutputBuilder.class, config);
+        createTypeMap(mapper, AudioWrapper.class, FFmpegOutputBuilder.class, config);
+        createTypeMap(mapper, VideoWrapper.class, FFmpegOutputBuilder.class, config);
 
-  public static <T extends AbstractFFmpegStreamBuilder<T>> void map(
-      EncodingOptions opts, AbstractFFmpegStreamBuilder<T> dest) {
-    map(opts.getMain(), dest);
-
-    if (opts.getAudio().enabled) {
-      map(opts.getAudio(), dest);
+        return mapper;
     }
-    if (opts.getVideo().enabled) {
-      map(opts.getVideo(), dest);
+
+    /** Simple wrapper object, to inject the word "audio" in the property name */
+    static class AudioWrapper {
+        public final AudioEncodingOptions audio;
+
+        AudioWrapper(AudioEncodingOptions audio) {
+            this.audio = audio;
+        }
     }
-  }
+
+    /** Simple wrapper object, to inject the word "video" in the property name */
+    static class VideoWrapper {
+        public final VideoEncodingOptions video;
+
+        VideoWrapper(VideoEncodingOptions video) {
+            this.video = video;
+        }
+    }
+
+    public static <T extends AbstractFFmpegStreamBuilder<T>> void map(
+            MainEncodingOptions opts, AbstractFFmpegStreamBuilder<T> dest) {
+        mapper.map(opts, dest);
+    }
+
+    public static <T extends AbstractFFmpegStreamBuilder<T>> void map(
+            AudioEncodingOptions opts, AbstractFFmpegStreamBuilder<T> dest) {
+        mapper.map(new AudioWrapper(opts), dest);
+    }
+
+    public static <T extends AbstractFFmpegStreamBuilder<T>> void map(
+            VideoEncodingOptions opts, AbstractFFmpegStreamBuilder<T> dest) {
+        mapper.map(new VideoWrapper(opts), dest);
+    }
+
+    public static <T extends AbstractFFmpegStreamBuilder<T>> void map(
+            EncodingOptions opts, AbstractFFmpegStreamBuilder<T> dest) {
+        map(opts.getMain(), dest);
+
+        if (opts.getAudio().enabled) {
+            map(opts.getAudio(), dest);
+        }
+        if (opts.getVideo().enabled) {
+            map(opts.getVideo(), dest);
+        }
+    }
 }

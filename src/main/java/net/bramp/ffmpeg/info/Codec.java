@@ -11,103 +11,103 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
  */
 public class Codec {
 
-  public enum Type {
-    VIDEO,
-    AUDIO,
-    SUBTITLE,
-    DATA
-  }
-
-  final String name;
-  final String longName;
-
-  /** Can I decode with this codec */
-  final boolean canDecode;
-
-  /** Can I encode with this codec */
-  final boolean canEncode;
-
-  /** What type of codec is this */
-  final Type type;
-
-  /**
-   * @param name short codec name
-   * @param longName long codec name
-   * @param flags is expected to be in the following format:
-   *     <pre>
-   * D..... = Decoding supported
-   * .E.... = Encoding supported
-   * ..V... = Video codec
-   * ..A... = Audio codec
-   * ..S... = Subtitle codec
-   * ...I.. = Intra frame-only codec
-   * ....L. = Lossy compression
-   * .....S = Lossless compression
-   * </pre>
-   */
-  public Codec(String name, String longName, String flags) {
-    this.name = Objects.requireNonNull(name).trim();
-    this.longName = Objects.requireNonNull(longName).trim();
-
-    Objects.requireNonNull(flags);
-    if (flags.length() != 6) {
-      throw new IllegalArgumentException("Format flags is invalid '" + flags + "'");
-    }
-    this.canDecode = flags.charAt(0) == 'D';
-    this.canEncode = flags.charAt(1) == 'E';
-
-    switch (flags.charAt(2)) {
-      case 'V':
-        this.type = Type.VIDEO;
-        break;
-      case 'A':
-        this.type = Type.AUDIO;
-        break;
-      case 'S':
-        this.type = Type.SUBTITLE;
-        break;
-      case 'D':
-        this.type = Type.DATA;
-        break;
-      default:
-        throw new IllegalArgumentException("Invalid codec type '" + flags.charAt(2) + "'");
+    public enum Type {
+        VIDEO,
+        AUDIO,
+        SUBTITLE,
+        DATA
     }
 
-    // TODO There are more flags to parse
-  }
+    final String name;
+    final String longName;
 
-  @Override
-  public String toString() {
-    return name + " " + longName;
-  }
+    /** Can I decode with this codec */
+    final boolean canDecode;
 
-  @Override
-  public boolean equals(Object obj) {
-    return EqualsBuilder.reflectionEquals(this, obj);
-  }
+    /** Can I encode with this codec */
+    final boolean canEncode;
 
-  @Override
-  public int hashCode() {
-    return HashCodeBuilder.reflectionHashCode(this);
-  }
+    /** What type of codec is this */
+    final Type type;
 
-  public String getName() {
-    return name;
-  }
+    /**
+     * @param name short codec name
+     * @param longName long codec name
+     * @param flags is expected to be in the following format:
+     *     <pre>
+     * D..... = Decoding supported
+     * .E.... = Encoding supported
+     * ..V... = Video codec
+     * ..A... = Audio codec
+     * ..S... = Subtitle codec
+     * ...I.. = Intra frame-only codec
+     * ....L. = Lossy compression
+     * .....S = Lossless compression
+     * </pre>
+     */
+    public Codec(String name, String longName, String flags) {
+        this.name = Objects.requireNonNull(name).trim();
+        this.longName = Objects.requireNonNull(longName).trim();
 
-  public String getLongName() {
-    return longName;
-  }
+        Objects.requireNonNull(flags);
+        if (flags.length() != 6) {
+            throw new IllegalArgumentException("Format flags is invalid '" + flags + "'");
+        }
+        this.canDecode = flags.charAt(0) == 'D';
+        this.canEncode = flags.charAt(1) == 'E';
 
-  public boolean getCanDecode() {
-    return canDecode;
-  }
+        switch (flags.charAt(2)) {
+            case 'V':
+                this.type = Type.VIDEO;
+                break;
+            case 'A':
+                this.type = Type.AUDIO;
+                break;
+            case 'S':
+                this.type = Type.SUBTITLE;
+                break;
+            case 'D':
+                this.type = Type.DATA;
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid codec type '" + flags.charAt(2) + "'");
+        }
 
-  public boolean getCanEncode() {
-    return canEncode;
-  }
+        // TODO There are more flags to parse
+    }
 
-  public Type getType() {
-    return type;
-  }
+    @Override
+    public String toString() {
+        return name + " " + longName;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return EqualsBuilder.reflectionEquals(this, obj);
+    }
+
+    @Override
+    public int hashCode() {
+        return HashCodeBuilder.reflectionHashCode(this);
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getLongName() {
+        return longName;
+    }
+
+    public boolean getCanDecode() {
+        return canDecode;
+    }
+
+    public boolean getCanEncode() {
+        return canEncode;
+    }
+
+    public Type getType() {
+        return type;
+    }
 }

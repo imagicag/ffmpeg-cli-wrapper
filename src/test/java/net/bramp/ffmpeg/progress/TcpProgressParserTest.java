@@ -17,42 +17,40 @@ import org.junit.Test;
 
 public class TcpProgressParserTest extends AbstractProgressParserTest {
 
-  @Override
-  public ProgressParser newParser(ProgressListener listener)
-      throws IOException, URISyntaxException {
-    return new TcpProgressParser(listener);
-  }
+    @Override
+    public ProgressParser newParser(ProgressListener listener) throws IOException, URISyntaxException {
+        return new TcpProgressParser(listener);
+    }
 
-  @Test
-  public void testNormal() throws IOException, InterruptedException, URISyntaxException {
-    parser.start();
+    @Test
+    public void testNormal() throws IOException, InterruptedException, URISyntaxException {
+        parser.start();
 
-    Socket client = new Socket(uri.getHost(), uri.getPort());
-    assertTrue("Socket is connected", client.isConnected());
+        Socket client = new Socket(uri.getHost(), uri.getPort());
+        assertTrue("Socket is connected", client.isConnected());
 
-    InputStream inputStream = combineResource(Progresses.allFiles);
-    OutputStream outputStream = client.getOutputStream();
+        InputStream inputStream = combineResource(Progresses.allFiles);
+        OutputStream outputStream = client.getOutputStream();
 
-    long bytes = inputStream.transferTo(outputStream);
+        long bytes = inputStream.transferTo(outputStream);
 
-    // HACK, but give the TcpProgressParser thread time to actually handle the connection/data
-    // before the client is closed, and the parser is stopped.
-    Thread.sleep(100);
+        // HACK, but give the TcpProgressParser thread time to actually handle the connection/data
+        // before the client is closed, and the parser is stopped.
+        Thread.sleep(100);
 
-    client.close();
-    parser.stop();
+        client.close();
+        parser.stop();
 
-    assertThat(bytes, greaterThan(0L));
-    assertThat(progesses, equalTo((List<Progress>) Progresses.allProgresses));
-  }
+        assertThat(bytes, greaterThan(0L));
+        assertThat(progesses, equalTo((List<Progress>) Progresses.allProgresses));
+    }
 
-  @Test
-  public void testPrematureDisconnect()
-      throws IOException, InterruptedException, URISyntaxException {
-    parser.start();
-    new Socket(uri.getHost(), uri.getPort()).close();
-    parser.stop();
+    @Test
+    public void testPrematureDisconnect() throws IOException, InterruptedException, URISyntaxException {
+        parser.start();
+        new Socket(uri.getHost(), uri.getPort()).close();
+        parser.stop();
 
-    assertTrue(progesses.isEmpty());
-  }
+        assertTrue(progesses.isEmpty());
+    }
 }

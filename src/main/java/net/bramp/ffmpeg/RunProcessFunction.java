@@ -15,36 +15,36 @@ import org.slf4j.LoggerFactory;
  */
 public class RunProcessFunction implements ProcessFunction {
 
-  static final Logger LOG = LoggerFactory.getLogger(RunProcessFunction.class);
+    static final Logger LOG = LoggerFactory.getLogger(RunProcessFunction.class);
 
-  File workingDirectory;
+    File workingDirectory;
 
-  @Override
-  public Process run(List<String> args) throws IOException {
-    Objects.requireNonNull(args, "Arguments must not be null");
-    if (args.isEmpty()) {
-      throw new IllegalArgumentException("No arguments specified");
+    @Override
+    public Process run(List<String> args) throws IOException {
+        Objects.requireNonNull(args, "Arguments must not be null");
+        if (args.isEmpty()) {
+            throw new IllegalArgumentException("No arguments specified");
+        }
+
+        if (LOG.isInfoEnabled()) {
+            LOG.info("{}", String.join(" ", args));
+        }
+
+        ProcessBuilder builder = new ProcessBuilder(args);
+        if (workingDirectory != null) {
+            builder.directory(workingDirectory);
+        }
+        builder.redirectErrorStream(true);
+        return builder.start();
     }
 
-    if (LOG.isInfoEnabled()) {
-      LOG.info("{}", String.join(" ", args));
+    public RunProcessFunction setWorkingDirectory(String workingDirectory) {
+        this.workingDirectory = new File(workingDirectory);
+        return this;
     }
 
-    ProcessBuilder builder = new ProcessBuilder(args);
-    if (workingDirectory != null) {
-      builder.directory(workingDirectory);
+    public RunProcessFunction setWorkingDirectory(File workingDirectory) {
+        this.workingDirectory = workingDirectory;
+        return this;
     }
-    builder.redirectErrorStream(true);
-    return builder.start();
-  }
-
-  public RunProcessFunction setWorkingDirectory(String workingDirectory) {
-    this.workingDirectory = new File(workingDirectory);
-    return this;
-  }
-
-  public RunProcessFunction setWorkingDirectory(File workingDirectory) {
-    this.workingDirectory = workingDirectory;
-    return this;
-  }
 }

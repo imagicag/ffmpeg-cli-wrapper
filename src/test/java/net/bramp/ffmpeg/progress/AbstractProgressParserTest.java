@@ -16,59 +16,58 @@ import org.junit.rules.Timeout;
 
 public abstract class AbstractProgressParserTest {
 
-  @Rule public Timeout timeout = new Timeout(10, TimeUnit.SECONDS);
+    @Rule
+    public Timeout timeout = new Timeout(10, TimeUnit.SECONDS);
 
-  final List<Progress> progesses = Collections.synchronizedList(new ArrayList<Progress>());
+    final List<Progress> progesses = Collections.synchronizedList(new ArrayList<Progress>());
 
-  ProgressParser parser;
-  URI uri;
+    ProgressParser parser;
+    URI uri;
 
-  final ProgressListener listener =
-      new ProgressListener() {
+    final ProgressListener listener = new ProgressListener() {
         @Override
         public void progress(Progress p) {
-          progesses.add(p);
+            progesses.add(p);
         }
-      };
+    };
 
-  @Before
-  public void setupParser() throws IOException, URISyntaxException {
-    synchronized (progesses) {
-      progesses.clear();
+    @Before
+    public void setupParser() throws IOException, URISyntaxException {
+        synchronized (progesses) {
+            progesses.clear();
+        }
+
+        parser = newParser(listener);
+        uri = parser.getUri();
     }
 
-    parser = newParser(listener);
-    uri = parser.getUri();
-  }
+    public abstract ProgressParser newParser(ProgressListener listener) throws IOException, URISyntaxException;
 
-  public abstract ProgressParser newParser(ProgressListener listener)
-      throws IOException, URISyntaxException;
+    @Test
+    public void testNoConnection() throws IOException, InterruptedException {
+        parser.start();
+        parser.stop();
+        assertTrue(progesses.isEmpty());
+    }
 
-  @Test
-  public void testNoConnection() throws IOException, InterruptedException {
-    parser.start();
-    parser.stop();
-    assertTrue(progesses.isEmpty());
-  }
+    @Test
+    public void testDoubleStop() throws IOException, InterruptedException {
+        parser.start();
+        parser.stop();
+        parser.stop();
+        assertTrue(progesses.isEmpty());
+    }
 
-  @Test
-  public void testDoubleStop() throws IOException, InterruptedException {
-    parser.start();
-    parser.stop();
-    parser.stop();
-    assertTrue(progesses.isEmpty());
-  }
+    @Test(expected = IllegalThreadStateException.class)
+    public void testDoubleStart() throws IOException {
+        parser.start();
+        parser.start();
+        assertTrue(progesses.isEmpty());
+    }
 
-  @Test(expected = IllegalThreadStateException.class)
-  public void testDoubleStart() throws IOException {
-    parser.start();
-    parser.start();
-    assertTrue(progesses.isEmpty());
-  }
-
-  @Test()
-  public void testStopNoStart() throws IOException {
-    parser.stop();
-    assertTrue(progesses.isEmpty());
-  }
+    @Test()
+    public void testStopNoStart() throws IOException {
+        parser.stop();
+        assertTrue(progesses.isEmpty());
+    }
 }

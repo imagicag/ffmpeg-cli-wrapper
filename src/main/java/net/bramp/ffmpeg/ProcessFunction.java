@@ -9,5 +9,5 @@ import java.util.List;
  * @author bramp
  */
 public interface ProcessFunction {
-  Process run(List<String> args) throws IOException;
+    Process run(List<String> args) throws IOException;
 }

@@ -9,12 +9,12 @@ import org.junit.Test;
 
 public class MetadataSpecTest {
 
-  @Test
-  public void testMetaSpec() {
-    assertThat(global().spec(), is("g"));
-    assertThat(chapter(1).spec(), is("c:1"));
-    assertThat(program(1).spec(), is("p:1"));
-    assertThat(stream(1).spec(), is("s:1"));
-    assertThat(stream(id(1)).spec(), is("s:i:1"));
-  }
+    @Test
+    public void testMetaSpec() {
+        assertThat(global().spec(), is("g"));
+        assertThat(chapter(1).spec(), is("c:1"));
+        assertThat(program(1).spec(), is("p:1"));
+        assertThat(stream(1).spec(), is("s:1"));
+        assertThat(stream(id(1)).spec(), is("s:i:1"));
+    }
 }

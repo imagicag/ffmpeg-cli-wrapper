@@ -16,34 +16,33 @@ import org.junit.Test;
 
 public class UdpProgressParserTest extends AbstractProgressParserTest {
 
-  @Override
-  public ProgressParser newParser(ProgressListener listener)
-      throws IOException, URISyntaxException {
-    return new UdpProgressParser(listener);
-  }
-
-  @Test
-  public void testNormal() throws IOException, InterruptedException, URISyntaxException {
-    parser.start();
-
-    final InetAddress addr = InetAddress.getByName(uri.getHost());
-    final int port = uri.getPort();
-
-    try (DatagramSocket socket = new DatagramSocket()) {
-      // Load each Progress Fixture, and send in a single datagram packet
-      for (String progressFixture : Progresses.allFiles) {
-        InputStream inputStream = loadResource(progressFixture);
-        byte[] bytes = inputStream.readAllBytes();
-
-        DatagramPacket packet = new DatagramPacket(bytes, bytes.length, addr, port);
-        socket.send(packet);
-      }
+    @Override
+    public ProgressParser newParser(ProgressListener listener) throws IOException, URISyntaxException {
+        return new UdpProgressParser(listener);
     }
 
-    Thread.sleep(100); // HACK: Wait a short while to avoid closing the receiving socket
+    @Test
+    public void testNormal() throws IOException, InterruptedException, URISyntaxException {
+        parser.start();
 
-    parser.stop();
+        final InetAddress addr = InetAddress.getByName(uri.getHost());
+        final int port = uri.getPort();
 
-    assertThat(progesses, equalTo((List<Progress>) Progresses.allProgresses));
-  }
+        try (DatagramSocket socket = new DatagramSocket()) {
+            // Load each Progress Fixture, and send in a single datagram packet
+            for (String progressFixture : Progresses.allFiles) {
+                InputStream inputStream = loadResource(progressFixture);
+                byte[] bytes = inputStream.readAllBytes();
+
+                DatagramPacket packet = new DatagramPacket(bytes, bytes.length, addr, port);
+                socket.send(packet);
+            }
+        }
+
+        Thread.sleep(100); // HACK: Wait a short while to avoid closing the receiving socket
+
+        parser.stop();
+
+        assertThat(progesses, equalTo((List<Progress>) Progresses.allProgresses));
+    }
 }

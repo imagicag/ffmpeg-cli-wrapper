@@ -10,61 +10,61 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
  * @author bramp
  */
 public class Format {
-  final String name;
-  final String longName;
+    final String name;
+    final String longName;
 
-  final boolean canDemux;
-  final boolean canMux;
+    final boolean canDemux;
+    final boolean canMux;
 
-  /**
-   * @param name short format name
-   * @param longName long format name
-   * @param flags is expected to be in the following format:
-   *     <pre>
-   * D. = Demuxing supported
-   * .E = Muxing supported
-   * </pre>
-   */
-  public Format(String name, String longName, String flags) {
-    this.name = Objects.requireNonNull(name).trim();
-    this.longName = Objects.requireNonNull(longName).trim();
+    /**
+     * @param name short format name
+     * @param longName long format name
+     * @param flags is expected to be in the following format:
+     *     <pre>
+     * D. = Demuxing supported
+     * .E = Muxing supported
+     * </pre>
+     */
+    public Format(String name, String longName, String flags) {
+        this.name = Objects.requireNonNull(name).trim();
+        this.longName = Objects.requireNonNull(longName).trim();
 
-    Objects.requireNonNull(flags);
-    if (flags.length() != 2) {
-      throw new IllegalArgumentException("Format flags is invalid '" + flags + "'");
+        Objects.requireNonNull(flags);
+        if (flags.length() != 2) {
+            throw new IllegalArgumentException("Format flags is invalid '" + flags + "'");
+        }
+        canDemux = flags.charAt(0) == 'D';
+        canMux = flags.charAt(1) == 'E';
     }
-    canDemux = flags.charAt(0) == 'D';
-    canMux = flags.charAt(1) == 'E';
-  }
 
-  @Override
-  public String toString() {
-    return name + " " + longName;
-  }
+    @Override
+    public String toString() {
+        return name + " " + longName;
+    }
 
-  @Override
-  public boolean equals(Object obj) {
-    return EqualsBuilder.reflectionEquals(this, obj);
-  }
+    @Override
+    public boolean equals(Object obj) {
+        return EqualsBuilder.reflectionEquals(this, obj);
+    }
 
-  @Override
-  public int hashCode() {
-    return HashCodeBuilder.reflectionHashCode(this);
-  }
+    @Override
+    public int hashCode() {
+        return HashCodeBuilder.reflectionHashCode(this);
+    }
 
-  public String getName() {
-    return name;
-  }
+    public String getName() {
+        return name;
+    }
 
-  public String getLongName() {
-    return longName;
-  }
+    public String getLongName() {
+        return longName;
+    }
 
-  public boolean getCanDemux() {
-    return canDemux;
-  }
+    public boolean getCanDemux() {
+        return canDemux;
+    }
 
-  public boolean getCanMux() {
-    return canMux;
-  }
+    public boolean getCanMux() {
+        return canMux;
+    }
 }

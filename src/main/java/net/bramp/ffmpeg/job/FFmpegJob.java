@@ -9,28 +9,28 @@ import net.bramp.ffmpeg.progress.ProgressListener;
  */
 public abstract class FFmpegJob implements Runnable {
 
-  public enum State {
-    WAITING,
-    RUNNING,
-    FINISHED,
-    FAILED,
-  }
+    public enum State {
+        WAITING,
+        RUNNING,
+        FINISHED,
+        FAILED,
+    }
 
-  final FFmpeg ffmpeg;
-  final ProgressListener listener;
+    final FFmpeg ffmpeg;
+    final ProgressListener listener;
 
-  State state = State.WAITING;
+    State state = State.WAITING;
 
-  public FFmpegJob(FFmpeg ffmpeg) {
-    this(ffmpeg, null);
-  }
+    public FFmpegJob(FFmpeg ffmpeg) {
+        this(ffmpeg, null);
+    }
 
-  public FFmpegJob(FFmpeg ffmpeg, ProgressListener listener) {
-    this.ffmpeg = Objects.requireNonNull(ffmpeg);
-    this.listener = listener;
-  }
+    public FFmpegJob(FFmpeg ffmpeg, ProgressListener listener) {
+        this.ffmpeg = Objects.requireNonNull(ffmpeg);
+        this.listener = listener;
+    }
 
-  public State getState() {
-    return state;
-  }
+    public State getState() {
+        return state;
+    }
 }

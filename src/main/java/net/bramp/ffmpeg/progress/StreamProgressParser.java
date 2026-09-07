@@ -10,37 +10,37 @@ import java.util.Objects;
 
 public class StreamProgressParser {
 
-  final ProgressListener listener;
+    final ProgressListener listener;
 
-  public StreamProgressParser(ProgressListener listener) {
-    this.listener = Objects.requireNonNull(listener);
-  }
-
-  private static BufferedReader wrapInBufferedReader(Reader reader) {
-    Objects.requireNonNull(reader);
-
-    if (reader instanceof BufferedReader) {
-      return (BufferedReader) reader;
+    public StreamProgressParser(ProgressListener listener) {
+        this.listener = Objects.requireNonNull(listener);
     }
 
-    return new BufferedReader(reader);
-  }
+    private static BufferedReader wrapInBufferedReader(Reader reader) {
+        Objects.requireNonNull(reader);
 
-  public void processStream(InputStream stream) throws IOException {
-    Objects.requireNonNull(stream);
-    processReader(new InputStreamReader(stream, StandardCharsets.UTF_8));
-  }
+        if (reader instanceof BufferedReader) {
+            return (BufferedReader) reader;
+        }
 
-  public void processReader(Reader reader) throws IOException {
-    final BufferedReader in = wrapInBufferedReader(reader);
-
-    String line;
-    Progress p = new Progress();
-    while ((line = in.readLine()) != null) {
-      if (p.parseLine(line)) {
-        listener.progress(p);
-        p = new Progress();
-      }
+        return new BufferedReader(reader);
     }
-  }
+
+    public void processStream(InputStream stream) throws IOException {
+        Objects.requireNonNull(stream);
+        processReader(new InputStreamReader(stream, StandardCharsets.UTF_8));
+    }
+
+    public void processReader(Reader reader) throws IOException {
+        final BufferedReader in = wrapInBufferedReader(reader);
+
+        String line;
+        Progress p = new Progress();
+        while ((line = in.readLine()) != null) {
+            if (p.parseLine(line)) {
+                listener.progress(p);
+                p = new Progress();
+            }
+        }
+    }
 }

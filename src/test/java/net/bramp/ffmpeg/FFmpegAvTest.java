@@ -17,43 +17,41 @@ import org.mockito.junit.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 public class FFmpegAvTest {
 
-  @Mock ProcessFunction runFunc;
+    @Mock
+    ProcessFunction runFunc;
 
-  FFmpeg ffmpeg;
+    FFmpeg ffmpeg;
 
-  @Before
-  public void before() throws IOException {
-    when(runFunc.run(argThatHasItem("-version")))
-        .thenAnswer(new NewProcessAnswer("avconv-version"));
+    @Before
+    public void before() throws IOException {
+        when(runFunc.run(argThatHasItem("-version"))).thenAnswer(new NewProcessAnswer("avconv-version"));
 
-    ffmpeg = new FFmpeg(runFunc);
-  }
+        ffmpeg = new FFmpeg(runFunc);
+    }
 
-  @Test
-  public void testVersion() throws Exception {
-    assertEquals(
-        "avconv version 11.4, Copyright (c) 2000-2014 the Libav developers", ffmpeg.version());
-    assertEquals(
-        "avconv version 11.4, Copyright (c) 2000-2014 the Libav developers", ffmpeg.version());
-  }
+    @Test
+    public void testVersion() throws Exception {
+        assertEquals("avconv version 11.4, Copyright (c) 2000-2014 the Libav developers", ffmpeg.version());
+        assertEquals("avconv version 11.4, Copyright (c) 2000-2014 the Libav developers", ffmpeg.version());
+    }
 
-  /**
-   * We don't support avconv, so all methods should throw an exception.
-   *
-   * @throws IOException
-   */
-  @Test(expected = IllegalArgumentException.class)
-  public void testProbeVideo() throws IOException {
-    ffmpeg.run(Collections.<String>emptyList());
-  }
+    /**
+     * We don't support avconv, so all methods should throw an exception.
+     *
+     * @throws IOException
+     */
+    @Test(expected = IllegalArgumentException.class)
+    public void testProbeVideo() throws IOException {
+        ffmpeg.run(Collections.<String>emptyList());
+    }
 
-  @Test(expected = IllegalArgumentException.class)
-  public void testCodecs() throws IOException {
-    ffmpeg.codecs();
-  }
+    @Test(expected = IllegalArgumentException.class)
+    public void testCodecs() throws IOException {
+        ffmpeg.codecs();
+    }
 
-  @Test(expected = IllegalArgumentException.class)
-  public void testFormats() throws IOException {
-    ffmpeg.formats();
-  }
+    @Test(expected = IllegalArgumentException.class)
+    public void testFormats() throws IOException {
+        ffmpeg.formats();
+    }
 }

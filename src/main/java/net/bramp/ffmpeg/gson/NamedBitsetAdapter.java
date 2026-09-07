@@ -37,105 +37,105 @@ import java.util.Optional;
  */
 public class NamedBitsetAdapter<T> extends TypeAdapter<T> {
 
-  final Class<T> clazz;
+    final Class<T> clazz;
 
-  public NamedBitsetAdapter(Class<T> clazz) {
-    this.clazz = Objects.requireNonNull(clazz);
-  }
-
-  protected Optional<Boolean> readBoolean(JsonReader reader) throws IOException {
-    JsonToken next = reader.peek();
-    switch (next) {
-      case BOOLEAN:
-        return Optional.of(reader.nextBoolean());
-      case NUMBER:
-        return Optional.of(reader.nextInt() != 0);
-      default:
-        reader.skipValue();
-        return Optional.empty();
-    }
-  }
-
-  protected void setField(T target, String name, boolean value) throws IllegalAccessException {
-    try {
-      Field f = clazz.getField(name);
-      if ((boolean.class.equals(f.getType()))) {
-        f.setBoolean(target, value);
-      } else if (int.class.equals(f.getType())) {
-        f.setInt(target, value ? 1 : 0);
-      }
-
-    } catch (NoSuchFieldException e) {
-      // Just continue
-    }
-  }
-
-  @Override
-  public T read(JsonReader reader) throws IOException {
-
-    JsonToken next = reader.peek();
-
-    if (next == JsonToken.NULL) {
-      reader.nextNull();
-      return null;
+    public NamedBitsetAdapter(Class<T> clazz) {
+        this.clazz = Objects.requireNonNull(clazz);
     }
 
-    try {
-      T obj = clazz.getDeclaredConstructor().newInstance();
-      reader.beginObject();
+    protected Optional<Boolean> readBoolean(JsonReader reader) throws IOException {
+        JsonToken next = reader.peek();
+        switch (next) {
+            case BOOLEAN:
+                return Optional.of(reader.nextBoolean());
+            case NUMBER:
+                return Optional.of(reader.nextInt() != 0);
+            default:
+                reader.skipValue();
+                return Optional.empty();
+        }
+    }
 
-      next = reader.peek();
-      while (next != JsonToken.END_OBJECT) {
-        String name = reader.nextName();
-        Optional<Boolean> value = readBoolean(reader);
+    protected void setField(T target, String name, boolean value) throws IllegalAccessException {
+        try {
+            Field f = clazz.getField(name);
+            if ((boolean.class.equals(f.getType()))) {
+                f.setBoolean(target, value);
+            } else if (int.class.equals(f.getType())) {
+                f.setInt(target, value ? 1 : 0);
+            }
 
-        if (value.isPresent()) {
-          setField(obj, name, value.get());
+        } catch (NoSuchFieldException e) {
+            // Just continue
+        }
+    }
+
+    @Override
+    public T read(JsonReader reader) throws IOException {
+
+        JsonToken next = reader.peek();
+
+        if (next == JsonToken.NULL) {
+            reader.nextNull();
+            return null;
         }
 
-        next = reader.peek();
-      }
+        try {
+            T obj = clazz.getDeclaredConstructor().newInstance();
+            reader.beginObject();
 
-      reader.endObject();
-      return obj;
+            next = reader.peek();
+            while (next != JsonToken.END_OBJECT) {
+                String name = reader.nextName();
+                Optional<Boolean> value = readBoolean(reader);
 
-    } catch (InstantiationException
-        | IllegalAccessException
-        | NoSuchMethodException
-        | InvocationTargetException e) {
-      throw new IOException("Reflection error", e);
+                if (value.isPresent()) {
+                    setField(obj, name, value.get());
+                }
+
+                next = reader.peek();
+            }
+
+            reader.endObject();
+            return obj;
+
+        } catch (InstantiationException
+                | IllegalAccessException
+                | NoSuchMethodException
+                | InvocationTargetException e) {
+            throw new IOException("Reflection error", e);
+        }
     }
-  }
 
-  @Override
-  public void write(JsonWriter writer, T value) throws IOException {
+    @Override
+    public void write(JsonWriter writer, T value) throws IOException {
 
-    if (value == null) {
-      writer.nullValue();
-      return;
-    }
-
-    assert value.getClass().equals(clazz);
-
-    writer.beginObject();
-    for (Field f : clazz.getFields()) {
-      try {
-        boolean b;
-        if (boolean.class.equals(f.getType())) {
-          b = f.getBoolean(value);
-        } else if (int.class.equals(f.getType())) {
-          b = f.getInt(value) != 0;
-        } else {
-          continue;
+        if (value == null) {
+            writer.nullValue();
+            return;
         }
 
-        writer.name(f.getName());
-        writer.value(b);
+        assert value.getClass().equals(clazz);
 
-      } catch (IllegalAccessException e) {
-        throw new IOException("Reflection error", e);
-      }
+        writer.beginObject();
+        for (Field f : clazz.getFields()) {
+            try {
+                boolean b;
+                if (boolean.class.equals(f.getType())) {
+                    b = f.getBoolean(value);
+                } else if (int.class.equals(f.getType())) {
+                    b = f.getInt(value) != 0;
+                } else {
+                    continue;
+                }
+
+                writer.name(f.getName());
+                writer.value(b);
+
+            } catch (IllegalAccessException e) {
+                throw new IOException("Reflection error", e);
+            }
+        }
+        writer.endObject();
     }
-    writer.endObject();
-  }
 }

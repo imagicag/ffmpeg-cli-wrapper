@@ -22,58 +22,58 @@ import java.util.Objects;
  */
 public class LowercaseEnumTypeAdapterFactory implements TypeAdapterFactory {
 
-  private static class MyTypeAdapter<T> extends TypeAdapter<T> {
+    private static class MyTypeAdapter<T> extends TypeAdapter<T> {
 
-    // T is a Enum, thus immutable, however, we can't enforce that type due to the
-    // TypeAdapterFactory interface
-    private final Map<String, T> lowercaseToEnum;
+        // T is a Enum, thus immutable, however, we can't enforce that type due to the
+        // TypeAdapterFactory interface
+        private final Map<String, T> lowercaseToEnum;
 
-    public MyTypeAdapter(Map<String, T> lowercaseToEnum) {
-      this.lowercaseToEnum = Map.copyOf(lowercaseToEnum);
+        public MyTypeAdapter(Map<String, T> lowercaseToEnum) {
+            this.lowercaseToEnum = Map.copyOf(lowercaseToEnum);
+        }
+
+        @Override
+        public void write(JsonWriter out, T value) throws IOException {
+            Objects.requireNonNull(out);
+
+            if (value == null) {
+                out.nullValue();
+            } else {
+                out.value(toLowercase(value));
+            }
+        }
+
+        @Override
+        public T read(JsonReader reader) throws IOException {
+            Objects.requireNonNull(reader);
+
+            if (reader.peek() == JsonToken.NULL) {
+                reader.nextNull();
+                return null;
+            }
+            return lowercaseToEnum.get(reader.nextString());
+        }
     }
 
     @Override
-    public void write(JsonWriter out, T value) throws IOException {
-      Objects.requireNonNull(out);
+    public <T> TypeAdapter<T> create(Gson gson, TypeToken<T> type) {
+        Objects.requireNonNull(type);
 
-      if (value == null) {
-        out.nullValue();
-      } else {
-        out.value(toLowercase(value));
-      }
+        Class<T> rawType = (Class<T>) type.getRawType();
+        if (!rawType.isEnum()) {
+            return null;
+        }
+
+        // Setup mapping of consts
+        final Map<String, T> lowercaseToEnum = new HashMap<>();
+        for (T constant : rawType.getEnumConstants()) {
+            lowercaseToEnum.put(toLowercase(constant), constant);
+        }
+
+        return new MyTypeAdapter<T>(lowercaseToEnum);
     }
 
-    @Override
-    public T read(JsonReader reader) throws IOException {
-      Objects.requireNonNull(reader);
-
-      if (reader.peek() == JsonToken.NULL) {
-        reader.nextNull();
-        return null;
-      }
-      return lowercaseToEnum.get(reader.nextString());
+    private static String toLowercase(Object o) {
+        return Objects.requireNonNull(o).toString().toLowerCase(Locale.UK);
     }
-  }
-
-  @Override
-  public <T> TypeAdapter<T> create(Gson gson, TypeToken<T> type) {
-    Objects.requireNonNull(type);
-
-    Class<T> rawType = (Class<T>) type.getRawType();
-    if (!rawType.isEnum()) {
-      return null;
-    }
-
-    // Setup mapping of consts
-    final Map<String, T> lowercaseToEnum = new HashMap<>();
-    for (T constant : rawType.getEnumConstants()) {
-      lowercaseToEnum.put(toLowercase(constant), constant);
-    }
-
-    return new MyTypeAdapter<T>(lowercaseToEnum);
-  }
-
-  private static String toLowercase(Object o) {
-    return Objects.requireNonNull(o).toString().toLowerCase(Locale.UK);
-  }
 }

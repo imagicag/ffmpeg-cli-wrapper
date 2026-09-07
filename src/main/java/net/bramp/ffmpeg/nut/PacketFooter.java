@@ -3,21 +3,21 @@ package net.bramp.ffmpeg.nut;
 import java.io.IOException;
 
 public class PacketFooter {
-  int checksum;
+    int checksum;
 
-  public void read(NutDataInputStream in) throws IOException {
-    long expected = in.getCRC();
-    checksum = in.readInt();
-    if (checksum != expected) {
-      // throw new IOException(String.format("invalid packet checksum %X want %X", expected,
-      // checksum));
-      Packet.LOG.debug("invalid packet checksum {} want {}", expected, checksum);
+    public void read(NutDataInputStream in) throws IOException {
+        long expected = in.getCRC();
+        checksum = in.readInt();
+        if (checksum != expected) {
+            // throw new IOException(String.format("invalid packet checksum %X want %X", expected,
+            // checksum));
+            Packet.LOG.debug("invalid packet checksum {} want {}", expected, checksum);
+        }
+        in.resetCRC();
     }
-    in.resetCRC();
-  }
 
-  @Override
-  public String toString() {
-    return "PacketFooter{checksum=" + checksum + '}';
-  }
+    @Override
+    public String toString() {
+        return "PacketFooter{checksum=" + checksum + '}';
+    }
 }

@@ -12,17 +12,17 @@ import org.junit.Test;
 
 public class StreamProgressParserTest {
 
-  RecordingProgressListener listener = new RecordingProgressListener();
+    RecordingProgressListener listener = new RecordingProgressListener();
 
-  @Test
-  public void testNormal() throws IOException {
-    listener.reset();
+    @Test
+    public void testNormal() throws IOException {
+        listener.reset();
 
-    StreamProgressParser parser = new StreamProgressParser(listener);
+        StreamProgressParser parser = new StreamProgressParser(listener);
 
-    InputStream inputStream = combineResource(Progresses.allFiles);
-    parser.processStream(inputStream);
+        InputStream inputStream = combineResource(Progresses.allFiles);
+        parser.processStream(inputStream);
 
-    assertThat(listener.progesses, equalTo((List<Progress>) Progresses.allProgresses));
-  }
+        assertThat(listener.progesses, equalTo((List<Progress>) Progresses.allProgresses));
+    }
 }

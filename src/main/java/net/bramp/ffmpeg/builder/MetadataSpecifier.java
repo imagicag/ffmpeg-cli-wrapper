@@ -15,61 +15,62 @@ import java.util.Objects;
  */
 public class MetadataSpecifier {
 
-  final String spec;
+    final String spec;
 
-  private MetadataSpecifier(String spec) {
-    this.spec = Objects.requireNonNull(spec);
-  }
-
-  private MetadataSpecifier(String prefix, int index) {
-    this.spec = Objects.requireNonNull(prefix) + ":" + index;
-  }
-
-  private MetadataSpecifier(String prefix, StreamSpecifier spec) {
-    this.spec = Objects.requireNonNull(prefix) + ":" + Objects.requireNonNull(spec).spec();
-  }
-
-  public String spec() {
-    return spec;
-  }
-
-  public static String checkValidKey(String key) {
-    Objects.requireNonNull(key);
-    if (key.isEmpty()) {
-      throw new IllegalArgumentException("key must not be empty");
+    private MetadataSpecifier(String spec) {
+        this.spec = Objects.requireNonNull(spec);
     }
-    if (!key.matches("\\w+")) {
-      throw new IllegalArgumentException("key must only contain letters, numbers or _");
+
+    private MetadataSpecifier(String prefix, int index) {
+        this.spec = Objects.requireNonNull(prefix) + ":" + index;
     }
-    return key;
-  }
 
-  public static MetadataSpecifier global() {
-    return new MetadataSpecifier("g");
-  }
+    private MetadataSpecifier(String prefix, StreamSpecifier spec) {
+        this.spec = Objects.requireNonNull(prefix) + ":"
+                + Objects.requireNonNull(spec).spec();
+    }
 
-  public static MetadataSpecifier chapter(int index) {
-    return new MetadataSpecifier("c", index);
-  }
+    public String spec() {
+        return spec;
+    }
 
-  public static MetadataSpecifier program(int index) {
-    return new MetadataSpecifier("p", index);
-  }
+    public static String checkValidKey(String key) {
+        Objects.requireNonNull(key);
+        if (key.isEmpty()) {
+            throw new IllegalArgumentException("key must not be empty");
+        }
+        if (!key.matches("\\w+")) {
+            throw new IllegalArgumentException("key must only contain letters, numbers or _");
+        }
+        return key;
+    }
 
-  public static MetadataSpecifier stream(int index) {
-    return new MetadataSpecifier("s", StreamSpecifier.stream(index));
-  }
+    public static MetadataSpecifier global() {
+        return new MetadataSpecifier("g");
+    }
 
-  public static MetadataSpecifier stream(StreamSpecifierType type) {
-    return new MetadataSpecifier("s", StreamSpecifier.stream(type));
-  }
+    public static MetadataSpecifier chapter(int index) {
+        return new MetadataSpecifier("c", index);
+    }
 
-  public static MetadataSpecifier stream(StreamSpecifierType stream_type, int stream_index) {
-    return new MetadataSpecifier("s", StreamSpecifier.stream(stream_type, stream_index));
-  }
+    public static MetadataSpecifier program(int index) {
+        return new MetadataSpecifier("p", index);
+    }
 
-  public static MetadataSpecifier stream(StreamSpecifier spec) {
-    Objects.requireNonNull(spec);
-    return new MetadataSpecifier("s", spec);
-  }
+    public static MetadataSpecifier stream(int index) {
+        return new MetadataSpecifier("s", StreamSpecifier.stream(index));
+    }
+
+    public static MetadataSpecifier stream(StreamSpecifierType type) {
+        return new MetadataSpecifier("s", StreamSpecifier.stream(type));
+    }
+
+    public static MetadataSpecifier stream(StreamSpecifierType stream_type, int stream_index) {
+        return new MetadataSpecifier("s", StreamSpecifier.stream(stream_type, stream_index));
+    }
+
+    public static MetadataSpecifier stream(StreamSpecifier spec) {
+        Objects.requireNonNull(spec);
+        return new MetadataSpecifier("s", spec);
+    }
 }

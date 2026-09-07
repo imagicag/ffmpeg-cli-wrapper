@@ -3,10 +3,10 @@ package ch.imagic.ffmpeg.progress;
 import static ch.imagic.ffmpeg.Helper.combineResource;
 import static org.junit.Assert.assertEquals;
 
+import ch.imagic.ffmpeg.fixtures.Progresses;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
-import ch.imagic.ffmpeg.fixtures.Progresses;
 import org.junit.Test;
 
 public class StreamProgressParserTest {

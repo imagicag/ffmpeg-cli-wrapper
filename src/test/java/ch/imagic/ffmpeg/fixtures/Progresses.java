@@ -1,7 +1,7 @@
 package ch.imagic.ffmpeg.fixtures;
 
-import java.util.List;
 import ch.imagic.ffmpeg.progress.Progress;
+import java.util.List;
 
 public final class Progresses {
 

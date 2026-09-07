@@ -1,21 +1,25 @@
 package ch.imagic.ffmpeg.lang;
 
+import ch.imagic.ffmpeg.process.FFMpegProcess;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.OptionalInt;
 
 /**
  * A Mock Process, which exits with zero, and returns the provided streams.
  *
  */
-class MockProcess extends Process {
+class MockProcess implements FFMpegProcess {
     final OutputStream stdin;
     final InputStream stdout;
     final InputStream stderr;
 
     public MockProcess(InputStream stdout) {
-        this.stdin = null; // TODO make this something
+        this.stdin = new ByteArrayOutputStream();
         this.stdout = stdout;
-        this.stderr = null; // TODO make this return nothing.
+        this.stderr = new ByteArrayInputStream(new byte[0]);
     }
 
     public MockProcess(OutputStream stdin, InputStream stdout, InputStream stderr) {
@@ -25,30 +29,30 @@ class MockProcess extends Process {
     }
 
     @Override
-    public OutputStream getOutputStream() {
-        return stdin;
+    public long pid() {
+        return 0;
     }
 
     @Override
-    public InputStream getInputStream() {
+    public boolean await(long timeoutInMillis) throws InterruptedException {
+        return true;
+    }
+
+    @Override
+    public OptionalInt exitCode() {
+        return OptionalInt.of(0);
+    }
+
+    @Override
+    public InputStream stdout() {
         return stdout;
     }
 
     @Override
-    public InputStream getErrorStream() {
+    public InputStream stderr() {
         return stderr;
     }
 
     @Override
-    public int waitFor() throws InterruptedException {
-        return 0;
-    }
-
-    @Override
-    public int exitValue() {
-        return 0;
-    }
-
-    @Override
-    public void destroy() {}
+    public void close() {}
 }

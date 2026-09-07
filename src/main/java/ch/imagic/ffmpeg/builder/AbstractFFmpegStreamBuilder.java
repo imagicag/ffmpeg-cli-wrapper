@@ -5,16 +5,16 @@ import static ch.imagic.ffmpeg.Preconditions.checkNotEmpty;
 import static ch.imagic.ffmpeg.Preconditions.checkValidStream;
 import static ch.imagic.ffmpeg.builder.MetadataSpecifier.checkValidKey;
 
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 import ch.imagic.ffmpeg.nut.Fraction;
 import ch.imagic.ffmpeg.options.AudioEncodingOptions;
 import ch.imagic.ffmpeg.options.EncodingOptions;
 import ch.imagic.ffmpeg.options.MainEncodingOptions;
 import ch.imagic.ffmpeg.options.VideoEncodingOptions;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 /**
  * This abstract class holds flags that are both applicable to input and output streams in the

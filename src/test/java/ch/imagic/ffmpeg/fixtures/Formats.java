@@ -1,7 +1,7 @@
 package ch.imagic.ffmpeg.fixtures;
 
-import java.util.List;
 import ch.imagic.ffmpeg.info.Format;
+import java.util.List;
 
 /**
  * Class that contains all formats as defined in the unit tests This should not be used to test if a

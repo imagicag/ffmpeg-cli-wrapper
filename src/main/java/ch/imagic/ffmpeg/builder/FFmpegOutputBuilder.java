@@ -2,14 +2,14 @@ package ch.imagic.ffmpeg.builder;
 
 import static ch.imagic.ffmpeg.Preconditions.checkNotEmpty;
 
-import java.net.URI;
-import java.util.List;
-import java.util.regex.Pattern;
 import ch.imagic.ffmpeg.options.AudioEncodingOptions;
 import ch.imagic.ffmpeg.options.EncodingOptions;
 import ch.imagic.ffmpeg.options.MainEncodingOptions;
 import ch.imagic.ffmpeg.options.VideoEncodingOptions;
 import ch.imagic.ffmpeg.probe.FFmpegProbeResult;
+import java.net.URI;
+import java.util.List;
+import java.util.regex.Pattern;
 
 /** Builds a representation of a single output/encoding setting */
 public class FFmpegOutputBuilder extends AbstractFFmpegStreamBuilder<FFmpegOutputBuilder> {

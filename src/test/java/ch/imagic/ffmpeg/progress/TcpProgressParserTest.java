@@ -4,13 +4,13 @@ import static ch.imagic.ffmpeg.Helper.combineResource;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import ch.imagic.ffmpeg.fixtures.Progresses;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.net.URISyntaxException;
 import java.util.List;
-import ch.imagic.ffmpeg.fixtures.Progresses;
 import org.junit.Test;
 
 public class TcpProgressParserTest extends AbstractProgressParserTest {

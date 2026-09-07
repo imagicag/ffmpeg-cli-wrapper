@@ -4,14 +4,16 @@ import static ch.imagic.ffmpeg.FFmpegTest.argThatHasItem;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
 
-import com.google.gson.Gson;
-import java.io.IOException;
 import ch.imagic.ffmpeg.fixtures.Samples;
 import ch.imagic.ffmpeg.lang.NewProcessAnswer;
+import ch.imagic.ffmpeg.process.FFMpegProcessFactory;
+import com.google.gson.Gson;
+import java.io.IOException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
 /** Tests what happens when using avprobe */
@@ -19,7 +21,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 public class FFprobeAvTest {
 
     @Mock
-    ProcessFunction runFunc;
+    FFMpegProcessFactory runFunc;
 
     FFprobe ffprobe;
 
@@ -27,7 +29,8 @@ public class FFprobeAvTest {
 
     @Before
     public void before() throws IOException {
-        when(runFunc.run(argThatHasItem("-version"))).thenAnswer(new NewProcessAnswer("avprobe-version"));
+        when(runFunc.createProcess(Mockito.any(), Mockito.any(), argThatHasItem("-version")))
+                .thenAnswer(new NewProcessAnswer("avprobe-version"));
 
         ffprobe = new FFprobe(runFunc);
     }

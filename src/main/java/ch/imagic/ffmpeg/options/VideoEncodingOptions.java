@@ -1,7 +1,7 @@
 package ch.imagic.ffmpeg.options;
 
-import java.beans.ConstructorProperties;
 import ch.imagic.ffmpeg.nut.Fraction;
+import java.beans.ConstructorProperties;
 
 /**
  * Encoding options for video

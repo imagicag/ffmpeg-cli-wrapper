@@ -1,12 +1,12 @@
 package ch.imagic.ffmpeg.nut;
 
+import ch.imagic.ffmpeg.io.CRC32InputStream;
 import java.io.DataInput;
 import java.io.DataInputStream;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Objects;
-import ch.imagic.ffmpeg.io.CRC32InputStream;
 
 /** A DataInputStream that implements a couple of custom FFmpeg Nut datatypes. */
 public class NutDataInputStream implements DataInput {

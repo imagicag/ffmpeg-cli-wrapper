@@ -1,14 +1,18 @@
 package ch.imagic.ffmpeg;
 
+import ch.imagic.ffmpeg.probe.FFmpegProbeResult;
+import ch.imagic.ffmpeg.process.FFMpegProcess;
+import ch.imagic.ffmpeg.process.FFMpegProcessFactory;
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
+import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
-import java.io.Reader;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
-import ch.imagic.ffmpeg.io.LoggingFilterReader;
-import ch.imagic.ffmpeg.probe.FFmpegProbeResult;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.concurrent.Executor;
 
 /**
  * Wrapper around FFprobe
@@ -16,27 +20,36 @@ import org.slf4j.LoggerFactory;
  */
 public class FFprobe extends FFcommon {
 
-    static final Logger LOG = LoggerFactory.getLogger(FFprobe.class);
-
-    static final String FFPROBE = "ffprobe";
-    static final String DEFAULT_PATH = java.util.Objects.requireNonNullElse(System.getenv("FFPROBE"), FFPROBE);
-
     static final Gson gson = FFmpegUtils.getGson();
 
     public FFprobe() throws IOException {
-        this(DEFAULT_PATH, new RunProcessFunction());
+        this(
+                getDefaultExecutor(),
+                FFMpegLogger.noop(),
+                getDefaultFfprobeBinary(),
+                FFMpegProcessFactory.defaultFactory());
     }
 
-    public FFprobe(ProcessFunction runFunction) throws IOException {
-        this(DEFAULT_PATH, runFunction);
+    public FFprobe(File ffmpegBinary, FFMpegProcessFactory processFactory) throws IOException {
+        this(getDefaultExecutor(), FFMpegLogger.noop(), ffmpegBinary, processFactory);
     }
 
-    public FFprobe(String path) throws IOException {
-        this(path, new RunProcessFunction());
+    public FFprobe(FFMpegProcessFactory processFactory) throws IOException {
+        this(getDefaultExecutor(), FFMpegLogger.noop(), getDefaultFfprobeBinary(), processFactory);
     }
-
-    public FFprobe(String path, ProcessFunction runFunction) {
-        super(path, runFunction);
+    /**
+     * Creates a FFProbe execution instance.
+     *
+     * @param executor executor that will be used to create asynchronous tasks to monitor the status of the ffmpeg binary.
+     *                 The executor MUST be capable of running at least 4 more tasks in parallel per concurrent execution.
+     * @param logger logger facade used for logging.
+     * @param ffprobeBinary File to the binary. NOTE: java.io.File#getAbsolutePath will be directly fed into ProcessBuilder and executed, DO NOT USE BINARIES OR PATHS YOU DON'T TRUST
+     * @param processFactory The factory function for the process. BasicRunFFMpegProcessFactory is sufficient for most uses.
+     * @throws IOException if an error occurs determining the ffmpeg version.
+     */
+    public FFprobe(Executor executor, FFMpegLogger logger, File ffprobeBinary, FFMpegProcessFactory processFactory)
+            throws IOException {
+        super(executor, logger, ffprobeBinary, processFactory);
     }
 
     public FFmpegProbeResult probe(String mediaPath) throws IOException {
@@ -72,8 +85,7 @@ public class FFprobe extends FFcommon {
         super.run(args);
     }
 
-    // TODO Add Probe Inputstream
-    public FFmpegProbeResult probe(String mediaPath, String userAgent) throws IOException {
+    protected JsonElement probeGson(String mediaPath, String userAgent) throws IOException {
         checkIfFFprobe();
 
         List<String> args = new ArrayList<>();
@@ -82,7 +94,7 @@ public class FFprobe extends FFcommon {
         // .add("--show_packets")
         // .add("--show_frames")
 
-        args.addAll(List.of(path, "-v", "quiet"));
+        args.addAll(List.of(getAbsolutePath(), "-v", "quiet"));
 
         if (userAgent != null) {
             args.addAll(List.of("-user_agent", userAgent));
@@ -91,25 +103,27 @@ public class FFprobe extends FFcommon {
         args.addAll(List.of(
                 "-print_format", "json", "-show_error", "-show_format", "-show_streams", "-show_chapters", mediaPath));
 
-        Process p = runFunc.run(List.copyOf(args));
-        try {
-            Reader reader = wrapInReader(p);
-            if (LOG.isDebugEnabled()) {
-                reader = new LoggingFilterReader(reader, LOG);
-            }
+        try (FFMpegProcess p = runFunc.createProcess(executor, logger, List.copyOf(args));
+                BufferedReader r = p.stdoutReader()) {
+            var errorReader = pipeOne(p.stderr(), OutputStream.nullOutputStream());
+            JsonElement element = JsonParser.parseReader(r);
 
-            FFmpegProbeResult result = gson.fromJson(reader, FFmpegProbeResult.class);
-
+            waitAndthrowOnError(errorReader);
             throwOnError(p);
-
-            if (result == null) {
-                throw new IllegalStateException("Gson returned null, which shouldn't happen :(");
-            }
-
-            return result;
-
-        } finally {
-            p.destroy();
+            return element;
         }
+    }
+
+    public String probeJson(String mediaPath, String userAgent) throws IOException {
+        return probeGson(mediaPath, userAgent).toString();
+    }
+
+    public FFmpegProbeResult probe(String mediaPath, String userAgent) throws IOException {
+        return probe(mediaPath, userAgent, FFmpegProbeResult.class);
+    }
+
+    public <T> T probe(String mediaPath, String userAgent, Class<T> clazz) throws IOException {
+        JsonElement elem = probeGson(mediaPath, userAgent);
+        return gson.fromJson(elem, clazz);
     }
 }

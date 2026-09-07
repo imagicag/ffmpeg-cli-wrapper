@@ -1,7 +1,7 @@
 package ch.imagic.ffmpeg.fixtures;
 
-import java.util.List;
 import ch.imagic.ffmpeg.info.Codec;
+import java.util.List;
 
 /**
  * Class that contains all codecs as defined in the unit tests This should not be used as a concise

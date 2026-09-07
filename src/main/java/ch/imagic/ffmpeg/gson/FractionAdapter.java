@@ -1,11 +1,11 @@
 package ch.imagic.ffmpeg.gson;
 
+import ch.imagic.ffmpeg.nut.Fraction;
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
 import java.io.IOException;
-import ch.imagic.ffmpeg.nut.Fraction;
 
 /**
  * GSON TypeAdapter for Apache Commons Math Fraction Object

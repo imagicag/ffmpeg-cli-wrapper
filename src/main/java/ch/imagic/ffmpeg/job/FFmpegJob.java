@@ -1,8 +1,8 @@
 package ch.imagic.ffmpeg.job;
 
-import java.util.Objects;
 import ch.imagic.ffmpeg.FFmpeg;
 import ch.imagic.ffmpeg.progress.ProgressListener;
+import java.util.Objects;
 
 /**
  */

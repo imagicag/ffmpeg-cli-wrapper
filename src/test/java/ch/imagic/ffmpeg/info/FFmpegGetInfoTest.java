@@ -5,28 +5,31 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 
+import ch.imagic.ffmpeg.FFmpeg;
+import ch.imagic.ffmpeg.lang.NewProcessAnswer;
+import ch.imagic.ffmpeg.process.FFMpegProcessFactory;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import ch.imagic.ffmpeg.FFmpeg;
-import ch.imagic.ffmpeg.ProcessFunction;
-import ch.imagic.ffmpeg.lang.NewProcessAnswer;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
 public class FFmpegGetInfoTest {
     @Mock
-    ProcessFunction runFunc;
+    FFMpegProcessFactory runFunc;
 
     @Before
     public void before() throws IOException {
-        when(runFunc.run(argThatHasItem("-version"))).thenAnswer(new NewProcessAnswer("ffmpeg-version"));
+        when(runFunc.createProcess(Mockito.any(), Mockito.any(), argThatHasItem("-version")))
+                .thenAnswer(new NewProcessAnswer("ffmpeg-version"));
 
-        when(runFunc.run(argThatHasItem("-codecs"))).thenAnswer(new NewProcessAnswer("ffmpeg-codecs"));
+        when(runFunc.createProcess(Mockito.any(), Mockito.any(), argThatHasItem("-codecs")))
+                .thenAnswer(new NewProcessAnswer("ffmpeg-codecs"));
     }
 
     @Test
@@ -37,7 +40,7 @@ public class FFmpegGetInfoTest {
         List<Codec> dataCodecs = new ArrayList<>();
         List<Codec> otherCodecs = new ArrayList<>();
 
-        FFmpeg ffmpeg = new FFmpeg("ffmpeg", runFunc);
+        FFmpeg ffmpeg = new FFmpeg(runFunc);
         ffmpeg.codecs();
 
         for (Codec codec : ffmpeg.codecs()) {

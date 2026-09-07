@@ -4,25 +4,27 @@ import static ch.imagic.ffmpeg.FFmpegTest.argThatHasItem;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
-import com.google.gson.Gson;
-import java.io.IOException;
 import ch.imagic.ffmpeg.fixtures.Samples;
 import ch.imagic.ffmpeg.lang.NewProcessAnswer;
 import ch.imagic.ffmpeg.nut.Fraction;
 import ch.imagic.ffmpeg.probe.FFmpegChapter;
 import ch.imagic.ffmpeg.probe.FFmpegProbeResult;
 import ch.imagic.ffmpeg.probe.FFmpegStream;
+import ch.imagic.ffmpeg.process.FFMpegProcessFactory;
+import com.google.gson.Gson;
+import java.io.IOException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
 public class FFprobeTest {
 
     @Mock
-    ProcessFunction runFunc;
+    FFMpegProcessFactory runFunc;
 
     FFprobe ffprobe;
 
@@ -30,24 +32,25 @@ public class FFprobeTest {
 
     @Before
     public void before() throws IOException {
-        when(runFunc.run(argThatHasItem("-version"))).thenAnswer(new NewProcessAnswer("ffprobe-version"));
+        when(runFunc.createProcess(Mockito.any(), Mockito.any(), argThatHasItem("-version")))
+                .thenAnswer(new NewProcessAnswer("ffprobe-version"));
 
-        when(runFunc.run(argThatHasItem(Samples.big_buck_bunny_720p_1mb)))
+        when(runFunc.createProcess(Mockito.any(), Mockito.any(), argThatHasItem(Samples.big_buck_bunny_720p_1mb)))
                 .thenAnswer(new NewProcessAnswer("ffprobe-big_buck_bunny_720p_1mb.mp4"));
 
-        when(runFunc.run(argThatHasItem(Samples.always_on_my_mind)))
+        when(runFunc.createProcess(Mockito.any(), Mockito.any(), argThatHasItem(Samples.always_on_my_mind)))
                 .thenAnswer(new NewProcessAnswer("ffprobe-always_on_my_mind.mp4"));
 
-        when(runFunc.run(argThatHasItem(Samples.start_pts_test)))
+        when(runFunc.createProcess(Mockito.any(), Mockito.any(), argThatHasItem(Samples.start_pts_test)))
                 .thenAnswer(new NewProcessAnswer("ffprobe-start_pts_test"));
 
-        when(runFunc.run(argThatHasItem(Samples.divide_by_zero)))
+        when(runFunc.createProcess(Mockito.any(), Mockito.any(), argThatHasItem(Samples.divide_by_zero)))
                 .thenAnswer(new NewProcessAnswer("ffprobe-divide-by-zero"));
 
-        when(runFunc.run(argThatHasItem(Samples.book_with_chapters)))
+        when(runFunc.createProcess(Mockito.any(), Mockito.any(), argThatHasItem(Samples.book_with_chapters)))
                 .thenAnswer(new NewProcessAnswer("book_with_chapters.m4b"));
 
-        when(runFunc.run(argThatHasItem(Samples.side_data_list)))
+        when(runFunc.createProcess(Mockito.any(), Mockito.any(), argThatHasItem(Samples.side_data_list)))
                 .thenAnswer(new NewProcessAnswer("ffprobe-side_data_list"));
 
         ffprobe = new FFprobe(runFunc);
@@ -58,7 +61,7 @@ public class FFprobeTest {
         assertEquals("ffprobe version 3.0.2 Copyright (c) 2007-2016 the FFmpeg developers", ffprobe.version());
         assertEquals("ffprobe version 3.0.2 Copyright (c) 2007-2016 the FFmpeg developers", ffprobe.version());
 
-        verify(runFunc, times(1)).run(argThatHasItem("-version"));
+        verify(runFunc, times(1)).createProcess(Mockito.any(), Mockito.any(), argThatHasItem("-version"));
     }
 
     @Test

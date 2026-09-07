@@ -1,25 +1,16 @@
 package ch.imagic.ffmpeg;
 
-import java.io.IOException;
-import java.util.Objects;
 import ch.imagic.ffmpeg.builder.FFmpegBuilder;
 import ch.imagic.ffmpeg.job.FFmpegJob;
 import ch.imagic.ffmpeg.job.SinglePassFFmpegJob;
 import ch.imagic.ffmpeg.job.TwoPassFFmpegJob;
 import ch.imagic.ffmpeg.progress.ProgressListener;
+import java.util.Objects;
 
 public class FFmpegExecutor {
 
     final FFmpeg ffmpeg;
     final FFprobe ffprobe;
-
-    public FFmpegExecutor() throws IOException {
-        this(new FFmpeg(), new FFprobe());
-    }
-
-    public FFmpegExecutor(FFmpeg ffmpeg) throws IOException {
-        this(ffmpeg, new FFprobe());
-    }
 
     public FFmpegExecutor(FFmpeg ffmpeg, FFprobe ffprobe) {
         this.ffmpeg = Objects.requireNonNull(ffmpeg);

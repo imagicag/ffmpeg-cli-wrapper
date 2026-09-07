@@ -2,9 +2,6 @@ package ch.imagic.ffmpeg;
 
 import static org.junit.Assert.assertEquals;
 
-import java.io.IOException;
-import java.util.Locale;
-import java.util.concurrent.TimeUnit;
 import ch.imagic.ffmpeg.builder.FFmpegBuilder;
 import ch.imagic.ffmpeg.fixtures.Samples;
 import ch.imagic.ffmpeg.job.FFmpegJob;
@@ -13,6 +10,9 @@ import ch.imagic.ffmpeg.probe.FFmpegProbeResult;
 import ch.imagic.ffmpeg.probe.FFmpegStream;
 import ch.imagic.ffmpeg.progress.Progress;
 import ch.imagic.ffmpeg.progress.ProgressListener;
+import java.io.IOException;
+import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 import org.junit.Test;
 
 /** Ensures the examples in the README continue to work. */
@@ -26,8 +26,8 @@ public class ReadmeTest {
 
     @Test
     public void testCreateFF() throws IOException {
-        FFmpeg ffmpeg = new FFmpeg(FFmpeg.DEFAULT_PATH);
-        FFprobe ffprobe = new FFprobe(FFmpeg.DEFAULT_PATH);
+        FFmpeg ffmpeg = new FFmpeg();
+        FFprobe ffprobe = new FFprobe();
 
         // Construct them, and do nothing with them
     }

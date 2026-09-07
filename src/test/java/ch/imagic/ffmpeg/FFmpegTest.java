@@ -4,32 +4,38 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
 
-import java.io.IOException;
-import java.util.List;
 import ch.imagic.ffmpeg.fixtures.Codecs;
 import ch.imagic.ffmpeg.fixtures.Formats;
 import ch.imagic.ffmpeg.fixtures.PixelFormats;
 import ch.imagic.ffmpeg.lang.NewProcessAnswer;
+import ch.imagic.ffmpeg.process.FFMpegProcessFactory;
+import java.io.IOException;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
 public class FFmpegTest {
 
     @Mock
-    ProcessFunction runFunc;
+    FFMpegProcessFactory runFunc;
 
     FFmpeg ffmpeg;
 
     @Before
     public void before() throws IOException {
-        when(runFunc.run(argThatHasItem("-version"))).thenAnswer(new NewProcessAnswer("ffmpeg-version"));
-        when(runFunc.run(argThatHasItem("-formats"))).thenAnswer(new NewProcessAnswer("ffmpeg-formats"));
-        when(runFunc.run(argThatHasItem("-codecs"))).thenAnswer(new NewProcessAnswer("ffmpeg-codecs"));
-        when(runFunc.run(argThatHasItem("-pix_fmts"))).thenAnswer(new NewProcessAnswer("ffmpeg-pix_fmts"));
+        when(runFunc.createProcess(Mockito.any(), Mockito.any(), argThatHasItem("-version")))
+                .thenAnswer(new NewProcessAnswer("ffmpeg-version"));
+        when(runFunc.createProcess(Mockito.any(), Mockito.any(), argThatHasItem("-formats")))
+                .thenAnswer(new NewProcessAnswer("ffmpeg-formats"));
+        when(runFunc.createProcess(Mockito.any(), Mockito.any(), argThatHasItem("-codecs")))
+                .thenAnswer(new NewProcessAnswer("ffmpeg-codecs"));
+        when(runFunc.createProcess(Mockito.any(), Mockito.any(), argThatHasItem("-pix_fmts")))
+                .thenAnswer(new NewProcessAnswer("ffmpeg-pix_fmts"));
 
         ffmpeg = new FFmpeg(runFunc);
     }
@@ -43,7 +49,7 @@ public class FFmpegTest {
         assertEquals("ffmpeg version 0.10.9-7:0.10.9-1~raring1", ffmpeg.version());
         assertEquals("ffmpeg version 0.10.9-7:0.10.9-1~raring1", ffmpeg.version());
 
-        verify(runFunc, times(1)).run(argThatHasItem("-version"));
+        verify(runFunc, times(1)).createProcess(Mockito.any(), Mockito.any(), argThatHasItem("-version"));
     }
 
     @Test
@@ -52,7 +58,7 @@ public class FFmpegTest {
         assertEquals(Codecs.CODECS, ffmpeg.codecs());
         assertEquals(Codecs.CODECS, ffmpeg.codecs());
 
-        verify(runFunc, times(1)).run(argThatHasItem("-codecs"));
+        verify(runFunc, times(1)).createProcess(Mockito.any(), Mockito.any(), argThatHasItem("-codecs"));
     }
 
     @Test
@@ -61,7 +67,7 @@ public class FFmpegTest {
         assertEquals(Formats.FORMATS, ffmpeg.formats());
         assertEquals(Formats.FORMATS, ffmpeg.formats());
 
-        verify(runFunc, times(1)).run(argThatHasItem("-formats"));
+        verify(runFunc, times(1)).createProcess(Mockito.any(), Mockito.any(), argThatHasItem("-formats"));
     }
 
     @Test
@@ -70,6 +76,6 @@ public class FFmpegTest {
         assertEquals(PixelFormats.PIXEL_FORMATS, ffmpeg.pixelFormats());
         assertEquals(PixelFormats.PIXEL_FORMATS, ffmpeg.pixelFormats());
 
-        verify(runFunc, times(1)).run(argThatHasItem("-pix_fmts"));
+        verify(runFunc, times(1)).createProcess(Mockito.any(), Mockito.any(), argThatHasItem("-pix_fmts"));
     }
 }

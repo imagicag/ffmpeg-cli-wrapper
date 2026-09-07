@@ -2,6 +2,9 @@ package ch.imagic.ffmpeg.nut;
 
 import static org.junit.Assert.assertEquals;
 
+import ch.imagic.ffmpeg.FFmpeg;
+import ch.imagic.ffmpeg.builder.FFmpegBuilder;
+import ch.imagic.ffmpeg.fixtures.Samples;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -14,9 +17,6 @@ import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.SourceDataLine;
-import ch.imagic.ffmpeg.FFmpeg;
-import ch.imagic.ffmpeg.builder.FFmpegBuilder;
-import ch.imagic.ffmpeg.fixtures.Samples;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
@@ -49,7 +49,7 @@ public class NutReaderTest {
                 .build();
 
         List<String> newArgs = new ArrayList<>();
-        newArgs.add(FFmpeg.DEFAULT_PATH);
+        newArgs.add(new FFmpeg().getPath().getAbsolutePath());
         newArgs.addAll(args);
 
         ProcessBuilder builder = new ProcessBuilder(newArgs);

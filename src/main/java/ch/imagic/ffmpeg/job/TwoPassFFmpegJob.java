@@ -1,5 +1,8 @@
 package ch.imagic.ffmpeg.job;
 
+import ch.imagic.ffmpeg.FFmpeg;
+import ch.imagic.ffmpeg.builder.FFmpegBuilder;
+import ch.imagic.ffmpeg.progress.ProgressListener;
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
@@ -8,9 +11,6 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
-import ch.imagic.ffmpeg.FFmpeg;
-import ch.imagic.ffmpeg.builder.FFmpegBuilder;
-import ch.imagic.ffmpeg.progress.ProgressListener;
 
 public class TwoPassFFmpegJob extends FFmpegJob {
 

@@ -1,10 +1,10 @@
 package ch.imagic.ffmpeg.job;
 
-import java.util.List;
-import java.util.Objects;
 import ch.imagic.ffmpeg.FFmpeg;
 import ch.imagic.ffmpeg.builder.FFmpegBuilder;
 import ch.imagic.ffmpeg.progress.ProgressListener;
+import java.util.List;
+import java.util.Objects;
 
 public class SinglePassFFmpegJob extends FFmpegJob {
 

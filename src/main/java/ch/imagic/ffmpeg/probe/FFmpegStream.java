@@ -1,7 +1,7 @@
 package ch.imagic.ffmpeg.probe;
 
-import java.util.Map;
 import ch.imagic.ffmpeg.nut.Fraction;
+import java.util.Map;
 
 public class FFmpegStream {
 

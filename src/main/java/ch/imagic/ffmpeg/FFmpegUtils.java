@@ -1,18 +1,18 @@
 package ch.imagic.ffmpeg;
 
-import static java.util.concurrent.TimeUnit.*;
 import static ch.imagic.ffmpeg.Preconditions.checkNotEmpty;
+import static java.util.concurrent.TimeUnit.*;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import ch.imagic.ffmpeg.gson.FractionAdapter;
 import ch.imagic.ffmpeg.gson.LowercaseEnumTypeAdapterFactory;
 import ch.imagic.ffmpeg.gson.NamedBitsetAdapter;
 import ch.imagic.ffmpeg.nut.Fraction;
 import ch.imagic.ffmpeg.probe.FFmpegDisposition;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /** Helper class with commonly used methods */
 public final class FFmpegUtils {

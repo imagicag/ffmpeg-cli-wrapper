@@ -2,6 +2,9 @@ package ch.imagic.ffmpeg.builder;
 
 import static ch.imagic.ffmpeg.Preconditions.checkNotEmpty;
 
+import ch.imagic.ffmpeg.FFMpegLogger;
+import ch.imagic.ffmpeg.FFmpegUtils;
+import ch.imagic.ffmpeg.probe.FFmpegProbeResult;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
@@ -9,8 +12,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
-import ch.imagic.ffmpeg.FFmpegUtils;
-import ch.imagic.ffmpeg.probe.FFmpegProbeResult;
 
 /**
  * Builds a ffmpeg command line

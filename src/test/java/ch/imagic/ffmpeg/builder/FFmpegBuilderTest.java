@@ -10,14 +10,14 @@ import static ch.imagic.ffmpeg.builder.StreamSpecifier.usable;
 import static ch.imagic.ffmpeg.builder.StreamSpecifierType.*;
 import static org.junit.Assert.assertEquals;
 
-import java.io.IOException;
-import java.net.URI;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
 import ch.imagic.ffmpeg.options.AudioEncodingOptions;
 import ch.imagic.ffmpeg.options.EncodingOptions;
 import ch.imagic.ffmpeg.options.MainEncodingOptions;
 import ch.imagic.ffmpeg.options.VideoEncodingOptions;
+import java.io.IOException;
+import java.net.URI;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 import org.junit.Test;
 
 /**

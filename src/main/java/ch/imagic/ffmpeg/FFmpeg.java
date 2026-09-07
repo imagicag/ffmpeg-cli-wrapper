@@ -1,30 +1,32 @@
 package ch.imagic.ffmpeg;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import ch.imagic.ffmpeg.builder.FFmpegBuilder;
 import ch.imagic.ffmpeg.info.Codec;
 import ch.imagic.ffmpeg.info.Format;
 import ch.imagic.ffmpeg.info.PixelFormat;
 import ch.imagic.ffmpeg.nut.Fraction;
+import ch.imagic.ffmpeg.process.FFMpegProcess;
+import ch.imagic.ffmpeg.process.FFMpegProcessFactory;
 import ch.imagic.ffmpeg.progress.ProgressListener;
 import ch.imagic.ffmpeg.progress.ProgressParser;
 import ch.imagic.ffmpeg.progress.TcpProgressParser;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.Executor;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Wrapper around FFmpeg
  *
  */
 public class FFmpeg extends FFcommon {
-
-    public static final String FFMPEG = "ffmpeg";
-    public static final String DEFAULT_PATH = Objects.requireNonNullElse(System.getenv("FFMPEG"), FFMPEG);
 
     public static final Fraction FPS_30 = Fraction.getFraction(30, 1);
     public static final Fraction FPS_29_97 = Fraction.getFraction(30000, 1001);
@@ -80,19 +82,34 @@ public class FFmpeg extends FFcommon {
     private List<PixelFormat> pixelFormats = null;
 
     public FFmpeg() throws IOException {
-        this(DEFAULT_PATH, new RunProcessFunction());
+        this(
+                getDefaultExecutor(),
+                FFMpegLogger.noop(),
+                getDefaultFFMPEGBinary(),
+                FFMpegProcessFactory.defaultFactory());
     }
 
-    public FFmpeg(ProcessFunction runFunction) throws IOException {
-        this(DEFAULT_PATH, runFunction);
+    public FFmpeg(File ffmpegBinary, FFMpegProcessFactory processFactory) throws IOException {
+        this(getDefaultExecutor(), FFMpegLogger.noop(), ffmpegBinary, processFactory);
     }
 
-    public FFmpeg(String path) throws IOException {
-        this(path, new RunProcessFunction());
+    public FFmpeg(FFMpegProcessFactory processFactory) throws IOException {
+        this(getDefaultExecutor(), FFMpegLogger.noop(), getDefaultFFMPEGBinary(), processFactory);
     }
 
-    public FFmpeg(String path, ProcessFunction runFunction) throws IOException {
-        super(path, runFunction);
+    /**
+     * Creates a FFMPEG execution instance.
+     *
+     * @param executor executor that will be used to create asynchronous tasks to monitor the status of the ffmpeg binary.
+     *                 The executor MUST be capable of running at least 4 more tasks in parallel per concurrent execution.
+     * @param logger logger facade used for logging.
+     * @param ffmpegBinary File to the binary. NOTE: java.io.File#getAbsolutePath will be directly fed into ProcessBuilder and executed, DO NOT USE BINARIES OR PATHS YOU DON'T TRUST
+     * @param processFactory The factory function for the process. BasicRunFFMpegProcessFactory is sufficient for most uses.
+     * @throws IOException if an error occurs determining the ffmpeg version.
+     */
+    public FFmpeg(Executor executor, FFMpegLogger logger, File ffmpegBinary, FFMpegProcessFactory processFactory)
+            throws IOException {
+        super(executor, logger, ffmpegBinary, processFactory);
         version();
     }
 
@@ -125,9 +142,10 @@ public class FFmpeg extends FFcommon {
         if (this.codecs == null) {
             codecs = new ArrayList<>();
 
-            Process p = runFunc.run(List.of(path, "-codecs"));
-            try {
-                BufferedReader r = wrapInReader(p);
+            try (FFMpegProcess p = runFunc.createProcess(executor, logger, List.of(getAbsolutePath(), "-codecs"));
+                    BufferedReader r = p.stdoutReader()) {
+                var errorReader = pipeOne(p.stderr(), OutputStream.nullOutputStream());
+
                 String line;
                 while ((line = r.readLine()) != null) {
                     Matcher m = CODECS_REGEX.matcher(line);
@@ -136,10 +154,9 @@ public class FFmpeg extends FFcommon {
                     codecs.add(new Codec(m.group(2), m.group(3), m.group(1)));
                 }
 
+                waitAndthrowOnError(errorReader);
                 throwOnError(p);
                 this.codecs = List.copyOf(codecs);
-            } finally {
-                p.destroy();
             }
         }
 
@@ -151,10 +168,9 @@ public class FFmpeg extends FFcommon {
 
         if (this.formats == null) {
             formats = new ArrayList<>();
-
-            Process p = runFunc.run(List.of(path, "-formats"));
-            try {
-                BufferedReader r = wrapInReader(p);
+            try (FFMpegProcess p = runFunc.createProcess(executor, logger, List.of(getAbsolutePath(), "-formats"));
+                    BufferedReader r = p.stdoutReader()) {
+                var errorReader = pipeOne(p.stderr(), OutputStream.nullOutputStream());
                 String line;
                 while ((line = r.readLine()) != null) {
                     Matcher m = FORMATS_REGEX.matcher(line);
@@ -163,10 +179,9 @@ public class FFmpeg extends FFcommon {
                     formats.add(new Format(m.group(2), m.group(3), m.group(1)));
                 }
 
+                waitAndthrowOnError(errorReader);
                 throwOnError(p);
                 this.formats = List.copyOf(formats);
-            } finally {
-                p.destroy();
             }
         }
         return formats;
@@ -178,9 +193,9 @@ public class FFmpeg extends FFcommon {
         if (this.pixelFormats == null) {
             pixelFormats = new ArrayList<>();
 
-            Process p = runFunc.run(List.of(path, "-pix_fmts"));
-            try {
-                BufferedReader r = wrapInReader(p);
+            try (FFMpegProcess p = runFunc.createProcess(executor, logger, List.of(getAbsolutePath(), "-pix_fmts"));
+                    BufferedReader r = p.stdoutReader()) {
+                var errorReader = pipeOne(p.stderr(), OutputStream.nullOutputStream());
                 String line;
                 while ((line = r.readLine()) != null) {
                     Matcher m = PIXEL_FORMATS_REGEX.matcher(line);
@@ -191,10 +206,9 @@ public class FFmpeg extends FFcommon {
                             m.group(2), Integer.parseInt(m.group(3)), Integer.parseInt(m.group(4)), flags));
                 }
 
+                waitAndthrowOnError(errorReader);
                 throwOnError(p);
                 this.pixelFormats = List.copyOf(pixelFormats);
-            } finally {
-                p.destroy();
             }
         }
 
@@ -239,10 +253,5 @@ public class FFmpeg extends FFcommon {
 
     public FFmpegBuilder builder() {
         return new FFmpegBuilder();
-    }
-
-    @Override
-    public String getPath() {
-        return path;
     }
 }

@@ -4,13 +4,15 @@ import static ch.imagic.ffmpeg.FFmpegTest.argThatHasItem;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
 
+import ch.imagic.ffmpeg.lang.NewProcessAnswer;
+import ch.imagic.ffmpeg.process.FFMpegProcessFactory;
 import java.io.IOException;
 import java.util.Collections;
-import ch.imagic.ffmpeg.lang.NewProcessAnswer;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
 /** Tests what happens when using avconv */
@@ -18,13 +20,14 @@ import org.mockito.junit.MockitoJUnitRunner;
 public class FFmpegAvTest {
 
     @Mock
-    ProcessFunction runFunc;
+    FFMpegProcessFactory runFunc;
 
     FFmpeg ffmpeg;
 
     @Before
     public void before() throws IOException {
-        when(runFunc.run(argThatHasItem("-version"))).thenAnswer(new NewProcessAnswer("avconv-version"));
+        when(runFunc.createProcess(Mockito.any(), Mockito.any(), argThatHasItem("-version")))
+                .thenAnswer(new NewProcessAnswer("avconv-version"));
 
         ffmpeg = new FFmpeg(runFunc);
     }

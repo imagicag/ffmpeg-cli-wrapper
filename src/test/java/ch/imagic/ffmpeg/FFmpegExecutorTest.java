@@ -5,6 +5,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import ch.imagic.ffmpeg.builder.FFmpegBuilder;
+import ch.imagic.ffmpeg.fixtures.Samples;
+import ch.imagic.ffmpeg.job.FFmpegJob;
+import ch.imagic.ffmpeg.probe.FFmpegProbeResult;
+import ch.imagic.ffmpeg.progress.Progress;
+import ch.imagic.ffmpeg.progress.RecordingProgressListener;
 import com.sun.net.httpserver.HttpServer;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -17,12 +23,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import ch.imagic.ffmpeg.builder.FFmpegBuilder;
-import ch.imagic.ffmpeg.fixtures.Samples;
-import ch.imagic.ffmpeg.job.FFmpegJob;
-import ch.imagic.ffmpeg.probe.FFmpegProbeResult;
-import ch.imagic.ffmpeg.progress.Progress;
-import ch.imagic.ffmpeg.progress.RecordingProgressListener;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -195,7 +195,7 @@ public class FFmpegExecutorTest {
                 .done();
 
         List<String> newArgs = new ArrayList<>();
-        newArgs.add(ffmpeg.getPath());
+        newArgs.add(ffmpeg.getPath().getAbsolutePath());
         newArgs.addAll(builder.build());
 
         // TODO Add support to the FFmpegJob to export the stream

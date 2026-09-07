@@ -3,7 +3,6 @@ package net.bramp.ffmpeg.gson;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.errorprone.annotations.Immutable;
 import com.google.gson.Gson;
 import com.google.gson.TypeAdapter;
 import com.google.gson.TypeAdapterFactory;
@@ -25,15 +24,12 @@ import javax.annotation.Nonnull;
  * "https://google-gson.googlecode.com/svn/trunk/gson/docs/javadocs/com/google/gson/TypeAdapterFactory.html"
  * >TypeAdapterFactory</a>
  */
-@Immutable
 public class LowercaseEnumTypeAdapterFactory implements TypeAdapterFactory {
 
-  @Immutable
   private static class MyTypeAdapter<T> extends TypeAdapter<T> {
 
     // T is a Enum, thus immutable, however, we can't enforce that type due to the
     // TypeAdapterFactory interface
-    @SuppressWarnings("Immutable")
     private final ImmutableMap<String, T> lowercaseToEnum;
 
     public MyTypeAdapter(Map<String, T> lowercaseToEnum) {
@@ -65,7 +61,6 @@ public class LowercaseEnumTypeAdapterFactory implements TypeAdapterFactory {
 
   @CheckReturnValue
   @Override
-  @SuppressWarnings("unchecked")
   public <T> TypeAdapter<T> create(Gson gson, TypeToken<T> type) {
     checkNotNull(type);
 

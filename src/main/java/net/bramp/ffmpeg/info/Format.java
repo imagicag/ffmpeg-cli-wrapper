@@ -1,7 +1,6 @@
 package net.bramp.ffmpeg.info;
 
 import com.google.common.base.Preconditions;
-import com.google.errorprone.annotations.Immutable;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
@@ -10,7 +9,6 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
  *
  * @author bramp
  */
-@Immutable
 public class Format {
   final String name;
   final String longName;

@@ -37,7 +37,6 @@ public class FFmpegTest {
     ffmpeg = new FFmpeg(runFunc);
   }
 
-  @SuppressWarnings("unchecked")
   public static <T> List<T> argThatHasItem(T s) {
     return (List<T>) argThat(hasItem(s));
   }

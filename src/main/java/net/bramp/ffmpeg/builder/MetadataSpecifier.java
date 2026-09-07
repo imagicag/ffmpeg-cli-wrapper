@@ -10,13 +10,10 @@ package net.bramp.ffmpeg.builder;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import com.google.errorprone.annotations.Immutable;
-
 /**
  * Metadata spec, as described in the "map_metadata" section of
  * https://www.ffmpeg.org/ffmpeg-all.html#Main-options
  */
-@Immutable
 public class MetadataSpecifier {
 
   final String spec;

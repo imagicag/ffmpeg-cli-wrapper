@@ -1,8 +1,7 @@
 package net.bramp.ffmpeg.progress;
 
 import static net.bramp.ffmpeg.Helper.loadResource;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.IsEqual.equalTo;
+import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -43,6 +42,6 @@ public class UdpProgressParserTest extends AbstractProgressParserTest {
 
         parser.stop();
 
-        assertThat(progesses, equalTo((List<Progress>) Progresses.allProgresses));
+        assertEquals((List<Progress>) Progresses.allProgresses, progesses);
     }
 }

@@ -1,7 +1,5 @@
 package net.bramp.ffmpeg;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
@@ -87,11 +85,10 @@ public class ReadmeTest {
                 stream.width,
                 stream.height);
 
-        assertThat(
-                line1,
-                is(
-                        "File: 'src/test/resources/net/bramp/ffmpeg/samples/big_buck_bunny_720p_1mb.mp4' ; Format: 'QuickTime / MOV' ; Duration: 5.312s"));
-        assertThat(line2, is("Codec: 'H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10' ; Width: 1280px ; Height: 720px"));
+        assertEquals(
+                "File: 'src/test/resources/net/bramp/ffmpeg/samples/big_buck_bunny_720p_1mb.mp4' ; Format: 'QuickTime / MOV' ; Duration: 5.312s",
+                line1);
+        assertEquals("Codec: 'H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10' ; Width: 1280px ; Height: 720px", line2);
     }
 
     @Test

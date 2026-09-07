@@ -1,12 +1,9 @@
 package net.bramp.ffmpeg;
 
 import static net.bramp.ffmpeg.FFmpeg.FPS_30;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.greaterThanOrEqualTo;
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import com.sun.net.httpserver.HttpServer;
 import java.io.IOException;
@@ -235,9 +232,9 @@ public class FFmpegExecutorTest {
         List<Progress> progesses = listener.progesses;
 
         // Since the results of ffmpeg are not predictable, test for the bare minimum.
-        assertThat(progesses, hasSize(greaterThanOrEqualTo(2)));
-        assertThat(progesses.get(0).status, is(Progress.Status.CONTINUE));
-        assertThat(progesses.get(progesses.size() - 1).status, is(Progress.Status.END));
+        assertTrue(progesses.size() >= 2);
+        assertEquals(Progress.Status.CONTINUE, progesses.get(0).status);
+        assertEquals(Progress.Status.END, progesses.get(progesses.size() - 1).status);
     }
 
     @Test

@@ -1,7 +1,6 @@
 package net.bramp.ffmpeg.builder;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.IsEqual.equalTo;
+import static org.junit.Assert.assertEquals;
 
 import java.util.Arrays;
 import java.util.List;
@@ -39,6 +38,6 @@ public class FormatDecimalIntegerTest {
     public void formatDecimalInteger() throws Exception {
         String got = FFmpegOutputBuilder.formatDecimalInteger(input);
 
-        assertThat(got, equalTo(expected));
+        assertEquals(expected, got);
     }
 }

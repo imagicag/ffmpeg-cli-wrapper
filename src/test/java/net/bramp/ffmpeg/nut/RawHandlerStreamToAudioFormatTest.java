@@ -1,8 +1,7 @@
 package net.bramp.ffmpeg.nut;
 
 import static javax.sound.sampled.AudioFormat.Encoding.*;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.IsEqual.equalTo;
+import static org.junit.Assert.assertEquals;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -46,6 +45,6 @@ public class RawHandlerStreamToAudioFormatTest {
         AudioFormat format = RawHandler.streamToAudioFormat(stream);
 
         // Compare strings since AudioFormat does not have a good equalsCode(..) method.
-        assertThat(format.toString(), equalTo(expected.toString()));
+        assertEquals(expected.toString(), format.toString());
     }
 }

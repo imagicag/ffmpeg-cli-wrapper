@@ -1,7 +1,6 @@
 package net.bramp.commons.lang3.math.gson;
 
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertEquals;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -58,7 +57,7 @@ public class FractionAdapterTest {
     public void testRead() {
         for (TestData test : readTests) {
             Fraction f = gson.fromJson(test.s, Fraction.class);
-            assertThat(f, equalTo(test.f));
+            assertEquals(test.f, f);
         }
     }
 
@@ -66,7 +65,7 @@ public class FractionAdapterTest {
     public void testZerosRead() {
         for (TestData test : zerosTests) {
             Fraction f = gson.fromJson(test.s, Fraction.class);
-            assertThat(f, equalTo(test.f));
+            assertEquals(test.f, f);
         }
     }
 
@@ -74,13 +73,13 @@ public class FractionAdapterTest {
     public void testWrites() {
         for (TestData test : writeTests) {
             String json = gson.toJson(test.f);
-            assertThat(json, equalTo('"' + test.s + '"'));
+            assertEquals('"' + test.s + '"', json);
         }
     }
 
     @Test
     public void testWriteNull() {
         String json = gson.toJson(null);
-        assertThat(json, equalTo("null"));
+        assertEquals("null", json);
     }
 }

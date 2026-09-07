@@ -1,8 +1,7 @@
 package net.bramp.ffmpeg.gson;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.IsEqual.equalTo;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -87,35 +86,35 @@ public class NamedBitsetAdapterTest {
     public void testWrite() throws Exception {
         // TODO This assumes that toJson will print the fields in particular order
         String json = gson.toJson(testSet);
-        assertThat(json, equalTo(testData));
+        assertEquals(testData, json);
     }
 
     @Test
     public void testWriteWithSkipField() throws Exception {
         // TODO This assumes that toJson will print the fields in particular order
         String json = gson.toJson(testSetWithSkip);
-        assertThat(json, equalTo(testData));
+        assertEquals(testData, json);
     }
 
     @Test
     public void testReadNull() throws Exception {
         Set s = gson.fromJson("null", Set.class);
-        assertThat(s, equalTo(null));
+        assertNull(s);
     }
 
     @Test
     public void testWriteNull() throws Exception {
         String json = gson.toJson(null);
-        assertThat(json, equalTo("null"));
+        assertEquals("null", json);
     }
 
     @Test
     public void readBooleanReturnsJavaOptional() throws Exception {
         NamedBitsetAdapter<Set> adapter = new NamedBitsetAdapter<>(Set.class);
 
-        assertThat(adapter.readBoolean(new JsonReader(new StringReader("true"))), equalTo(Optional.of(true)));
-        assertThat(adapter.readBoolean(new JsonReader(new StringReader("0"))), equalTo(Optional.of(false)));
-        assertThat(adapter.readBoolean(new JsonReader(new StringReader("2"))), equalTo(Optional.of(true)));
-        assertThat(adapter.readBoolean(new JsonReader(new StringReader("\"ignored\""))), equalTo(Optional.empty()));
+        assertEquals(Optional.of(true), adapter.readBoolean(new JsonReader(new StringReader("true"))));
+        assertEquals(Optional.of(false), adapter.readBoolean(new JsonReader(new StringReader("0"))));
+        assertEquals(Optional.of(true), adapter.readBoolean(new JsonReader(new StringReader("2"))));
+        assertEquals(Optional.empty(), adapter.readBoolean(new JsonReader(new StringReader("\"ignored\""))));
     }
 }

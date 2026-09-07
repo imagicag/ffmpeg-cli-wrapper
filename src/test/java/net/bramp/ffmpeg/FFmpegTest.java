@@ -1,9 +1,8 @@
 package net.bramp.ffmpeg;
 
-import static org.hamcrest.Matchers.hasItem;
 import static org.junit.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
-import static org.mockito.hamcrest.MockitoHamcrest.argThat;
 
 import java.io.IOException;
 import java.util.List;
@@ -36,7 +35,7 @@ public class FFmpegTest {
     }
 
     public static <T> List<T> argThatHasItem(T s) {
-        return (List<T>) argThat(hasItem(s));
+        return argThat(items -> items != null && items.contains(s));
     }
 
     @Test

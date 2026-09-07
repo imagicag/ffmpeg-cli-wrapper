@@ -1,8 +1,8 @@
 package net.bramp.ffmpeg.info;
 
 import static net.bramp.ffmpeg.FFmpegTest.argThatHasItem;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
@@ -59,15 +59,19 @@ public class FFmpegGetInfoTest {
             }
         }
 
-        assertThat(videoCodecs, hasSize(245));
-        assertThat(audioCodecs, hasSize(180));
-        assertThat(subtitleCodecs, hasSize(26));
-        assertThat(dataCodecs, hasSize(8));
-        assertThat(otherCodecs, hasSize(0));
+        assertEquals(245, videoCodecs.size());
+        assertEquals(180, audioCodecs.size());
+        assertEquals(26, subtitleCodecs.size());
+        assertEquals(8, dataCodecs.size());
+        assertEquals(0, otherCodecs.size());
 
-        assertThat(videoCodecs, hasItem(hasProperty("name", equalTo("h264"))));
-        assertThat(audioCodecs, hasItem(hasProperty("name", equalTo("aac"))));
-        assertThat(subtitleCodecs, hasItem(hasProperty("name", equalTo("ssa"))));
-        assertThat(dataCodecs, hasItem(hasProperty("name", equalTo("bin_data"))));
+        assertTrue("Expected video codec h264", videoCodecs.stream().anyMatch(codec -> "h264".equals(codec.getName())));
+        assertTrue("Expected audio codec aac", audioCodecs.stream().anyMatch(codec -> "aac".equals(codec.getName())));
+        assertTrue(
+                "Expected subtitle codec ssa",
+                subtitleCodecs.stream().anyMatch(codec -> "ssa".equals(codec.getName())));
+        assertTrue(
+                "Expected data codec bin_data",
+                dataCodecs.stream().anyMatch(codec -> "bin_data".equals(codec.getName())));
     }
 }

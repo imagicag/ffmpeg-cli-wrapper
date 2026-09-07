@@ -2,8 +2,7 @@ package net.bramp.ffmpeg.builder;
 
 import static net.bramp.ffmpeg.builder.StreamSpecifier.*;
 import static net.bramp.ffmpeg.builder.StreamSpecifierType.*;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
@@ -11,23 +10,23 @@ public class StreamSpecTest {
 
     @Test
     public void testStreamSpec() {
-        assertThat(stream(1).spec(), is("1"));
-        assertThat(stream(Video).spec(), is("v"));
+        assertEquals("1", stream(1).spec());
+        assertEquals("v", stream(Video).spec());
 
-        assertThat(stream(Video, 1).spec(), is("v:1"));
-        assertThat(stream(PureVideo, 1).spec(), is("V:1"));
-        assertThat(stream(Audio, 1).spec(), is("a:1"));
-        assertThat(stream(Subtitle, 1).spec(), is("s:1"));
-        assertThat(stream(Data, 1).spec(), is("d:1"));
-        assertThat(stream(Attachment, 1).spec(), is("t:1"));
+        assertEquals("v:1", stream(Video, 1).spec());
+        assertEquals("V:1", stream(PureVideo, 1).spec());
+        assertEquals("a:1", stream(Audio, 1).spec());
+        assertEquals("s:1", stream(Subtitle, 1).spec());
+        assertEquals("d:1", stream(Data, 1).spec());
+        assertEquals("t:1", stream(Attachment, 1).spec());
 
-        assertThat(program(1).spec(), is("p:1"));
-        assertThat(program(1, 2).spec(), is("p:1:2"));
+        assertEquals("p:1", program(1).spec());
+        assertEquals("p:1:2", program(1, 2).spec());
 
-        assertThat(id(1).spec(), is("i:1"));
+        assertEquals("i:1", id(1).spec());
 
-        assertThat(tag("key").spec(), is("m:key"));
-        assertThat(tag("key", "value").spec(), is("m:key:value"));
-        assertThat(usable().spec(), is("u"));
+        assertEquals("m:key", tag("key").spec());
+        assertEquals("m:key:value", tag("key", "value").spec());
+        assertEquals("u", usable().spec());
     }
 }

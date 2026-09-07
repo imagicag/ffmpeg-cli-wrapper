@@ -1,16 +1,11 @@
-FFmpeg Java
+FFmpeg Java CLI Wrapper
 ===========
-by Andrew Brampton ([bramp.net](https://bramp.net)) (c) 2013-2014,2016
+Based on ffmpeg-cli-wrapper version 0.8.0 by Andrew Brampton (c) 2013-2022,
+see https://github.com/bramp/ffmpeg-cli-wrapper for more details.
 
-A fluent interface to running FFmpeg from Java.
-
-![Java](https://img.shields.io/badge/Java-8+-brightgreen.svg)
-[![Build Status](https://img.shields.io/travis/bramp/ffmpeg-cli-wrapper/master.svg)](https://travis-ci.org/bramp/ffmpeg-cli-wrapper)
-[![Coverage Status](https://img.shields.io/coveralls/bramp/ffmpeg-cli-wrapper.svg)](https://coveralls.io/github/bramp/ffmpeg-cli-wrapper)
-[![Maven](https://img.shields.io/maven-central/v/net.bramp.ffmpeg/ffmpeg.svg)](http://mvnrepository.com/artifact/net.bramp.ffmpeg/ffmpeg)
-[![Libraries.io](https://img.shields.io/librariesio/github/bramp/ffmpeg-cli-wrapper.svg)](https://libraries.io/github/bramp/ffmpeg-cli-wrapper)
-
-[GitHub](https://github.com/bramp/ffmpeg-cli-wrapper) | [API docs](https://bramp.github.io/ffmpeg-cli-wrapper/)
+This project focuses on providing a ffmpeg-cli-wrapper for java with minimal dependencies and improved
+usability in edge cases that were difficult to achieve with the original version.
+Minimum required java version is java 17.
 
 Install
 -------
@@ -18,9 +13,9 @@ Install
 Maven:
 ```xml
 <dependency>
-  <groupId>net.bramp.ffmpeg</groupId>
-  <artifactId>ffmpeg</artifactId>
-  <version>0.7.0</version>
+  <groupId>ch.imagic</groupId>
+  <artifactId>ffmpeg-cli</artifactId>
+  <version>0.1.0</version>
 </dependency>
 ```
 
@@ -123,56 +118,11 @@ FFmpegJob job = executor.createJob(builder, new ProgressListener() {
 job.run();
 ```
 
-Building & Releasing
---------------
-If you wish to make changes, then building and releasing is simple:
-```bash
-# To build
-mvn
-
-# To test
-mvn test
-
-# To release (pushing jar to maven central)
-mvn release:prepare
-mvn release:perform
-
-# To publish javadoc
-git checkout ffmpeg-0.x
-mvn clean javadoc:aggregate scm-publish:publish-scm
-```
-
-Bumpings Deps
------
-
-```bash
-# Update Maven Plugins
-mvn versions:display-plugin-updates
-
-# Library Dependencies
-mvn versions:display-dependency-updates 
-
-```
-
-Install FFmpeg on Ubuntu
------------------
-
-We only the support the original FFmpeg, not the libav version. Before Ubuntu 12.04, and in 15.04
-and later the original FFmpeg is shipped. If you have to run on a version with libav, you can install
-FFmpeg from a PPA, or using the static build. More information [here](http://askubuntu.com/q/373322/34845)
-
-Get involved!
--------------
-
-We welcome contributions. Please check the [issue tracker](https://github.com/bramp/ffmpeg-cli-wrapper/issues).
-If you see something you wish to work on, please either comment on the issue, or just send a pull
-request. Want to work on something else, then just open a issue, and we can discuss! We appreciate
-documentation improvements, code cleanup, or new features. Please be mindful that all work is done
-on a volunteer basis, thus we can be slow to reply.
 
 Licence (Simplified BSD License)
 --------------------------------
 ```
+Copyright (c) 2026, Imagic Bildverarbeitung AG, Sägereistrasse 29, 8152 Glattbrugg, Switzerland
 Copyright (c) 2016-2022, Andrew Brampton
 All rights reserved.
 

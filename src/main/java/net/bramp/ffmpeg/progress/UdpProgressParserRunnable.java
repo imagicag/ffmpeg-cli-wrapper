@@ -1,13 +1,12 @@
 package net.bramp.ffmpeg.progress;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
 import java.util.concurrent.CountDownLatch;
+import java.util.Objects;
 
 class UdpProgressParserRunnable implements Runnable {
 
@@ -19,9 +18,9 @@ class UdpProgressParserRunnable implements Runnable {
 
   public UdpProgressParserRunnable(
       StreamProgressParser parser, DatagramSocket socket, CountDownLatch startSignal) {
-    this.parser = checkNotNull(parser);
-    this.socket = checkNotNull(socket);
-    this.startSignal = checkNotNull(startSignal);
+    this.parser = Objects.requireNonNull(parser);
+    this.socket = Objects.requireNonNull(socket);
+    this.startSignal = Objects.requireNonNull(startSignal);
   }
 
   @Override

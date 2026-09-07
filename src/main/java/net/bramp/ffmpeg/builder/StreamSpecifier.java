@@ -1,8 +1,8 @@
 package net.bramp.ffmpeg.builder;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static net.bramp.ffmpeg.builder.MetadataSpecifier.checkValidKey;
 
+import java.util.Objects;
 /** https://ffmpeg.org/ffmpeg.html#Stream-specifiers */
 public class StreamSpecifier {
 
@@ -33,7 +33,7 @@ public class StreamSpecifier {
    * @return A new StreamSpecifier
    */
   public static StreamSpecifier stream(StreamSpecifierType type) {
-    checkNotNull(type);
+    Objects.requireNonNull(type);
     return new StreamSpecifier(type.toString());
   }
 
@@ -45,7 +45,7 @@ public class StreamSpecifier {
    * @return A new StreamSpecifier
    */
   public static StreamSpecifier stream(StreamSpecifierType type, int index) {
-    checkNotNull(type);
+    Objects.requireNonNull(type);
     return new StreamSpecifier(type.toString() + ":" + index);
   }
 
@@ -99,7 +99,7 @@ public class StreamSpecifier {
    */
   public static StreamSpecifier tag(String key, String value) {
     checkValidKey(key);
-    checkNotNull(value);
+    Objects.requireNonNull(value);
     return new StreamSpecifier("m:" + key + ":" + value);
   }
 

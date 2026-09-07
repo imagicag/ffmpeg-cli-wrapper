@@ -1,10 +1,9 @@
 package net.bramp.ffmpeg;
 
-import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,11 +21,13 @@ public class RunProcessFunction implements ProcessFunction {
 
   @Override
   public Process run(List<String> args) throws IOException {
-    Preconditions.checkNotNull(args, "Arguments must not be null");
-    Preconditions.checkArgument(!args.isEmpty(), "No arguments specified");
+    Objects.requireNonNull(args, "Arguments must not be null");
+    if (args.isEmpty()) {
+      throw new IllegalArgumentException("No arguments specified");
+    }
 
     if (LOG.isInfoEnabled()) {
-      LOG.info("{}", Joiner.on(" ").join(args));
+      LOG.info("{}", String.join(" ", args));
     }
 
     ProcessBuilder builder = new ProcessBuilder(args);

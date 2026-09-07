@@ -1,7 +1,5 @@
 package net.bramp.ffmpeg.nut;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
 import static net.bramp.ffmpeg.nut.StreamHeaderPacket.fourccToString;
 
 import java.awt.image.BufferedImage;
@@ -11,6 +9,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.IntBuffer;
 import java.util.Arrays;
+import java.util.Objects;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 
@@ -25,11 +24,11 @@ public class RawHandler {
   }
 
   public static BufferedImage toBufferedImage(Frame frame) {
-    checkNotNull(frame);
+    Objects.requireNonNull(frame);
 
     final StreamHeaderPacket header = frame.stream.header;
 
-    checkArgument(header.type == StreamHeaderPacket.VIDEO);
+    requireArgument(header.type == StreamHeaderPacket.VIDEO);
 
     // DataBufferByte buffer = new DataBufferByte(frame.data, frame.data.length);
     // SampleModel sample = new MultiPixelPackedSampleModel(DataBuffer.TYPE_BYTE,
@@ -62,8 +61,8 @@ public class RawHandler {
    * @return The AudioFormat matching this header.
    */
   public static AudioFormat streamToAudioFormat(final StreamHeaderPacket header) {
-    checkNotNull(header);
-    checkArgument(header.type == StreamHeaderPacket.AUDIO);
+    Objects.requireNonNull(header);
+    requireArgument(header.type == StreamHeaderPacket.AUDIO);
 
     // Vars that go into the AudioFormat
     AudioFormat.Encoding encoding;
@@ -133,13 +132,17 @@ public class RawHandler {
   }
 
   public static AudioInputStream toAudioInputStream(Frame frame) {
-    checkNotNull(frame);
-    final StreamHeaderPacket header = checkNotNull(frame.stream.header);
-    checkArgument(header.type == StreamHeaderPacket.AUDIO);
+    Objects.requireNonNull(frame);
+    final StreamHeaderPacket header = Objects.requireNonNull(frame.stream.header);
+    requireArgument(header.type == StreamHeaderPacket.AUDIO);
 
     AudioFormat format = streamToAudioFormat(header);
     InputStream stream = new ByteArrayInputStream(frame.data);
 
     return new AudioInputStream(stream, format, frame.data.length / format.getFrameSize());
+  }
+
+  private static void requireArgument(boolean condition) {
+    if (!condition) throw new IllegalArgumentException();
   }
 }

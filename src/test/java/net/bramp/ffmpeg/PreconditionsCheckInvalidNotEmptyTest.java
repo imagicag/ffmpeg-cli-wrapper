@@ -10,7 +10,7 @@ import org.junit.runners.Parameterized;
 public class PreconditionsCheckInvalidNotEmptyTest {
   @Parameterized.Parameters(name = "{0}")
   public static List<String> data() {
-    return Arrays.asList(null, "", "   ", "\n", " \n ");
+    return Arrays.asList(null, "", "   ", "\n", " \n ", "\u00a0");
   }
 
   private final String input;

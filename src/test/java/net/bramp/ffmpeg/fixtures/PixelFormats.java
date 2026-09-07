@@ -1,6 +1,6 @@
 package net.bramp.ffmpeg.fixtures;
 
-import com.google.common.collect.ImmutableList;
+import java.util.List;
 import net.bramp.ffmpeg.info.PixelFormat;
 
 /**
@@ -14,9 +14,8 @@ public final class PixelFormats {
     throw new AssertionError("No instances for you!");
   }
 
-  public static final ImmutableList<PixelFormat> PIXEL_FORMATS =
-      new ImmutableList.Builder<PixelFormat>()
-          .add(
+  public static final List<PixelFormat> PIXEL_FORMATS =
+      List.of(
               new PixelFormat("yuv420p", 3, 12, "IO..."),
               new PixelFormat("yuyv422", 3, 16, "IO..."),
               new PixelFormat("rgb24", 3, 24, "IO..."),
@@ -209,6 +208,5 @@ public final class PixelFormats {
               new PixelFormat("yuva444p12be", 4, 48, "IO..."),
               new PixelFormat("yuva444p12le", 4, 48, "IO..."),
               new PixelFormat("nv24", 3, 24, "IO..."),
-              new PixelFormat("nv42", 3, 24, "IO..."))
-          .build();
+          new PixelFormat("nv42", 3, 24, "IO..."));
 }

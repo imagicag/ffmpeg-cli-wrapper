@@ -6,6 +6,9 @@ import static org.hamcrest.core.IsEqual.equalTo;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.stream.JsonReader;
+import java.io.StringReader;
+import java.util.Optional;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -99,5 +102,23 @@ public class NamedBitsetAdapterTest {
   public void testWriteNull() throws Exception {
     String json = gson.toJson(null);
     assertThat(json, equalTo("null"));
+  }
+
+  @Test
+  public void readBooleanReturnsJavaOptional() throws Exception {
+    NamedBitsetAdapter<Set> adapter = new NamedBitsetAdapter<>(Set.class);
+
+    assertThat(
+        adapter.readBoolean(new JsonReader(new StringReader("true"))),
+        equalTo(Optional.of(true)));
+    assertThat(
+        adapter.readBoolean(new JsonReader(new StringReader("0"))),
+        equalTo(Optional.of(false)));
+    assertThat(
+        adapter.readBoolean(new JsonReader(new StringReader("2"))),
+        equalTo(Optional.of(true)));
+    assertThat(
+        adapter.readBoolean(new JsonReader(new StringReader("\"ignored\""))),
+        equalTo(Optional.empty()));
   }
 }

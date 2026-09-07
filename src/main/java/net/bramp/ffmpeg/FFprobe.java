@@ -1,13 +1,10 @@
 package net.bramp.ffmpeg;
 
-import com.google.common.base.MoreObjects;
-import com.google.common.collect.ImmutableList;
 import com.google.gson.Gson;
 import java.io.IOException;
 import java.io.Reader;
+import java.util.ArrayList;
 import java.util.List;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import net.bramp.ffmpeg.io.LoggingFilterReader;
 import net.bramp.ffmpeg.probe.FFmpegProbeResult;
 import org.slf4j.Logger;
@@ -23,7 +20,7 @@ public class FFprobe extends FFcommon {
   static final Logger LOG = LoggerFactory.getLogger(FFprobe.class);
 
   static final String FFPROBE = "ffprobe";
-  static final String DEFAULT_PATH = MoreObjects.firstNonNull(System.getenv("FFPROBE"), FFPROBE);
+  static final String DEFAULT_PATH = java.util.Objects.requireNonNullElse(System.getenv("FFPROBE"), FFPROBE);
 
   static final Gson gson = FFmpegUtils.getGson();
 
@@ -31,15 +28,15 @@ public class FFprobe extends FFcommon {
     this(DEFAULT_PATH, new RunProcessFunction());
   }
 
-  public FFprobe(@Nonnull ProcessFunction runFunction) throws IOException {
+  public FFprobe(ProcessFunction runFunction) throws IOException {
     this(DEFAULT_PATH, runFunction);
   }
 
-  public FFprobe(@Nonnull String path) throws IOException {
+  public FFprobe(String path) throws IOException {
     this(path, new RunProcessFunction());
   }
 
-  public FFprobe(@Nonnull String path, @Nonnull ProcessFunction runFunction) {
+  public FFprobe(String path, ProcessFunction runFunction) {
     super(path, runFunction);
   }
 
@@ -78,29 +75,32 @@ public class FFprobe extends FFcommon {
   }
 
   // TODO Add Probe Inputstream
-  public FFmpegProbeResult probe(String mediaPath, @Nullable String userAgent) throws IOException {
+  public FFmpegProbeResult probe(String mediaPath, String userAgent) throws IOException {
     checkIfFFprobe();
 
-    ImmutableList.Builder<String> args = new ImmutableList.Builder<String>();
+    List<String> args = new ArrayList<>();
 
     // TODO Add:
     // .add("--show_packets")
     // .add("--show_frames")
 
-    args.add(path).add("-v", "quiet");
+    args.addAll(List.of(path, "-v", "quiet"));
 
     if (userAgent != null) {
-      args.add("-user_agent", userAgent);
+      args.addAll(List.of("-user_agent", userAgent));
     }
 
-    args.add("-print_format", "json")
-        .add("-show_error")
-        .add("-show_format")
-        .add("-show_streams")
-        .add("-show_chapters")
-        .add(mediaPath);
+    args.addAll(
+        List.of(
+            "-print_format",
+            "json",
+            "-show_error",
+            "-show_format",
+            "-show_streams",
+            "-show_chapters",
+            mediaPath));
 
-    Process p = runFunc.run(args.build());
+    Process p = runFunc.run(List.copyOf(args));
     try {
       Reader reader = wrapInReader(p);
       if (LOG.isDebugEnabled()) {

@@ -1,7 +1,5 @@
 package net.bramp.ffmpeg.nut;
 
-import com.google.common.base.MoreObjects;
-
 public class FrameCode {
 
   long flags;
@@ -15,15 +13,8 @@ public class FrameCode {
 
   @Override
   public String toString() {
-    return MoreObjects.toStringHelper(this)
-        .add("flags", flags)
-        .add("id", streamId)
-        .add("dataSizeMul", dataSizeMul)
-        .add("dataSizeLsb", dataSizeLsb)
-        .add("ptsDelta", ptsDelta)
-        .add("reservedCount", reservedCount)
-        .add("matchTimeDelta", matchTimeDelta)
-        .add("headerIdx", headerIdx)
-        .toString();
+    return "FrameCode{flags=" + flags + ", id=" + streamId + ", dataSizeMul=" + dataSizeMul
+        + ", dataSizeLsb=" + dataSizeLsb + ", ptsDelta=" + ptsDelta + ", reservedCount="
+        + reservedCount + ", matchTimeDelta=" + matchTimeDelta + ", headerIdx=" + headerIdx + '}';
   }
 }

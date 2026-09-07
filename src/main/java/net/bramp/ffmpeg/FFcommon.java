@@ -1,19 +1,16 @@
 package net.bramp.ffmpeg;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableList;
-import com.google.common.io.CharStreams;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import javax.annotation.Nonnull;
 import net.bramp.ffmpeg.io.ProcessUtils;
 
 /** Private class to contain common methods for both FFmpeg and FFprobe. */
@@ -28,13 +25,15 @@ abstract class FFcommon {
   /** Version string */
   String version = null;
 
-  public FFcommon(@Nonnull String path) {
+  public FFcommon(String path) {
     this(path, new RunProcessFunction());
   }
 
-  protected FFcommon(@Nonnull String path, @Nonnull ProcessFunction runFunction) {
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(path));
-    this.runFunc = checkNotNull(runFunction);
+  protected FFcommon(String path, ProcessFunction runFunction) {
+    if (path == null || path.isEmpty()) {
+      throw new IllegalArgumentException();
+    }
+    this.runFunc = Objects.requireNonNull(runFunction);
     this.path = path;
   }
 
@@ -60,13 +59,13 @@ abstract class FFcommon {
    * @return the version string.
    * @throws IOException If there is an error capturing output from the binary.
    */
-  public synchronized @Nonnull String version() throws IOException {
+  public synchronized String version() throws IOException {
     if (this.version == null) {
-      Process p = runFunc.run(ImmutableList.of(path, "-version"));
+      Process p = runFunc.run(List.of(path, "-version"));
       try {
         BufferedReader r = wrapInReader(p);
         this.version = r.readLine();
-        CharStreams.copy(r, CharStreams.nullWriter()); // Throw away rest of the output
+        r.transferTo(Writer.nullWriter()); // Throw away rest of the output
 
         throwOnError(p);
       } finally {
@@ -88,7 +87,10 @@ abstract class FFcommon {
    * @throws IOException If there is an error capturing output from the binary
    */
   public List<String> path(List<String> args) throws IOException {
-    return ImmutableList.<String>builder().add(path).addAll(args).build();
+    List<String> command = new ArrayList<>(args.size() + 1);
+    command.add(path);
+    command.addAll(args);
+    return List.copyOf(command);
   }
 
   /**
@@ -98,7 +100,7 @@ abstract class FFcommon {
    * @throws IOException If there is a problem executing the binary.
    */
   public void run(List<String> args) throws IOException {
-    checkNotNull(args);
+    Objects.requireNonNull(args);
 
     Process p = runFunc.run(path(args));
     assert (p != null);
@@ -107,7 +109,9 @@ abstract class FFcommon {
       // TODO Move the copy onto a thread, so that FFmpegProgressListener can be on this thread.
 
       // Now block reading ffmpeg's stdout. We are effectively throwing away the output.
-      CharStreams.copy(wrapInReader(p), System.out); // TODO Should I be outputting to stdout?
+      Writer output = new OutputStreamWriter(System.out, StandardCharsets.UTF_8);
+      wrapInReader(p).transferTo(output); // TODO Should I be outputting to stdout?
+      output.flush();
 
       throwOnError(p);
 

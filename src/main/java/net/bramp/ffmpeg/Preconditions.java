@@ -1,19 +1,13 @@
 package net.bramp.ffmpeg;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
-
-import com.google.common.base.CharMatcher;
-import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableList;
 import java.net.URI;
 import java.util.List;
-import javax.annotation.Nullable;
+import java.util.Objects;
 
 public final class Preconditions {
 
-  private static final List<String> rtps = ImmutableList.of("rtsp", "rtp", "rtmp");
-  private static final List<String> udpTcp = ImmutableList.of("udp", "tcp");
+  private static final List<String> rtps = List.of("rtsp", "rtp", "rtmp");
+  private static final List<String> udpTcp = List.of("udp", "tcp");
 
   Preconditions() {
     throw new AssertionError("No instances for you!");
@@ -26,10 +20,18 @@ public final class Preconditions {
    * @param errorMessage The exception message to use if the check fails
    * @return The passed in argument if it is not blank
    */
-  public static String checkNotEmpty(String arg, @Nullable Object errorMessage) {
-    boolean empty = Strings.isNullOrEmpty(arg) || CharMatcher.whitespace().matchesAllOf(arg);
-    checkArgument(!empty, errorMessage);
+  public static String checkNotEmpty(String arg, Object errorMessage) {
+    boolean empty = arg == null || arg.chars().allMatch(Preconditions::isWhitespace);
+    if (empty) {
+      throw new IllegalArgumentException(String.valueOf(errorMessage));
+    }
     return arg;
+  }
+
+  private static boolean isWhitespace(int character) {
+    return Character.isWhitespace(character)
+        || Character.isSpaceChar(character)
+        || character == 0x85; // Unicode NEXT LINE
   }
 
   /**
@@ -40,8 +42,8 @@ public final class Preconditions {
    * @throws IllegalArgumentException if the URI is not valid.
    */
   public static URI checkValidStream(URI uri) throws IllegalArgumentException {
-    String scheme = checkNotNull(uri).getScheme();
-    scheme = checkNotNull(scheme, "URI is missing a scheme").toLowerCase();
+    String scheme = Objects.requireNonNull(uri).getScheme();
+    scheme = Objects.requireNonNull(scheme, "URI is missing a scheme").toLowerCase();
 
     if (rtps.contains(scheme)) {
       return uri;

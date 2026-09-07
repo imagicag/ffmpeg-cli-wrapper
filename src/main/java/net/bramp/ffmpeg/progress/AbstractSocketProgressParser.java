@@ -1,14 +1,11 @@
 package net.bramp.ffmpeg.progress;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
-import com.google.common.net.InetAddresses;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.concurrent.CountDownLatch;
-import javax.annotation.CheckReturnValue;
+import java.util.Objects;
 
 public abstract class AbstractSocketProgressParser implements ProgressParser {
 
@@ -31,20 +28,18 @@ public abstract class AbstractSocketProgressParser implements ProgressParser {
    * @return
    * @throws URISyntaxException
    */
-  @CheckReturnValue
   static URI createUri(String scheme, InetAddress address, int port) throws URISyntaxException {
-    checkNotNull(address);
+    Objects.requireNonNull(address);
     return new URI(
         scheme,
         null /* userInfo */,
-        InetAddresses.toUriString(address),
+        address.getHostAddress(),
         port,
         null /* path */,
         null /* query */,
         null /* fragment */);
   }
 
-  @CheckReturnValue
   protected abstract String getThreadName();
 
   protected abstract Runnable getRunnable(CountDownLatch startSignal);

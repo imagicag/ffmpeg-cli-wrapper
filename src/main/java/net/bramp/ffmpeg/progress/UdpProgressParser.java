@@ -1,7 +1,5 @@
 package net.bramp.ffmpeg.progress;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import java.io.IOException;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -9,6 +7,7 @@ import java.net.SocketException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.concurrent.CountDownLatch;
+import java.util.Objects;
 
 public class UdpProgressParser extends AbstractSocketProgressParser {
 
@@ -24,7 +23,7 @@ public class UdpProgressParser extends AbstractSocketProgressParser {
 
     super(listener);
 
-    this.socket = new DatagramSocket(port, checkNotNull(addr));
+    this.socket = new DatagramSocket(port, Objects.requireNonNull(addr));
     this.address = createUri("udp", socket.getLocalAddress(), socket.getLocalPort());
 
     this.socket.setBroadcast(false);

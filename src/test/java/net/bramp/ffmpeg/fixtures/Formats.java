@@ -1,6 +1,6 @@
 package net.bramp.ffmpeg.fixtures;
 
-import com.google.common.collect.ImmutableList;
+import java.util.List;
 import net.bramp.ffmpeg.info.Format;
 
 /**
@@ -16,9 +16,8 @@ public final class Formats {
     throw new AssertionError("No instances for you!");
   }
 
-  public static final ImmutableList<Format> FORMATS =
-      new ImmutableList.Builder<Format>()
-          .add(
+  public static final List<Format> FORMATS =
+      List.of(
               new Format("3g2", "3GP2 format", " E"),
               new Format("3gp", "3GP format", " E"),
               new Format("4xm", "4X Technologies format", "D "),
@@ -227,6 +226,5 @@ public final class Formats {
               new Format("xmv", "Microsoft XMV", "D "),
               new Format("xwma", "Microsoft xWMA", "D "),
               new Format("yop", "Psygnosis YOP Format", "D "),
-              new Format("yuv4mpegpipe", "YUV4MPEG pipe format", "DE"))
-          .build();
+          new Format("yuv4mpegpipe", "YUV4MPEG pipe format", "DE"));
 }

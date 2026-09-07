@@ -1,6 +1,5 @@
 package net.bramp.ffmpeg.probe;
 
-import com.google.common.collect.ImmutableList;
 import java.util.Collections;
 import java.util.List;
 
@@ -25,11 +24,11 @@ public class FFmpegProbeResult {
 
   public List<FFmpegStream> getStreams() {
     if (streams == null) return Collections.emptyList();
-    return ImmutableList.copyOf(streams);
+    return List.copyOf(streams);
   }
 
   public List<FFmpegChapter> getChapters() {
     if (chapters == null) return Collections.emptyList();
-    return ImmutableList.copyOf(chapters);
+    return List.copyOf(chapters);
   }
 }

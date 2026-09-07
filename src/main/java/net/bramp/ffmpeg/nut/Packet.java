@@ -1,6 +1,5 @@
 package net.bramp.ffmpeg.nut;
 
-import com.google.common.base.MoreObjects;
 import java.io.IOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -83,6 +82,6 @@ public class Packet {
 
   @Override
   public String toString() {
-    return MoreObjects.toStringHelper(this).add("header", header).add("footer", footer).toString();
+    return "Packet{header=" + header + ", footer=" + footer + '}';
   }
 }

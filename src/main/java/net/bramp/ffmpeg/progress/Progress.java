@@ -1,11 +1,8 @@
 package net.bramp.ffmpeg.progress;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static net.bramp.ffmpeg.FFmpegUtils.fromTimecode;
 
-import com.google.common.base.MoreObjects;
 import java.util.Objects;
-import javax.annotation.CheckReturnValue;
 import net.bramp.ffmpeg.FFmpegUtils;
 import org.apache.commons.lang3.math.Fraction;
 import org.slf4j.Logger;
@@ -111,7 +108,7 @@ public class Progress {
    * @return true if the record is finished
    */
   protected boolean parseLine(String line) {
-    line = checkNotNull(line).trim();
+    line = Objects.requireNonNull(line).trim();
     if (line.isEmpty()) {
       return false; // Skip empty lines
     }
@@ -122,8 +119,8 @@ public class Progress {
       return false;
     }
 
-    final String key = checkNotNull(args[0]);
-    final String value = checkNotNull(args[1]);
+    final String key = Objects.requireNonNull(args[0]);
+    final String value = Objects.requireNonNull(args[1]);
 
     switch (key) {
       case "frame":
@@ -200,7 +197,6 @@ public class Progress {
     }
   }
 
-  @CheckReturnValue
   public boolean isEnd() {
     return status == Status.END;
   }
@@ -229,16 +225,24 @@ public class Progress {
 
   @Override
   public String toString() {
-    return MoreObjects.toStringHelper(this)
-        .add("frame", frame)
-        .add("fps", fps)
-        .add("bitrate", bitrate)
-        .add("total_size", total_size)
-        .add("out_time_ns", out_time_ns)
-        .add("dup_frames", dup_frames)
-        .add("drop_frames", drop_frames)
-        .add("speed", speed)
-        .add("status", status)
-        .toString();
+    return "Progress{frame="
+        + frame
+        + ", fps="
+        + fps
+        + ", bitrate="
+        + bitrate
+        + ", total_size="
+        + total_size
+        + ", out_time_ns="
+        + out_time_ns
+        + ", dup_frames="
+        + dup_frames
+        + ", drop_frames="
+        + drop_frames
+        + ", speed="
+        + speed
+        + ", status="
+        + status
+        + '}';
   }
 }

@@ -1,19 +1,14 @@
 package net.bramp.ffmpeg.builder;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
 import static net.bramp.ffmpeg.Preconditions.checkNotEmpty;
 
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableList;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
-import javax.annotation.CheckReturnValue;
 import net.bramp.ffmpeg.FFmpegUtils;
 import net.bramp.ffmpeg.probe.FFmpegProbeResult;
 
@@ -97,23 +92,23 @@ public class FFmpegBuilder {
   }
 
   public FFmpegBuilder setPassDirectory(String directory) {
-    this.pass_directory = checkNotNull(directory);
+    this.pass_directory = Objects.requireNonNull(directory);
     return this;
   }
 
   public FFmpegBuilder setPassPrefix(String prefix) {
-    this.pass_prefix = checkNotNull(prefix);
+    this.pass_prefix = Objects.requireNonNull(prefix);
     return this;
   }
 
   public FFmpegBuilder setVerbosity(Verbosity verbosity) {
-    checkNotNull(verbosity);
+    Objects.requireNonNull(verbosity);
     this.verbosity = verbosity;
     return this;
   }
 
   public FFmpegBuilder setUserAgent(String userAgent) {
-    this.user_agent = checkNotNull(userAgent);
+    this.user_agent = Objects.requireNonNull(userAgent);
     return this;
   }
 
@@ -123,14 +118,14 @@ public class FFmpegBuilder {
   }
 
   public FFmpegBuilder addInput(FFmpegProbeResult result) {
-    checkNotNull(result);
-    String filename = checkNotNull(result.format).filename;
+    Objects.requireNonNull(result);
+    String filename = Objects.requireNonNull(result.format).filename;
     inputProbes.put(filename, result);
     return addInput(filename);
   }
 
   public FFmpegBuilder addInput(String filename) {
-    checkNotNull(filename);
+    Objects.requireNonNull(filename);
     inputs.add(filename);
     return this;
   }
@@ -151,12 +146,12 @@ public class FFmpegBuilder {
   }
 
   public FFmpegBuilder setFormat(String format) {
-    this.format = checkNotNull(format);
+    this.format = Objects.requireNonNull(format);
     return this;
   }
 
   public FFmpegBuilder setStartOffset(long duration, TimeUnit units) {
-    checkNotNull(units);
+    Objects.requireNonNull(units);
 
     this.startOffset = units.toMillis(duration);
 
@@ -164,7 +159,7 @@ public class FFmpegBuilder {
   }
 
   public FFmpegBuilder addProgress(URI uri) {
-    this.progress = checkNotNull(uri);
+    this.progress = Objects.requireNonNull(uri);
     return this;
   }
 
@@ -208,11 +203,13 @@ public class FFmpegBuilder {
    * @return this
    */
   public FFmpegBuilder addExtraArgs(String... values) {
-    checkArgument(values.length > 0, "one or more values must be supplied");
+    if (values.length == 0) {
+      throw new IllegalArgumentException("one or more values must be supplied");
+    }
     checkNotEmpty(values[0], "first extra arg may not be empty");
 
     for (String value : values) {
-      extra_args.add(checkNotNull(value));
+      extra_args.add(Objects.requireNonNull(value));
     }
     return this;
   }
@@ -271,26 +268,29 @@ public class FFmpegBuilder {
     return addOutput("-");
   }
 
-  @CheckReturnValue
   public List<String> build() {
-    ImmutableList.Builder<String> args = new ImmutableList.Builder<String>();
+    List<String> args = new ArrayList<>();
 
-    Preconditions.checkArgument(!inputs.isEmpty(), "At least one input must be specified");
-    Preconditions.checkArgument(!outputs.isEmpty(), "At least one output must be specified");
+    if (inputs.isEmpty()) {
+      throw new IllegalArgumentException("At least one input must be specified");
+    }
+    if (outputs.isEmpty()) {
+      throw new IllegalArgumentException("At least one output must be specified");
+    }
 
     args.add(override ? "-y" : "-n");
-    args.add("-v", this.verbosity.toString());
+    args.addAll(List.of("-v", this.verbosity.toString()));
 
     if (user_agent != null) {
-      args.add("-user_agent", user_agent);
+      args.addAll(List.of("-user_agent", user_agent));
     }
 
     if (startOffset != null) {
-      args.add("-ss", FFmpegUtils.toTimecode(startOffset, TimeUnit.MILLISECONDS));
+      args.addAll(List.of("-ss", FFmpegUtils.toTimecode(startOffset, TimeUnit.MILLISECONDS)));
     }
 
     if (format != null) {
-      args.add("-f", format);
+      args.addAll(List.of("-f", format));
     }
 
     if (read_at_native_frame_rate) {
@@ -298,39 +298,39 @@ public class FFmpegBuilder {
     }
 
     if (progress != null) {
-      args.add("-progress", progress.toString());
+      args.addAll(List.of("-progress", progress.toString()));
     }
 
     args.addAll(extra_args);
 
     for (String input : inputs) {
-      args.add("-i", input);
+      args.addAll(List.of("-i", input));
     }
 
     if (pass > 0) {
-      args.add("-pass", Integer.toString(pass));
+      args.addAll(List.of("-pass", Integer.toString(pass)));
 
       if (pass_prefix != null) {
-        args.add("-passlogfile", pass_directory + pass_prefix);
+        args.addAll(List.of("-passlogfile", pass_directory + pass_prefix));
       }
     }
 
-    if (!Strings.isNullOrEmpty(audioFilter)) {
-      args.add("-af", audioFilter);
+    if (audioFilter != null && !audioFilter.isEmpty()) {
+      args.addAll(List.of("-af", audioFilter));
     }
 
-    if (!Strings.isNullOrEmpty(videoFilter)) {
-      args.add("-vf", videoFilter);
+    if (videoFilter != null && !videoFilter.isEmpty()) {
+      args.addAll(List.of("-vf", videoFilter));
     }
 
-    if (!Strings.isNullOrEmpty(complexFilter)) {
-      args.add("-filter_complex", complexFilter);
+    if (complexFilter != null && !complexFilter.isEmpty()) {
+      args.addAll(List.of("-filter_complex", complexFilter));
     }
 
     for (FFmpegOutputBuilder output : this.outputs) {
       args.addAll(output.build(this, pass));
     }
 
-    return args.build();
+    return List.copyOf(args);
   }
 }

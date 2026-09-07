@@ -1,15 +1,10 @@
 package net.bramp.ffmpeg.builder;
 
-import static com.google.common.base.Preconditions.*;
 import static net.bramp.ffmpeg.Preconditions.checkNotEmpty;
 
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableList;
 import java.net.URI;
 import java.util.List;
 import java.util.regex.Pattern;
-import javax.annotation.CheckReturnValue;
 import net.bramp.ffmpeg.options.AudioEncodingOptions;
 import net.bramp.ffmpeg.options.EncodingOptions;
 import net.bramp.ffmpeg.options.MainEncodingOptions;
@@ -48,20 +43,20 @@ public class FFmpegOutputBuilder extends AbstractFFmpegStreamBuilder<FFmpegOutpu
   }
 
   public FFmpegOutputBuilder setConstantRateFactor(double factor) {
-    checkArgument(factor >= 0, "constant rate factor must be greater or equal to zero");
+    requireArgument(factor >= 0, "constant rate factor must be greater or equal to zero");
     this.constantRateFactor = factor;
     return this;
   }
 
   public FFmpegOutputBuilder setVideoBitRate(long bit_rate) {
-    checkArgument(bit_rate > 0, "bit rate must be positive");
+    requireArgument(bit_rate > 0, "bit rate must be positive");
     this.video_enabled = true;
     this.video_bit_rate = bit_rate;
     return this;
   }
 
   public FFmpegOutputBuilder setVideoQuality(double quality) {
-    checkArgument(quality > 0, "quality must be positive");
+    requireArgument(quality > 0, "quality must be positive");
     this.video_enabled = true;
     this.video_quality = quality;
     return this;
@@ -142,14 +137,14 @@ public class FFmpegOutputBuilder extends AbstractFFmpegStreamBuilder<FFmpegOutpu
    * @return this
    */
   public FFmpegOutputBuilder setAudioBitRate(long bit_rate) {
-    checkArgument(bit_rate > 0, "bit rate must be positive");
+    requireArgument(bit_rate > 0, "bit rate must be positive");
     this.audio_enabled = true;
     this.audio_bit_rate = bit_rate;
     return this;
   }
 
   public FFmpegOutputBuilder setAudioQuality(double quality) {
-    checkArgument(quality > 0, "quality must be positive");
+    requireArgument(quality > 0, "quality must be positive");
     this.audio_enabled = true;
     this.audio_quality = quality;
     return this;
@@ -182,7 +177,6 @@ public class FFmpegOutputBuilder extends AbstractFFmpegStreamBuilder<FFmpegOutpu
    *
    * @return A new EncodingOptions capturing this Builder's state
    */
-  @CheckReturnValue
   @Override
   public EncodingOptions buildOptions() {
     // TODO When/if modelmapper supports @ConstructorProperties, we map this
@@ -210,10 +204,9 @@ public class FFmpegOutputBuilder extends AbstractFFmpegStreamBuilder<FFmpegOutpu
             video_preset));
   }
 
-  @CheckReturnValue
   @Override
   protected List<String> build(int pass) {
-    Preconditions.checkState(parent != null, "Can not build without parent being set");
+    requireState(parent != null, "Can not build without parent being set");
     return build(parent, pass);
   }
 
@@ -225,24 +218,23 @@ public class FFmpegOutputBuilder extends AbstractFFmpegStreamBuilder<FFmpegOutpu
    *     be 1 for the first pass, 2 for the second, and so on.
    * @return The arguments
    */
-  @CheckReturnValue
   @Override
   protected List<String> build(FFmpegBuilder parent, int pass) {
     if (pass > 0) {
-      checkArgument(
+      requireArgument(
           targetSize != 0 || video_bit_rate != 0,
           "Target size, or video bitrate must be specified when using two-pass");
     }
     if (targetSize > 0) {
-      checkState(parent.inputs.size() == 1, "Target size does not support multiple inputs");
+      requireState(parent.inputs.size() == 1, "Target size does not support multiple inputs");
 
-      checkArgument(
+      requireArgument(
           constantRateFactor == null, "Target size can not be used with constantRateFactor");
 
       String firstInput = parent.inputs.iterator().next();
       FFmpegProbeResult input = parent.inputProbes.get(firstInput);
 
-      checkState(input != null, "Target size must be used with setInput(FFmpegProbeResult)");
+      requireState(input != null, "Target size must be used with setInput(FFmpegProbeResult)");
 
       // TODO factor in start time and/or number of frames
 
@@ -277,16 +269,16 @@ public class FFmpegOutputBuilder extends AbstractFFmpegStreamBuilder<FFmpegOutpu
   }
 
   @Override
-  protected void addGlobalFlags(FFmpegBuilder parent, ImmutableList.Builder<String> args) {
+  protected void addGlobalFlags(FFmpegBuilder parent, List<String> args) {
     super.addGlobalFlags(parent, args);
 
     if (constantRateFactor != null) {
-      args.add("-crf", formatDecimalInteger(constantRateFactor));
+      args.addAll(List.of("-crf", formatDecimalInteger(constantRateFactor)));
     }
   }
 
   @Override
-  protected void addVideoFlags(FFmpegBuilder parent, ImmutableList.Builder<String> args) {
+  protected void addVideoFlags(FFmpegBuilder parent, List<String> args) {
     super.addVideoFlags(parent, args);
 
     if (video_bit_rate > 0 && video_quality != null) {
@@ -295,35 +287,35 @@ public class FFmpegOutputBuilder extends AbstractFFmpegStreamBuilder<FFmpegOutpu
     }
 
     if (video_bit_rate > 0) {
-      args.add("-b:v", String.valueOf(video_bit_rate));
+      args.addAll(List.of("-b:v", String.valueOf(video_bit_rate)));
     }
 
     if (video_quality != null) {
-      args.add("-qscale:v", formatDecimalInteger(video_quality));
+      args.addAll(List.of("-qscale:v", formatDecimalInteger(video_quality)));
     }
 
-    if (!Strings.isNullOrEmpty(video_preset)) {
-      args.add("-vpre", video_preset);
+    if (video_preset != null && !video_preset.isEmpty()) {
+      args.addAll(List.of("-vpre", video_preset));
     }
 
-    if (!Strings.isNullOrEmpty(video_filter)) {
-      checkState(
+    if (video_filter != null && !video_filter.isEmpty()) {
+      requireState(
           parent.inputs.size() == 1,
           "Video filter only works with one input, instead use setComplexVideoFilter(..)");
-      args.add("-vf", video_filter);
+      args.addAll(List.of("-vf", video_filter));
     }
 
-    if (!Strings.isNullOrEmpty(video_bit_stream_filter)) {
-      args.add("-bsf:v", video_bit_stream_filter);
+    if (video_bit_stream_filter != null && !video_bit_stream_filter.isEmpty()) {
+      args.addAll(List.of("-bsf:v", video_bit_stream_filter));
     }
   }
 
   @Override
-  protected void addAudioFlags(ImmutableList.Builder<String> args) {
+  protected void addAudioFlags(List<String> args) {
     super.addAudioFlags(args);
 
-    if (!Strings.isNullOrEmpty(audio_sample_format)) {
-      args.add("-sample_fmt", audio_sample_format);
+    if (audio_sample_format != null && !audio_sample_format.isEmpty()) {
+      args.addAll(List.of("-sample_fmt", audio_sample_format));
     }
 
     if (audio_bit_rate > 0 && audio_quality != null && throwWarnings) {
@@ -332,23 +324,22 @@ public class FFmpegOutputBuilder extends AbstractFFmpegStreamBuilder<FFmpegOutpu
     }
 
     if (audio_bit_rate > 0) {
-      args.add("-b:a", String.valueOf(audio_bit_rate));
+      args.addAll(List.of("-b:a", String.valueOf(audio_bit_rate)));
     }
 
     if (audio_quality != null) {
-      args.add("-qscale:a", formatDecimalInteger(audio_quality));
+      args.addAll(List.of("-qscale:a", formatDecimalInteger(audio_quality)));
     }
 
-    if (!Strings.isNullOrEmpty(audio_bit_stream_filter)) {
-      args.add("-bsf:a", audio_bit_stream_filter);
+    if (audio_bit_stream_filter != null && !audio_bit_stream_filter.isEmpty()) {
+      args.addAll(List.of("-bsf:a", audio_bit_stream_filter));
     }
 
-    if (!Strings.isNullOrEmpty(audio_filter)) {
-      args.add("-af", audio_filter);
+    if (audio_filter != null && !audio_filter.isEmpty()) {
+      args.addAll(List.of("-af", audio_filter));
     }
   }
 
-  @CheckReturnValue
   @Override
   protected FFmpegOutputBuilder getThis() {
     return this;

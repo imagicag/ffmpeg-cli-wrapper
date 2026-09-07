@@ -2,10 +2,10 @@ package net.bramp.ffmpeg.nut;
 
 import static org.junit.Assert.assertEquals;
 
-import com.google.common.collect.ImmutableList;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -49,8 +49,9 @@ public class NutReaderTest {
             .done()
             .build();
 
-    List<String> newArgs =
-        ImmutableList.<String>builder().add(FFmpeg.DEFAULT_PATH).addAll(args).build();
+    List<String> newArgs = new ArrayList<>();
+    newArgs.add(FFmpeg.DEFAULT_PATH);
+    newArgs.addAll(args);
 
     ProcessBuilder builder = new ProcessBuilder(newArgs);
     Process p = builder.start();

@@ -6,7 +6,6 @@ import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.junit.Assert.assertTrue;
 
-import com.google.common.io.ByteStreams;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -34,7 +33,7 @@ public class TcpProgressParserTest extends AbstractProgressParserTest {
     InputStream inputStream = combineResource(Progresses.allFiles);
     OutputStream outputStream = client.getOutputStream();
 
-    long bytes = ByteStreams.copy(inputStream, outputStream);
+    long bytes = inputStream.transferTo(outputStream);
 
     // HACK, but give the TcpProgressParser thread time to actually handle the connection/data
     // before the client is closed, and the parser is stopped.

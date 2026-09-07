@@ -7,8 +7,7 @@ package net.bramp.ffmpeg.builder;
 // p:program_index
 // index is meant to be zero based, by negitive is allowed as dummy values
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
+import java.util.Objects;
 
 /**
  * Metadata spec, as described in the "map_metadata" section of
@@ -19,15 +18,15 @@ public class MetadataSpecifier {
   final String spec;
 
   private MetadataSpecifier(String spec) {
-    this.spec = checkNotNull(spec);
+    this.spec = Objects.requireNonNull(spec);
   }
 
   private MetadataSpecifier(String prefix, int index) {
-    this.spec = checkNotNull(prefix) + ":" + index;
+    this.spec = Objects.requireNonNull(prefix) + ":" + index;
   }
 
   private MetadataSpecifier(String prefix, StreamSpecifier spec) {
-    this.spec = checkNotNull(prefix) + ":" + checkNotNull(spec).spec();
+    this.spec = Objects.requireNonNull(prefix) + ":" + Objects.requireNonNull(spec).spec();
   }
 
   public String spec() {
@@ -35,9 +34,13 @@ public class MetadataSpecifier {
   }
 
   public static String checkValidKey(String key) {
-    checkNotNull(key);
-    checkArgument(!key.isEmpty(), "key must not be empty");
-    checkArgument(key.matches("\\w+"), "key must only contain letters, numbers or _");
+    Objects.requireNonNull(key);
+    if (key.isEmpty()) {
+      throw new IllegalArgumentException("key must not be empty");
+    }
+    if (!key.matches("\\w+")) {
+      throw new IllegalArgumentException("key must only contain letters, numbers or _");
+    }
     return key;
   }
 
@@ -66,7 +69,7 @@ public class MetadataSpecifier {
   }
 
   public static MetadataSpecifier stream(StreamSpecifier spec) {
-    checkNotNull(spec);
+    Objects.requireNonNull(spec);
     return new MetadataSpecifier("s", spec);
   }
 }

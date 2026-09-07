@@ -1,8 +1,7 @@
 package net.bramp.ffmpeg;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import java.io.IOException;
+import java.util.Objects;
 import net.bramp.ffmpeg.builder.FFmpegBuilder;
 import net.bramp.ffmpeg.job.FFmpegJob;
 import net.bramp.ffmpeg.job.SinglePassFFmpegJob;
@@ -23,8 +22,8 @@ public class FFmpegExecutor {
   }
 
   public FFmpegExecutor(FFmpeg ffmpeg, FFprobe ffprobe) {
-    this.ffmpeg = checkNotNull(ffmpeg);
-    this.ffprobe = checkNotNull(ffprobe);
+    this.ffmpeg = Objects.requireNonNull(ffmpeg);
+    this.ffprobe = Objects.requireNonNull(ffprobe);
   }
 
   public FFmpegJob createJob(FFmpegBuilder builder) {

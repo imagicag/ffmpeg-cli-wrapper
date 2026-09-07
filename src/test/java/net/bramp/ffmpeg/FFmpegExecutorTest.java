@@ -8,11 +8,9 @@ import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.io.ByteStreams;
-import com.google.common.io.CountingOutputStream;
-import com.google.common.net.HostAndPort;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -72,8 +70,11 @@ public class FFmpegExecutorTest {
 
   public static String getWebserverRoot() {
     NetworkListener net = server.getListener("grizzly");
-    HostAndPort hp = HostAndPort.fromParts(net.getHost(), net.getPort());
-    return "http://" + hp.toString() + "/";
+    String host = net.getHost();
+    if (host.indexOf(':') >= 0 && !(host.startsWith("[") && host.endsWith("]"))) {
+      host = "[" + host + "]";
+    }
+    return "http://" + host + ":" + net.getPort() + "/";
   }
 
   @Test
@@ -196,19 +197,19 @@ public class FFmpegExecutorTest {
             .setAudioChannels(1)
             .done();
 
-    List<String> newArgs =
-        ImmutableList.<String>builder().add(ffmpeg.getPath()).addAll(builder.build()).build();
+    List<String> newArgs = new ArrayList<>();
+    newArgs.add(ffmpeg.getPath());
+    newArgs.addAll(builder.build());
 
     // TODO Add support to the FFmpegJob to export the stream
     Process p = new ProcessBuilder(newArgs).start();
 
-    CountingOutputStream out = new CountingOutputStream(ByteStreams.nullOutputStream());
-    ByteStreams.copy(p.getInputStream(), out);
+    long byteCount = p.getInputStream().transferTo(OutputStream.nullOutputStream());
 
     assertEquals(0, p.waitFor());
 
     // This is perhaps fragile, but one byte per audio sample
-    assertEquals(254976, out.getCount());
+    assertEquals(254976, byteCount);
   }
 
   @Test

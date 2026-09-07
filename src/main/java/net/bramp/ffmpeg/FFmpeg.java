@@ -1,19 +1,13 @@
 package net.bramp.ffmpeg;
 
-import static com.google.common.base.MoreObjects.firstNonNull;
-import static com.google.common.base.Preconditions.checkNotNull;
-
-import com.google.common.collect.ImmutableList;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.annotation.CheckReturnValue;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import net.bramp.ffmpeg.builder.FFmpegBuilder;
 import net.bramp.ffmpeg.info.Codec;
 import net.bramp.ffmpeg.info.Format;
@@ -31,7 +25,7 @@ import org.apache.commons.lang3.math.Fraction;
 public class FFmpeg extends FFcommon {
 
   public static final String FFMPEG = "ffmpeg";
-  public static final String DEFAULT_PATH = firstNonNull(System.getenv("FFMPEG"), FFMPEG);
+  public static final String DEFAULT_PATH = Objects.requireNonNullElse(System.getenv("FFMPEG"), FFMPEG);
 
   public static final Fraction FPS_30 = Fraction.getFraction(30, 1);
   public static final Fraction FPS_29_97 = Fraction.getFraction(30000, 1001);
@@ -82,15 +76,15 @@ public class FFmpeg extends FFcommon {
     this(DEFAULT_PATH, new RunProcessFunction());
   }
 
-  public FFmpeg(@Nonnull ProcessFunction runFunction) throws IOException {
+  public FFmpeg(ProcessFunction runFunction) throws IOException {
     this(DEFAULT_PATH, runFunction);
   }
 
-  public FFmpeg(@Nonnull String path) throws IOException {
+  public FFmpeg(String path) throws IOException {
     this(path, new RunProcessFunction());
   }
 
-  public FFmpeg(@Nonnull String path, @Nonnull ProcessFunction runFunction) throws IOException {
+  public FFmpeg(String path, ProcessFunction runFunction) throws IOException {
     super(path, runFunction);
     version();
   }
@@ -119,13 +113,13 @@ public class FFmpeg extends FFcommon {
     }
   }
 
-  public synchronized @Nonnull List<Codec> codecs() throws IOException {
+  public synchronized List<Codec> codecs() throws IOException {
     checkIfFFmpeg();
 
     if (this.codecs == null) {
       codecs = new ArrayList<>();
 
-      Process p = runFunc.run(ImmutableList.of(path, "-codecs"));
+      Process p = runFunc.run(List.of(path, "-codecs"));
       try {
         BufferedReader r = wrapInReader(p);
         String line;
@@ -137,7 +131,7 @@ public class FFmpeg extends FFcommon {
         }
 
         throwOnError(p);
-        this.codecs = ImmutableList.copyOf(codecs);
+        this.codecs = List.copyOf(codecs);
       } finally {
         p.destroy();
       }
@@ -146,13 +140,13 @@ public class FFmpeg extends FFcommon {
     return codecs;
   }
 
-  public synchronized @Nonnull List<Format> formats() throws IOException {
+  public synchronized List<Format> formats() throws IOException {
     checkIfFFmpeg();
 
     if (this.formats == null) {
       formats = new ArrayList<>();
 
-      Process p = runFunc.run(ImmutableList.of(path, "-formats"));
+      Process p = runFunc.run(List.of(path, "-formats"));
       try {
         BufferedReader r = wrapInReader(p);
         String line;
@@ -164,7 +158,7 @@ public class FFmpeg extends FFcommon {
         }
 
         throwOnError(p);
-        this.formats = ImmutableList.copyOf(formats);
+        this.formats = List.copyOf(formats);
       } finally {
         p.destroy();
       }
@@ -178,7 +172,7 @@ public class FFmpeg extends FFcommon {
     if (this.pixelFormats == null) {
       pixelFormats = new ArrayList<>();
 
-      Process p = runFunc.run(ImmutableList.of(path, "-pix_fmts"));
+      Process p = runFunc.run(List.of(path, "-pix_fmts"));
       try {
         BufferedReader r = wrapInReader(p);
         String line;
@@ -193,7 +187,7 @@ public class FFmpeg extends FFcommon {
         }
 
         throwOnError(p);
-        this.pixelFormats = ImmutableList.copyOf(pixelFormats);
+        this.pixelFormats = List.copyOf(pixelFormats);
       } finally {
         p.destroy();
       }
@@ -207,7 +201,7 @@ public class FFmpeg extends FFcommon {
     try {
       // Default to TCP because it is supported across all OSes, and is better than UDP because it
       // provides good properties such as in-order packets, reliability, error checking, etc.
-      return new TcpProgressParser(checkNotNull(listener));
+      return new TcpProgressParser(Objects.requireNonNull(listener));
     } catch (URISyntaxException e) {
       throw new IOException(e);
     }
@@ -223,8 +217,8 @@ public class FFmpeg extends FFcommon {
     run(builder, null);
   }
 
-  public void run(FFmpegBuilder builder, @Nullable ProgressListener listener) throws IOException {
-    checkNotNull(builder);
+  public void run(FFmpegBuilder builder, ProgressListener listener) throws IOException {
+    Objects.requireNonNull(builder);
 
     if (listener != null) {
       try (ProgressParser progressParser = createProgressParser(listener)) {
@@ -238,7 +232,6 @@ public class FFmpeg extends FFcommon {
     }
   }
 
-  @CheckReturnValue
   public FFmpegBuilder builder() {
     return new FFmpegBuilder();
   }

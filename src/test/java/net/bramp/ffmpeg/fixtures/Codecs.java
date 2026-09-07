@@ -1,6 +1,6 @@
 package net.bramp.ffmpeg.fixtures;
 
-import com.google.common.collect.ImmutableList;
+import java.util.List;
 import net.bramp.ffmpeg.info.Codec;
 
 /**
@@ -16,9 +16,8 @@ public final class Codecs {
     throw new AssertionError("No instances for you!");
   }
 
-  public static final ImmutableList<Codec> CODECS =
-      new ImmutableList.Builder<Codec>()
-          .add(
+  public static final List<Codec> CODECS =
+      List.of(
               new Codec("012v", "Uncompressed 4:2:2 10-bit", "D.VI.S"),
               new Codec("4xm", "4X Movie", "D.V.L."),
               new Codec("8bps", "QuickTime 8BPS video", "D.VI.S"),
@@ -593,6 +592,5 @@ public final class Codecs {
               new Codec("ttml", "Timed Text Markup Language", "..S..."),
               new Codec("vplayer", "VPlayer subtitle", "D.S..."),
               new Codec("webvtt", "WebVTT subtitle", "DES..."),
-              new Codec("xsub", "XSUB", "DES..."))
-          .build();
+          new Codec("xsub", "XSUB", "DES..."));
 }

@@ -3,7 +3,6 @@ package net.bramp.commons.lang3.math.gson;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-import com.google.common.collect.ImmutableList;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import java.util.List;
@@ -32,7 +31,7 @@ public class FractionAdapterTest {
   }
 
   static final List<TestData> readTests =
-      ImmutableList.of(
+      List.of(
           new TestData("null", null),
           new TestData("1", Fraction.getFraction(1, 1)),
           new TestData("1.0", Fraction.getFraction(1, 1)),
@@ -47,11 +46,11 @@ public class FractionAdapterTest {
 
   // Divide by zero
   static final List<TestData> zerosTests =
-      ImmutableList.of(
+      List.of(
           new TestData("\"0/0\"", Fraction.ZERO), new TestData("\"1/0\"", Fraction.ZERO));
 
   static final List<TestData> writeTests =
-      ImmutableList.of(
+      List.of(
           new TestData("0", Fraction.ZERO),
           new TestData("1", Fraction.getFraction(1, 1)),
           new TestData("2", Fraction.getFraction(2, 1)),

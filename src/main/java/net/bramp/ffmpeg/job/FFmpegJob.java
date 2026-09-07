@@ -1,8 +1,6 @@
 package net.bramp.ffmpeg.job;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
-import javax.annotation.Nullable;
+import java.util.Objects;
 import net.bramp.ffmpeg.FFmpeg;
 import net.bramp.ffmpeg.progress.ProgressListener;
 
@@ -27,8 +25,8 @@ public abstract class FFmpegJob implements Runnable {
     this(ffmpeg, null);
   }
 
-  public FFmpegJob(FFmpeg ffmpeg, @Nullable ProgressListener listener) {
-    this.ffmpeg = checkNotNull(ffmpeg);
+  public FFmpegJob(FFmpeg ffmpeg, ProgressListener listener) {
+    this.ffmpeg = Objects.requireNonNull(ffmpeg);
     this.listener = listener;
   }
 

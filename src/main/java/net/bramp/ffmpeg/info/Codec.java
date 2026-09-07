@@ -1,6 +1,6 @@
 package net.bramp.ffmpeg.info;
 
-import com.google.common.base.Preconditions;
+import java.util.Objects;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
@@ -46,11 +46,13 @@ public class Codec {
    * </pre>
    */
   public Codec(String name, String longName, String flags) {
-    this.name = Preconditions.checkNotNull(name).trim();
-    this.longName = Preconditions.checkNotNull(longName).trim();
+    this.name = Objects.requireNonNull(name).trim();
+    this.longName = Objects.requireNonNull(longName).trim();
 
-    Preconditions.checkNotNull(flags);
-    Preconditions.checkArgument(flags.length() == 6, "Format flags is invalid '{}'", flags);
+    Objects.requireNonNull(flags);
+    if (flags.length() != 6) {
+      throw new IllegalArgumentException("Format flags is invalid '" + flags + "'");
+    }
     this.canDecode = flags.charAt(0) == 'D';
     this.canEncode = flags.charAt(1) == 'E';
 

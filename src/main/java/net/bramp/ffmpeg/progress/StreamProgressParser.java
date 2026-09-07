@@ -1,24 +1,23 @@
 package net.bramp.ffmpeg.progress;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
-import com.google.common.base.Charsets;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.nio.charset.StandardCharsets;
+import java.util.Objects;
 
 public class StreamProgressParser {
 
   final ProgressListener listener;
 
   public StreamProgressParser(ProgressListener listener) {
-    this.listener = checkNotNull(listener);
+    this.listener = Objects.requireNonNull(listener);
   }
 
   private static BufferedReader wrapInBufferedReader(Reader reader) {
-    checkNotNull(reader);
+    Objects.requireNonNull(reader);
 
     if (reader instanceof BufferedReader) {
       return (BufferedReader) reader;
@@ -28,8 +27,8 @@ public class StreamProgressParser {
   }
 
   public void processStream(InputStream stream) throws IOException {
-    checkNotNull(stream);
-    processReader(new InputStreamReader(stream, Charsets.UTF_8));
+    Objects.requireNonNull(stream);
+    processReader(new InputStreamReader(stream, StandardCharsets.UTF_8));
   }
 
   public void processReader(Reader reader) throws IOException {

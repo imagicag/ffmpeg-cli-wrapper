@@ -1,16 +1,13 @@
 package net.bramp.ffmpeg.job;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
-import com.google.common.base.Throwables;
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
-import javax.annotation.Nullable;
 import net.bramp.ffmpeg.FFmpeg;
 import net.bramp.ffmpeg.builder.FFmpegBuilder;
 import net.bramp.ffmpeg.progress.ProgressListener;
@@ -25,12 +22,12 @@ public class TwoPassFFmpegJob extends FFmpegJob {
   }
 
   public TwoPassFFmpegJob(
-      FFmpeg ffmpeg, FFmpegBuilder builder, @Nullable ProgressListener listener) {
+      FFmpeg ffmpeg, FFmpegBuilder builder, ProgressListener listener) {
     super(ffmpeg, listener);
 
     // Random prefix so multiple runs don't clash
     this.passlogPrefix = UUID.randomUUID().toString();
-    this.builder = checkNotNull(builder).setPassPrefix(passlogPrefix);
+    this.builder = Objects.requireNonNull(builder).setPassPrefix(passlogPrefix);
 
     // Build the args now (but throw away the results). This allows the illegal arguments to be
     // caught early, but also allows the ffmpeg command to actually alter the arguments when
@@ -70,7 +67,8 @@ public class TwoPassFFmpegJob extends FFmpegJob {
     } catch (Throwable t) {
       state = State.FAILED;
 
-      Throwables.throwIfUnchecked(t);
+      if (t instanceof RuntimeException runtimeException) throw runtimeException;
+      if (t instanceof Error error) throw error;
       throw new RuntimeException(t);
     }
   }

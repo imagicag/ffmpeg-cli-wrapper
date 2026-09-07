@@ -1,6 +1,5 @@
 package net.bramp.ffmpeg.nut;
 
-import com.google.common.base.MoreObjects;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
@@ -179,10 +178,6 @@ public class Frame {
 
   @Override
   public String toString() {
-    return MoreObjects.toStringHelper(this)
-        .add("id", stream.header.id)
-        .add("pts", pts)
-        .add("data", String.format("(%d bytes)", data.length))
-        .toString();
+    return "Frame{id=" + stream.header.id + ", pts=" + pts + ", data=(" + data.length + " bytes)}";
   }
 }

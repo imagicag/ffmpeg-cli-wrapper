@@ -1,6 +1,5 @@
 package net.bramp.ffmpeg.nut;
 
-import com.google.common.base.MoreObjects;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -174,17 +173,9 @@ public class MainHeaderPacket extends Packet {
 
   @Override
   public String toString() {
-    return MoreObjects.toStringHelper(this)
-        .add("header", header)
-        .add("version", version)
-        .add("minorVersion", minorVersion)
-        .add("streamCount", streamCount)
-        .add("maxDistance", maxDistance)
-        .add("timeBase", timeBase)
-        .add("flags", flags)
-        .add("frameCodes", frameCodes.size())
-        .add("elision", elision)
-        .add("footer", footer)
-        .toString();
+    return "MainHeaderPacket{header=" + header + ", version=" + version + ", minorVersion="
+        + minorVersion + ", streamCount=" + streamCount + ", maxDistance=" + maxDistance
+        + ", timeBase=" + timeBase + ", flags=" + flags + ", frameCodes=" + frameCodes.size()
+        + ", elision=" + elision + ", footer=" + footer + '}';
   }
 }

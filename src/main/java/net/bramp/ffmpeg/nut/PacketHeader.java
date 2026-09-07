@@ -1,6 +1,5 @@
 package net.bramp.ffmpeg.nut;
 
-import com.google.common.base.MoreObjects;
 import java.io.IOException;
 
 public class PacketHeader {
@@ -30,14 +29,7 @@ public class PacketHeader {
 
   @Override
   public String toString() {
-    MoreObjects.ToStringHelper helper =
-        MoreObjects.toStringHelper(this)
-            .add("startcode", Packet.Startcode.toString(startcode))
-            .add("forwardPtr", forwardPtr);
-
-    if (forwardPtr > 4096) {
-      helper = helper.add("checksum", checksum);
-    }
-    return helper.toString();
+    return "PacketHeader{startcode=" + Packet.Startcode.toString(startcode) + ", forwardPtr="
+        + forwardPtr + (forwardPtr > 4096 ? ", checksum=" + checksum : "") + '}';
   }
 }

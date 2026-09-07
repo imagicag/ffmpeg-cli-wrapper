@@ -1,10 +1,8 @@
 package net.bramp.ffmpeg;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.concurrent.TimeUnit.*;
 import static net.bramp.ffmpeg.Preconditions.checkNotEmpty;
 
-import com.google.common.base.CharMatcher;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import java.util.concurrent.TimeUnit;
@@ -22,7 +20,6 @@ public final class FFmpegUtils {
   static final Gson gson = FFmpegUtils.setupGson();
   static final Pattern BITRATE_REGEX = Pattern.compile("(\\d+(?:\\.\\d+)?)kbits/s");
   static final Pattern TIME_REGEX = Pattern.compile("(\\d+):(\\d+):(\\d+(?:\\.\\d+)?)");
-  static final CharMatcher ZERO = CharMatcher.is('0');
 
   FFmpegUtils() {
     throw new AssertionError("No instances for you!");
@@ -50,7 +47,9 @@ public final class FFmpegUtils {
   public static String toTimecode(long duration, TimeUnit units) {
     // FIXME Negative durations are also supported.
     // https://www.ffmpeg.org/ffmpeg-utils.html#Time-duration
-    checkArgument(duration >= 0, "duration must be positive");
+    if (duration < 0) {
+      throw new IllegalArgumentException("duration must be positive");
+    }
 
     long nanoseconds = units.toNanos(duration); // TODO This will clip at Long.MAX_VALUE
     long seconds = units.toSeconds(duration);
@@ -66,7 +65,8 @@ public final class FFmpegUtils {
       return String.format("%02d:%02d:%02d", hours, minutes, seconds);
     }
 
-    return ZERO.trimTrailingFrom(String.format("%02d:%02d:%02d.%09d", hours, minutes, seconds, ns));
+    return String.format("%02d:%02d:%02d.%09d", hours, minutes, seconds, ns)
+        .replaceFirst("0+$", "");
   }
 
   /**

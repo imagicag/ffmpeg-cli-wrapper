@@ -1,12 +1,11 @@
 package net.bramp.ffmpeg.nut;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
-import com.google.common.io.CountingInputStream;
 import java.io.DataInput;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.FilterInputStream;
+import java.util.Objects;
 import net.bramp.ffmpeg.io.CRC32InputStream;
 
 /** A DataInputStream that implements a couple of custom FFmpeg Nut datatypes. */
@@ -21,7 +20,7 @@ public class NutDataInputStream implements DataInput {
   long endCrcRange;
 
   public NutDataInputStream(InputStream in) {
-    checkNotNull(in);
+    Objects.requireNonNull(in);
     this.count = new CountingInputStream(in);
     this.crc = new CRC32InputStream(count);
     this.in = new DataInputStream(crc);
@@ -183,5 +182,38 @@ public class NutDataInputStream implements DataInput {
   @Override
   public String readUTF() throws IOException {
     return in.readUTF();
+  }
+
+  private static final class CountingInputStream extends FilterInputStream {
+    private long count;
+
+    CountingInputStream(InputStream in) {
+      super(in);
+    }
+
+    long getCount() {
+      return count;
+    }
+
+    @Override
+    public int read() throws IOException {
+      int result = super.read();
+      if (result != -1) count++;
+      return result;
+    }
+
+    @Override
+    public int read(byte[] bytes, int offset, int length) throws IOException {
+      int result = super.read(bytes, offset, length);
+      if (result != -1) count += result;
+      return result;
+    }
+
+    @Override
+    public long skip(long bytes) throws IOException {
+      long skipped = super.skip(bytes);
+      count += skipped;
+      return skipped;
+    }
   }
 }

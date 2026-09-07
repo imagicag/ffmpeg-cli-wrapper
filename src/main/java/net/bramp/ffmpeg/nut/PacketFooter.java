@@ -1,6 +1,5 @@
 package net.bramp.ffmpeg.nut;
 
-import com.google.common.base.MoreObjects;
 import java.io.IOException;
 
 public class PacketFooter {
@@ -19,6 +18,6 @@ public class PacketFooter {
 
   @Override
   public String toString() {
-    return MoreObjects.toStringHelper(this).add("checksum", checksum).toString();
+    return "PacketFooter{checksum=" + checksum + '}';
   }
 }

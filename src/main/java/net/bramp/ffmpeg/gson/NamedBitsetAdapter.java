@@ -1,8 +1,5 @@
 package net.bramp.ffmpeg.gson;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
-import com.google.common.base.Optional;
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
@@ -10,6 +7,8 @@ import com.google.gson.stream.JsonWriter;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Objects;
+import java.util.Optional;
 
 /**
  * Converts a json object which represents a set of booleans. For example:
@@ -41,7 +40,7 @@ public class NamedBitsetAdapter<T> extends TypeAdapter<T> {
   final Class<T> clazz;
 
   public NamedBitsetAdapter(Class<T> clazz) {
-    this.clazz = checkNotNull(clazz);
+    this.clazz = Objects.requireNonNull(clazz);
   }
 
   protected Optional<Boolean> readBoolean(JsonReader reader) throws IOException {
@@ -53,7 +52,7 @@ public class NamedBitsetAdapter<T> extends TypeAdapter<T> {
         return Optional.of(reader.nextInt() != 0);
       default:
         reader.skipValue();
-        return Optional.absent();
+        return Optional.empty();
     }
   }
 

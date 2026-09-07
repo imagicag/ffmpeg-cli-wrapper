@@ -4,7 +4,6 @@ import static net.bramp.ffmpeg.Helper.loadResource;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.IsEqual.equalTo;
 
-import com.google.common.io.ByteStreams;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.DatagramPacket;
@@ -34,7 +33,7 @@ public class UdpProgressParserTest extends AbstractProgressParserTest {
       // Load each Progress Fixture, and send in a single datagram packet
       for (String progressFixture : Progresses.allFiles) {
         InputStream inputStream = loadResource(progressFixture);
-        byte[] bytes = ByteStreams.toByteArray(inputStream);
+        byte[] bytes = inputStream.readAllBytes();
 
         DatagramPacket packet = new DatagramPacket(bytes, bytes.length, addr, port);
         socket.send(packet);

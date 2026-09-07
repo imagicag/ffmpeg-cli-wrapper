@@ -1,8 +1,5 @@
 package net.bramp.ffmpeg.gson;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
-import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
 import com.google.gson.TypeAdapter;
 import com.google.gson.TypeAdapterFactory;
@@ -14,8 +11,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
-import javax.annotation.CheckReturnValue;
-import javax.annotation.Nonnull;
+import java.util.Objects;
 
 /**
  * Maps Enums to lowercase strings.
@@ -30,15 +26,15 @@ public class LowercaseEnumTypeAdapterFactory implements TypeAdapterFactory {
 
     // T is a Enum, thus immutable, however, we can't enforce that type due to the
     // TypeAdapterFactory interface
-    private final ImmutableMap<String, T> lowercaseToEnum;
+    private final Map<String, T> lowercaseToEnum;
 
     public MyTypeAdapter(Map<String, T> lowercaseToEnum) {
-      this.lowercaseToEnum = ImmutableMap.copyOf(lowercaseToEnum);
+      this.lowercaseToEnum = Map.copyOf(lowercaseToEnum);
     }
 
     @Override
     public void write(JsonWriter out, T value) throws IOException {
-      checkNotNull(out);
+      Objects.requireNonNull(out);
 
       if (value == null) {
         out.nullValue();
@@ -49,7 +45,7 @@ public class LowercaseEnumTypeAdapterFactory implements TypeAdapterFactory {
 
     @Override
     public T read(JsonReader reader) throws IOException {
-      checkNotNull(reader);
+      Objects.requireNonNull(reader);
 
       if (reader.peek() == JsonToken.NULL) {
         reader.nextNull();
@@ -59,10 +55,9 @@ public class LowercaseEnumTypeAdapterFactory implements TypeAdapterFactory {
     }
   }
 
-  @CheckReturnValue
   @Override
   public <T> TypeAdapter<T> create(Gson gson, TypeToken<T> type) {
-    checkNotNull(type);
+    Objects.requireNonNull(type);
 
     Class<T> rawType = (Class<T>) type.getRawType();
     if (!rawType.isEnum()) {
@@ -78,8 +73,7 @@ public class LowercaseEnumTypeAdapterFactory implements TypeAdapterFactory {
     return new MyTypeAdapter<T>(lowercaseToEnum);
   }
 
-  @CheckReturnValue
-  private static String toLowercase(@Nonnull Object o) {
-    return checkNotNull(o).toString().toLowerCase(Locale.UK);
+  private static String toLowercase(Object o) {
+    return Objects.requireNonNull(o).toString().toLowerCase(Locale.UK);
   }
 }

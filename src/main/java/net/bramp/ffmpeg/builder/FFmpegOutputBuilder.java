@@ -42,6 +42,30 @@ public class FFmpegOutputBuilder extends AbstractFFmpegStreamBuilder<FFmpegOutpu
         super(parent, uri);
     }
 
+    @Override
+    public FFmpegOutputBuilder useOptions(MainEncodingOptions opts) {
+        super.useOptions(opts);
+        return this;
+    }
+
+    @Override
+    public FFmpegOutputBuilder useOptions(AudioEncodingOptions opts) {
+        super.useOptions(opts);
+        if (opts.sample_format != null) audio_sample_format = opts.sample_format;
+        if (opts.bit_rate != 0) audio_bit_rate = opts.bit_rate;
+        if (opts.quality != null) audio_quality = opts.quality;
+        return this;
+    }
+
+    @Override
+    public FFmpegOutputBuilder useOptions(VideoEncodingOptions opts) {
+        super.useOptions(opts);
+        if (opts.bit_rate != 0) video_bit_rate = opts.bit_rate;
+        if (opts.filter != null) video_filter = opts.filter;
+        if (opts.preset != null) video_preset = opts.preset;
+        return this;
+    }
+
     public FFmpegOutputBuilder setConstantRateFactor(double factor) {
         requireArgument(factor >= 0, "constant rate factor must be greater or equal to zero");
         this.constantRateFactor = factor;
@@ -179,9 +203,6 @@ public class FFmpegOutputBuilder extends AbstractFFmpegStreamBuilder<FFmpegOutpu
      */
     @Override
     public EncodingOptions buildOptions() {
-        // TODO When/if modelmapper supports @ConstructorProperties, we map this
-        // object, instead of doing new XXX(...)
-        // https://github.com/jhalterman/modelmapper/issues/44
         return new EncodingOptions(
                 new MainEncodingOptions(format, startOffset, duration),
                 new AudioEncodingOptions(

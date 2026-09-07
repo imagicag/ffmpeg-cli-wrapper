@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
-import net.bramp.ffmpeg.modelmapper.Mapper;
 import net.bramp.ffmpeg.nut.Fraction;
 import net.bramp.ffmpeg.options.AudioEncodingOptions;
 import net.bramp.ffmpeg.options.EncodingOptions;
@@ -113,22 +112,44 @@ public abstract class AbstractFFmpegStreamBuilder<T extends AbstractFFmpegStream
     protected abstract T getThis();
 
     public T useOptions(EncodingOptions opts) {
-        Mapper.map(opts, this);
+        Objects.requireNonNull(opts);
+        useOptions(opts.getMain());
+
+        if (opts.getAudio().enabled) {
+            useOptions(opts.getAudio());
+        }
+        if (opts.getVideo().enabled) {
+            useOptions(opts.getVideo());
+        }
+
         return getThis();
     }
 
     public T useOptions(MainEncodingOptions opts) {
-        Mapper.map(opts, this);
+        Objects.requireNonNull(opts);
+        if (opts.format != null) format = opts.format;
+        if (opts.startOffset != null) startOffset = opts.startOffset;
+        if (opts.duration != null) duration = opts.duration;
         return getThis();
     }
 
     public T useOptions(AudioEncodingOptions opts) {
-        Mapper.map(opts, this);
+        Objects.requireNonNull(opts);
+        if (opts.enabled) audio_enabled = true;
+        if (opts.codec != null) audio_codec = opts.codec;
+        if (opts.channels != 0) audio_channels = opts.channels;
+        if (opts.sample_rate != 0) audio_sample_rate = opts.sample_rate;
         return getThis();
     }
 
     public T useOptions(VideoEncodingOptions opts) {
-        Mapper.map(opts, this);
+        Objects.requireNonNull(opts);
+        if (opts.enabled) video_enabled = true;
+        if (opts.codec != null) video_codec = opts.codec;
+        if (opts.frame_rate != null) video_frame_rate = opts.frame_rate;
+        if (opts.width != 0) video_width = opts.width;
+        if (opts.height != 0) video_height = opts.height;
+        if (opts.frames != null) video_frames = opts.frames;
         return getThis();
     }
 

@@ -203,6 +203,47 @@ public class FFmpegBuilderTest {
     }
 
     @Test
+    public void testCopyFromPreservesValuesForDefaultOptions() {
+        FFmpegOutputBuilder output = new FFmpegOutputBuilder()
+                .setFormat("mp4")
+                .setAudioCodec("aac")
+                .setAudioChannels(2)
+                .setVideoCodec("libx264")
+                .setVideoResolution(320, 240);
+
+        output.useOptions(new MainEncodingOptions(null, null, null));
+        output.useOptions(new AudioEncodingOptions(false, null, 0, 0, null, 0, null));
+        output.useOptions(new VideoEncodingOptions(false, null, null, 0, 0, 0, null, null, null));
+
+        EncodingOptions options = output.buildOptions();
+        assertEquals("mp4", options.main.format);
+        assertEquals("aac", options.audio.codec);
+        assertEquals(2, options.audio.channels);
+        assertEquals("libx264", options.video.codec);
+        assertEquals(320, options.video.width);
+        assertEquals(240, options.video.height);
+    }
+
+    @Test
+    public void testCopyFromSkipsDisabledSections() {
+        EncodingOptions disabledOptions = new EncodingOptions(
+                new MainEncodingOptions("mp4", 0L, 0L),
+                new AudioEncodingOptions(false, "aac", 2, AUDIO_SAMPLE_48000, AUDIO_FORMAT_S16, 128000, 2.0),
+                new VideoEncodingOptions(false, "libx264", FPS_30, 320, 240, 1000000, 10, "scale=320:240", "fast"));
+
+        EncodingOptions actual =
+                new FFmpegOutputBuilder().useOptions(disabledOptions).buildOptions();
+
+        assertEquals("mp4", actual.main.format);
+        assertEquals(Long.valueOf(0), actual.main.startOffset);
+        assertEquals(Long.valueOf(0), actual.main.duration);
+        assertEquals(null, actual.audio.codec);
+        assertEquals(0, actual.audio.channels);
+        assertEquals(null, actual.video.codec);
+        assertEquals(0, actual.video.width);
+    }
+
+    @Test
     public void testMultipleOutputs() {
 
         List<String> args = new FFmpegBuilder()

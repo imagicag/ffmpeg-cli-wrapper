@@ -5,7 +5,6 @@ import static org.junit.Assert.assertEquals;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import java.util.List;
-
 import net.bramp.ffmpeg.gson.FractionAdapter;
 import net.bramp.ffmpeg.nut.Fraction;
 import org.junit.BeforeClass;

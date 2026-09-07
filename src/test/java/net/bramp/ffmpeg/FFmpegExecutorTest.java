@@ -8,8 +8,12 @@ import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
+import com.sun.net.httpserver.HttpServer;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.InetSocketAddress;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -22,10 +26,6 @@ import net.bramp.ffmpeg.job.FFmpegJob;
 import net.bramp.ffmpeg.probe.FFmpegProbeResult;
 import net.bramp.ffmpeg.progress.Progress;
 import net.bramp.ffmpeg.progress.RecordingProgressListener;
-import org.glassfish.grizzly.PortRange;
-import org.glassfish.grizzly.http.server.HttpServer;
-import org.glassfish.grizzly.http.server.NetworkListener;
-import org.glassfish.grizzly.http.util.MimeType;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -53,11 +53,17 @@ public class FFmpegExecutorTest {
 
   @BeforeClass
   public static void startWebserver() throws IOException {
-    MimeType.add("mp4", "video/mp4");
-
-    server =
-        HttpServer.createSimpleServer(
-            Samples.TEST_PREFIX, "127.0.0.1", new PortRange(10000, 60000));
+    Path sample = Path.of(Samples.big_buck_bunny_720p_1mb);
+    server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+    server.createContext(
+        "/" + Samples.base_big_buck_bunny_720p_1mb,
+        exchange -> {
+          exchange.getResponseHeaders().set("Content-Type", "video/mp4");
+          exchange.sendResponseHeaders(200, Files.size(sample));
+          try (OutputStream response = exchange.getResponseBody()) {
+            Files.copy(sample, response);
+          }
+        });
     server.start();
 
     LOG.info("Started server at {}", getWebserverRoot());
@@ -65,16 +71,16 @@ public class FFmpegExecutorTest {
 
   @AfterClass
   public static void stopWebserver() {
-    server.shutdownNow();
+    server.stop(0);
   }
 
   public static String getWebserverRoot() {
-    NetworkListener net = server.getListener("grizzly");
-    String host = net.getHost();
+    InetSocketAddress address = server.getAddress();
+    String host = address.getHostString();
     if (host.indexOf(':') >= 0 && !(host.startsWith("[") && host.endsWith("]"))) {
       host = "[" + host + "]";
     }
-    return "http://" + host + ":" + net.getPort() + "/";
+    return "http://" + host + ":" + address.getPort() + "/";
   }
 
   @Test

@@ -1,6 +1,5 @@
 package net.bramp.ffmpeg.builder;
 
-import static com.nitorcreations.Matchers.reflectEquals;
 import static net.bramp.ffmpeg.FFmpeg.AUDIO_FORMAT_S16;
 import static net.bramp.ffmpeg.FFmpeg.AUDIO_SAMPLE_48000;
 import static net.bramp.ffmpeg.FFmpeg.FPS_30;
@@ -9,7 +8,6 @@ import static net.bramp.ffmpeg.builder.MetadataSpecifier.*;
 import static net.bramp.ffmpeg.builder.StreamSpecifier.tag;
 import static net.bramp.ffmpeg.builder.StreamSpecifier.usable;
 import static net.bramp.ffmpeg.builder.StreamSpecifierType.*;
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
@@ -178,9 +176,30 @@ public class FFmpegBuilderTest {
                 .useOptions(video)
                 .buildOptions();
 
-        assertThat(main, reflectEquals(options.getMain()));
-        assertThat(audio, reflectEquals(options.getAudio()));
-        assertThat(video, reflectEquals(options.getVideo()));
+        MainEncodingOptions actualMain = options.getMain();
+        assertEquals(main.format, actualMain.format);
+        assertEquals(main.startOffset, actualMain.startOffset);
+        assertEquals(main.duration, actualMain.duration);
+
+        AudioEncodingOptions actualAudio = options.getAudio();
+        assertEquals(audio.enabled, actualAudio.enabled);
+        assertEquals(audio.codec, actualAudio.codec);
+        assertEquals(audio.channels, actualAudio.channels);
+        assertEquals(audio.sample_rate, actualAudio.sample_rate);
+        assertEquals(audio.sample_format, actualAudio.sample_format);
+        assertEquals(audio.bit_rate, actualAudio.bit_rate);
+        assertEquals(audio.quality, actualAudio.quality);
+
+        VideoEncodingOptions actualVideo = options.getVideo();
+        assertEquals(video.enabled, actualVideo.enabled);
+        assertEquals(video.codec, actualVideo.codec);
+        assertEquals(video.frame_rate, actualVideo.frame_rate);
+        assertEquals(video.width, actualVideo.width);
+        assertEquals(video.height, actualVideo.height);
+        assertEquals(video.bit_rate, actualVideo.bit_rate);
+        assertEquals(video.frames, actualVideo.frames);
+        assertEquals(video.filter, actualVideo.filter);
+        assertEquals(video.preset, actualVideo.preset);
     }
 
     @Test

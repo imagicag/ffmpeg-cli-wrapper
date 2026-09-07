@@ -1,8 +1,8 @@
 package net.bramp.ffmpeg.gson;
 
-import static com.nitorcreations.Matchers.reflectEquals;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.IsEqual.equalTo;
+import static org.junit.Assert.assertEquals;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -68,13 +68,19 @@ public class NamedBitsetAdapterTest {
     @Test
     public void testRead() throws Exception {
         Set s = gson.fromJson(testData, Set.class);
-        assertThat(s, reflectEquals(testSet));
+        assertEquals(testSet.a, s.a);
+        assertEquals(testSet.b, s.b);
+        assertEquals(testSet.c, s.c);
+        assertEquals(testSet.d, s.d);
     }
 
     @Test
     public void testReadWithSkipField() throws Exception {
         Set s = gson.fromJson(testDataWithSkipField, Set.class);
-        assertThat(s, reflectEquals(testSet));
+        assertEquals(testSet.a, s.a);
+        assertEquals(testSet.b, s.b);
+        assertEquals(testSet.c, s.c);
+        assertEquals(testSet.d, s.d);
     }
 
     @Test

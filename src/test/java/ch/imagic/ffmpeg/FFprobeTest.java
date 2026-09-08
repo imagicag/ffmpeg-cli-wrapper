@@ -6,10 +6,10 @@ import static org.mockito.Mockito.*;
 
 import ch.imagic.ffmpeg.fixtures.Samples;
 import ch.imagic.ffmpeg.lang.NewProcessAnswer;
-import ch.imagic.ffmpeg.probe.Fraction;
 import ch.imagic.ffmpeg.probe.FFmpegChapter;
 import ch.imagic.ffmpeg.probe.FFmpegProbeResult;
 import ch.imagic.ffmpeg.probe.FFmpegStream;
+import ch.imagic.ffmpeg.probe.Fraction;
 import ch.imagic.ffmpeg.process.FFMpegProcessFactory;
 import com.google.gson.Gson;
 import java.io.File;
@@ -91,11 +91,11 @@ public class FFprobeTest {
 
         // Only a quick sanity check until we do something better
         assertEquals(2, info.getStreams().size());
-        assertEquals(FFmpegStream.CodecType.VIDEO, info.getStreams().get(0).codec_type);
-        assertEquals(FFmpegStream.CodecType.AUDIO, info.getStreams().get(1).codec_type);
+        assertEquals(FFmpegStream.CodecType.VIDEO, info.getStreams().get(0).getCodecType());
+        assertEquals(FFmpegStream.CodecType.AUDIO, info.getStreams().get(1).getCodecType());
 
-        assertEquals(6, info.getStreams().get(1).channels);
-        assertEquals(48_000, info.getStreams().get(1).sample_rate);
+        assertEquals(6, info.getStreams().get(1).getChannels());
+        assertEquals(48_000, info.getStreams().get(1).getSampleRate());
 
         assertTrue(info.getChapters().isEmpty());
         // System.out.println(FFmpegUtils.getGson().toJson(info));
@@ -109,20 +109,21 @@ public class FFprobeTest {
         assertEquals(24, info.getChapters().size());
 
         FFmpegChapter firstChapter = info.getChapters().get(0);
-        assertEquals("1/44100", firstChapter.time_base);
-        assertEquals(0L, firstChapter.start);
-        assertEquals("0.000000", firstChapter.start_time);
-        assertEquals(11951309L, firstChapter.end);
-        assertEquals("271.004739", firstChapter.end_time);
-        assertEquals("01 - Sammy Jay Makes a Fuss", firstChapter.tags.title);
+        assertEquals("1/44100", firstChapter.getTimeBase());
+        assertEquals(0L, firstChapter.getStart());
+        assertEquals("0.000000", firstChapter.getStartTime());
+        assertEquals(11951309L, firstChapter.getEnd());
+        assertEquals("271.004739", firstChapter.getEndTime());
+        assertEquals("01 - Sammy Jay Makes a Fuss", firstChapter.getTags().getTitle());
 
         FFmpegChapter lastChapter = info.getChapters().get(info.getChapters().size() - 1);
-        assertEquals("1/44100", lastChapter.time_base);
-        assertEquals(237875790L, lastChapter.start);
-        assertEquals("5394.008844", lastChapter.start_time);
-        assertEquals(248628224L, lastChapter.end);
-        assertEquals("5637.828209", lastChapter.end_time);
-        assertEquals("24 - Chatterer Has His Turn to Laugh", lastChapter.tags.title);
+        assertEquals("1/44100", lastChapter.getTimeBase());
+        assertEquals(237875790L, lastChapter.getStart());
+        assertEquals("5394.008844", lastChapter.getStartTime());
+        assertEquals(248628224L, lastChapter.getEnd());
+        assertEquals("5637.828209", lastChapter.getEndTime());
+        assertEquals(
+                "24 - Chatterer Has His Turn to Laugh", lastChapter.getTags().getTitle());
     }
 
     @Test
@@ -133,14 +134,16 @@ public class FFprobeTest {
 
         // Only a quick sanity check until we do something better
         assertEquals(2, info.getStreams().size());
-        assertEquals(FFmpegStream.CodecType.VIDEO, info.getStreams().get(0).codec_type);
-        assertEquals(FFmpegStream.CodecType.AUDIO, info.getStreams().get(1).codec_type);
+        assertEquals(FFmpegStream.CodecType.VIDEO, info.getStreams().get(0).getCodecType());
+        assertEquals(FFmpegStream.CodecType.AUDIO, info.getStreams().get(1).getCodecType());
 
-        assertEquals(2, info.getStreams().get(1).channels);
-        assertEquals(48_000, info.getStreams().get(1).sample_rate);
+        assertEquals(2, info.getStreams().get(1).getChannels());
+        assertEquals(48_000, info.getStreams().get(1).getSampleRate());
 
         // Test a UTF-8 name
-        assertEquals("c:\\Users\\Bob\\Always On My Mind [Program Only] - Adelén.mp4", info.getFormat().filename);
+        assertEquals(
+                "c:\\Users\\Bob\\Always On My Mind [Program Only] - Adelén.mp4",
+                info.getFormat().getFilename());
 
         // System.out.println(FFmpegUtils.getGson().toJson(info));
     }
@@ -151,7 +154,7 @@ public class FFprobeTest {
         assertFalse(info.hasError());
 
         // Check edge case with a time larger than an integer
-        assertEquals(8570867078L, info.getStreams().get(0).start_pts);
+        assertEquals(8570867078L, info.getStreams().get(0).getStartPts());
     }
 
     @Test
@@ -160,7 +163,7 @@ public class FFprobeTest {
         FFmpegProbeResult info = ffprobe.probe(new File(Samples.divide_by_zero)).get();
         assertFalse(info.hasError());
 
-        assertEquals(Fraction.ZERO, info.getStreams().get(1).codec_time_base);
+        assertEquals(Fraction.ZERO, info.getStreams().get(1).getCodecTimeBase());
 
         // System.out.println(FFmpegUtils.getGson().toJson(info));
     }
@@ -170,11 +173,12 @@ public class FFprobeTest {
         FFmpegProbeResult info = ffprobe.probe(new File(Samples.side_data_list)).get();
 
         // Check edge case with a time larger than an integer
-        assertEquals(1, info.getStreams().get(0).side_data_list.length);
-        assertEquals("Display Matrix", info.getStreams().get(0).side_data_list[0].side_data_type);
+        assertEquals(1, info.getStreams().get(0).getSideDataList().length);
+        assertEquals(
+                "Display Matrix", info.getStreams().get(0).getSideDataList()[0].getSideDataType());
         assertEquals(
                 "\n00000000:            0      -65536           0\n00000001:        65536           0           0\n00000002:            0           0  1073741824\n",
-                info.getStreams().get(0).side_data_list[0].displaymatrix);
-        assertEquals(90, info.getStreams().get(0).side_data_list[0].rotation);
+                info.getStreams().get(0).getSideDataList()[0].getDisplayMatrix());
+        assertEquals(90, info.getStreams().get(0).getSideDataList()[0].getRotation());
     }
 }

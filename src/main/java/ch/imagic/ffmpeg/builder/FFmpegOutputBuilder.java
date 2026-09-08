@@ -258,7 +258,7 @@ public class FFmpegOutputBuilder extends AbstractFFmpegStreamBuilder<FFmpegOutpu
 
             // TODO factor in start time and/or number of frames
 
-            double durationInSeconds = input.format.duration;
+            double durationInSeconds = input.getFormat().getDuration();
             long totalBitRate = (long) Math.floor((targetSize * 8) / durationInSeconds) - pass_padding_bitrate;
 
             // TODO Calculate audioBitRate

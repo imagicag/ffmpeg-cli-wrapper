@@ -5,7 +5,7 @@ import static java.util.concurrent.TimeUnit.*;
 
 import ch.imagic.ffmpeg.gson.FractionAdapter;
 import ch.imagic.ffmpeg.gson.LowercaseEnumTypeAdapterFactory;
-import ch.imagic.ffmpeg.gson.NamedBitsetAdapter;
+import ch.imagic.ffmpeg.gson.FFmpegDispositionAdapter;
 import ch.imagic.ffmpeg.probe.Fraction;
 import ch.imagic.ffmpeg.probe.FFmpegDisposition;
 import com.google.gson.Gson;
@@ -108,7 +108,7 @@ public final class FFmpegUtils {
 
         builder.registerTypeAdapterFactory(new LowercaseEnumTypeAdapterFactory());
         builder.registerTypeAdapter(Fraction.class, new FractionAdapter());
-        builder.registerTypeAdapter(FFmpegDisposition.class, new NamedBitsetAdapter<>(FFmpegDisposition.class));
+        builder.registerTypeAdapter(FFmpegDisposition.class, new FFmpegDispositionAdapter());
 
         return builder.create();
     }

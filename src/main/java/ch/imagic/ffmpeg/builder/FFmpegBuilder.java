@@ -118,7 +118,7 @@ public class FFmpegBuilder {
 
     public FFmpegBuilder addInput(FFmpegProbeResult result) {
         Objects.requireNonNull(result);
-        String filename = Objects.requireNonNull(result.format).filename;
+        String filename = Objects.requireNonNull(result.getFormat()).getFilename();
         inputProbes.put(filename, result);
         return addInput(filename);
     }

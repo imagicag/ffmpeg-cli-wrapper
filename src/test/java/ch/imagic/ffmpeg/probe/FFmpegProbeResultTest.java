@@ -14,16 +14,18 @@ public class FFmpegProbeResultTest {
         FFmpegProbeResult result = new FFmpegProbeResult();
 
         FFmpegStream stream = new FFmpegStream();
-        result.streams = new ArrayList<>(List.of(stream));
+        ArrayList<FFmpegStream> mutableStreams = new ArrayList<>(List.of(stream));
+        result.setStreams(mutableStreams);
         List<FFmpegStream> streams = result.getStreams();
-        result.streams.clear();
+        mutableStreams.clear();
         assertEquals(List.of(stream), streams);
         assertThrows(UnsupportedOperationException.class, streams::clear);
 
         FFmpegChapter chapter = new FFmpegChapter();
-        result.chapters = new ArrayList<>(List.of(chapter));
+        ArrayList<FFmpegChapter> mutableChapters = new ArrayList<>(List.of(chapter));
+        result.setChapters(mutableChapters);
         List<FFmpegChapter> chapters = result.getChapters();
-        result.chapters.clear();
+        mutableChapters.clear();
         assertEquals(List.of(chapter), chapters);
         assertThrows(UnsupportedOperationException.class, chapters::clear);
     }

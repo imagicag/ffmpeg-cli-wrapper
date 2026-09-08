@@ -38,17 +38,17 @@ public class ReadmeTest {
         String line1 = String.format(
                 locale,
                 "File: '%s' ; Format: '%s' ; Duration: %.3fs",
-                format.filename,
-                format.format_long_name,
-                format.duration);
+                format.getFilename(),
+                format.getFormatLongName(),
+                format.getDuration());
 
         FFmpegStream stream = probeResult.getStreams().get(0);
         String line2 = String.format(
                 locale,
                 "Codec: '%s' ; Width: %dpx ; Height: %dpx",
-                stream.codec_long_name,
-                stream.width,
-                stream.height);
+                stream.getCodecLongName(),
+                stream.getWidth(),
+                stream.getHeight());
 
         assertTrue(line1.startsWith("File: '"));
         assertTrue(

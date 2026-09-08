@@ -1,8 +1,8 @@
 package ch.imagic.ffmpeg.builder;
 
+import static ch.imagic.ffmpeg.FFmpegUtils.checkNotEmpty;
+import static ch.imagic.ffmpeg.FFmpegUtils.checkValidStream;
 import static ch.imagic.ffmpeg.FFmpegUtils.toTimecode;
-import static ch.imagic.ffmpeg.Preconditions.checkNotEmpty;
-import static ch.imagic.ffmpeg.Preconditions.checkValidStream;
 import static ch.imagic.ffmpeg.builder.MetadataSpecifier.checkValidKey;
 
 import ch.imagic.ffmpeg.options.AudioEncodingOptions;
@@ -610,7 +610,7 @@ public abstract class AbstractFFmpegStreamBuilder<T extends AbstractFFmpegStream
         } else if (uri != null) {
             args.add(uri.toString());
         } else {
-            assert (false);
+            throw new IllegalStateException("Output filename or URI must be specified");
         }
 
         return List.copyOf(args);

@@ -5,15 +5,21 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import ch.imagic.ffmpeg.fixtures.Samples;
+import ch.imagic.ffmpeg.lang.MockProcess;
 import ch.imagic.ffmpeg.lang.NewProcessAnswer;
 import ch.imagic.ffmpeg.probe.FFmpegChapter;
+import ch.imagic.ffmpeg.probe.FFmpegCodecType;
 import ch.imagic.ffmpeg.probe.FFmpegProbeResult;
-import ch.imagic.ffmpeg.probe.FFmpegStream;
 import ch.imagic.ffmpeg.probe.Fraction;
 import ch.imagic.ffmpeg.process.FFMpegProcessFactory;
 import com.google.gson.Gson;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -94,8 +100,8 @@ public class FFprobeTest {
 
         // Only a quick sanity check until we do something better
         assertEquals(2, info.getStreams().size());
-        assertEquals(FFmpegStream.CodecType.VIDEO, info.getStreams().get(0).getCodecType());
-        assertEquals(FFmpegStream.CodecType.AUDIO, info.getStreams().get(1).getCodecType());
+        assertEquals(FFmpegCodecType.VIDEO, info.getStreams().get(0).getCodecType());
+        assertEquals(FFmpegCodecType.AUDIO, info.getStreams().get(1).getCodecType());
 
         assertEquals(6, info.getStreams().get(1).getChannels());
         assertEquals(48_000, info.getStreams().get(1).getSampleRate());
@@ -137,8 +143,8 @@ public class FFprobeTest {
 
         // Only a quick sanity check until we do something better
         assertEquals(2, info.getStreams().size());
-        assertEquals(FFmpegStream.CodecType.VIDEO, info.getStreams().get(0).getCodecType());
-        assertEquals(FFmpegStream.CodecType.AUDIO, info.getStreams().get(1).getCodecType());
+        assertEquals(FFmpegCodecType.VIDEO, info.getStreams().get(0).getCodecType());
+        assertEquals(FFmpegCodecType.AUDIO, info.getStreams().get(1).getCodecType());
 
         assertEquals(2, info.getStreams().get(1).getChannels());
         assertEquals(48_000, info.getStreams().get(1).getSampleRate());
@@ -183,5 +189,99 @@ public class FFprobeTest {
                 "\n00000000:            0      -65536           0\n00000001:        65536           0           0\n00000002:            0           0  1073741824\n",
                 info.getStreams().get(0).getSideDataList()[0].getDisplayMatrix());
         assertEquals(90, info.getStreams().get(0).getSideDataList()[0].getRotation());
+    }
+
+    @Test
+    public void probeJsonFileOverloadBuildsCommandAndForwardsStderr() throws Exception {
+        File media = new File("relative media.mp4");
+        ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+        when(runFunc.createProcess(Mockito.any(), Mockito.any(), Mockito.anyList()))
+                .thenReturn(process("{\"answer\":42}", "warning", 0));
+
+        assertEquals(
+                "{\"answer\":42}",
+                ffprobe.probeJson(media, stderr, "-select_streams", "v:0").get());
+
+        verify(runFunc)
+                .createProcess(
+                        Mockito.any(),
+                        Mockito.any(),
+                        Mockito.eq(List.of(
+                                ffprobe.getPath().getAbsolutePath(),
+                                "-v",
+                                "quiet",
+                                "-select_streams",
+                                "v:0",
+                                "-print_format",
+                                "json",
+                                "-show_error",
+                                "-show_format",
+                                "-show_streams",
+                                "-show_chapters",
+                                media.getAbsolutePath())));
+        assertEquals("warning", stderr.toString(StandardCharsets.UTF_8));
+    }
+
+    @Test
+    public void genericStringOverloadUsesPathVerbatimAndRequestedClass() throws Exception {
+        when(runFunc.createProcess(Mockito.any(), Mockito.any(), Mockito.anyList()))
+                .thenReturn(process("{\"value\":\"ok\"}", "", 0));
+
+        ProbeValue result = ffprobe.probe("pipe:0", OutputStream.nullOutputStream(), ProbeValue.class, "-show_data")
+                .get();
+
+        assertEquals("ok", result.value);
+        verify(runFunc).createProcess(Mockito.any(), Mockito.any(), argThatHasItem("pipe:0"));
+        verify(runFunc).createProcess(Mockito.any(), Mockito.any(), argThatHasItem("-show_data"));
+    }
+
+    @Test
+    public void probeReportsProcessFailureAfterPipingStderr() throws Exception {
+        ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+        when(runFunc.createProcess(Mockito.any(), Mockito.any(), Mockito.anyList()))
+                .thenReturn(process("{}", "probe failed", 9));
+
+        IOException failure = assertThrows(
+                IOException.class,
+                () -> ffprobe.probeJson(new File("media"), stderr).get());
+
+        assertTrue(failure.getMessage().contains("exited with code 9"));
+        assertEquals("probe failed", stderr.toString(StandardCharsets.UTF_8));
+    }
+
+    @Test
+    public void probeReportsInvalidJson() throws Exception {
+        when(runFunc.createProcess(Mockito.any(), Mockito.any(), Mockito.anyList()))
+                .thenReturn(process("not json", "", 0));
+
+        IOException failure = assertThrows(
+                IOException.class,
+                () -> ffprobe.probeJson(new File("media"), OutputStream.nullOutputStream())
+                        .get());
+
+        assertNotNull(failure.getCause());
+    }
+
+    @Test
+    public void probeRejectsNullProcessFromFactory() throws Exception {
+        when(runFunc.createProcess(Mockito.any(), Mockito.any(), Mockito.anyList()))
+                .thenReturn(null);
+
+        assertThrows(
+                IllegalStateException.class,
+                () -> ffprobe.probeJson(new File("media"), OutputStream.nullOutputStream()));
+    }
+
+    private static MockProcess process(String stdout, String stderr, int exitCode) {
+        return new MockProcess(
+                OutputStream.nullOutputStream(),
+                new ByteArrayInputStream(stdout.getBytes(StandardCharsets.UTF_8)),
+                new ByteArrayInputStream(stderr.getBytes(StandardCharsets.UTF_8)),
+                true,
+                exitCode);
+    }
+
+    private static class ProbeValue {
+        String value;
     }
 }

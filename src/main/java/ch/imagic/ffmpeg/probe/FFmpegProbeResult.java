@@ -4,7 +4,6 @@ import com.google.gson.annotations.SerializedName;
 import java.util.Collections;
 import java.util.List;
 
-/** TODO Make this immutable */
 public class FFmpegProbeResult {
     @SerializedName("error")
     private FFmpegError error;

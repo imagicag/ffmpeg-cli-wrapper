@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import ch.imagic.ffmpeg.builder.FFmpegBuilder;
 import ch.imagic.ffmpeg.fixtures.Samples;
+import ch.imagic.ffmpeg.probe.FFmpegCodecType;
 import ch.imagic.ffmpeg.probe.FFmpegFormat;
 import ch.imagic.ffmpeg.probe.FFmpegProbeResult;
 import ch.imagic.ffmpeg.probe.FFmpegStream;
@@ -66,11 +67,11 @@ public class ReadmeTest {
 
             FFmpegProbeResult output = ffprobe.probe(outputPath.toFile()).get();
             FFmpegStream video = output.getStreams().stream()
-                    .filter(stream -> stream.getCodecType() == FFmpegStream.CodecType.VIDEO)
+                    .filter(stream -> stream.getCodecType() == FFmpegCodecType.VIDEO)
                     .findFirst()
                     .orElseThrow();
             FFmpegStream audio = output.getStreams().stream()
-                    .filter(stream -> stream.getCodecType() == FFmpegStream.CodecType.AUDIO)
+                    .filter(stream -> stream.getCodecType() == FFmpegCodecType.AUDIO)
                     .findFirst()
                     .orElseThrow();
 

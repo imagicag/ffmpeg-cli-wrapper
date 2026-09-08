@@ -480,4 +480,158 @@ public class FFmpegBuilderTest {
                         "-y", "-v", "error", "-i", "input", "-preset", "a", "-fpre", "b", "-vpre", "c", "-apre", "d",
                         "-spre", "e", "output"));
     }
+
+    @Test
+    public void testFirstPassCommand() {
+        List<String> args = new FFmpegBuilder()
+                .setPass(1)
+                .setPassDirectory("logs/")
+                .setPassPrefix("encode")
+                .setInput("input.mp4")
+                .addOutput("output.mp4")
+                .setFormat("mp4")
+                .setVideoCodec("libx264")
+                .setVideoBitRate(800000)
+                .setAudioCodec("aac")
+                .done()
+                .build();
+
+        assertEquals(
+                List.of(
+                        "-y",
+                        "-v",
+                        "error",
+                        "-i",
+                        "input.mp4",
+                        "-pass",
+                        "1",
+                        "-passlogfile",
+                        "logs/encode",
+                        "-f",
+                        "mp4",
+                        "-vcodec",
+                        "libx264",
+                        "-b:v",
+                        "800000",
+                        "-an",
+                        "/dev/null"),
+                args);
+    }
+
+    @Test
+    public void testSecondPassCommand() {
+        List<String> args = new FFmpegBuilder()
+                .setPass(2)
+                .setInput("input.mp4")
+                .addOutput("output.mp4")
+                .setFormat("mp4")
+                .setVideoBitRate(800000)
+                .setAudioCodec("aac")
+                .setAudioBitRate(128000)
+                .done()
+                .build();
+
+        assertEquals(
+                List.of(
+                        "-y",
+                        "-v",
+                        "error",
+                        "-i",
+                        "input.mp4",
+                        "-pass",
+                        "2",
+                        "-f",
+                        "mp4",
+                        "-b:v",
+                        "800000",
+                        "-acodec",
+                        "aac",
+                        "-b:a",
+                        "128000",
+                        "output.mp4"),
+                args);
+    }
+
+    @Test
+    public void testTwoPassRequiresFormat() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new FFmpegBuilder()
+                        .setPass(1)
+                        .setInput("input.mp4")
+                        .addOutput("output.mp4")
+                        .setVideoBitRate(800000)
+                        .done()
+                        .build());
+    }
+
+    @Test
+    public void testTwoPassRequiresTargetSizeOrVideoBitRate() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new FFmpegBuilder()
+                        .setPass(1)
+                        .setInput("input.mp4")
+                        .addOutput("output.mp4")
+                        .setFormat("mp4")
+                        .done()
+                        .build());
+    }
+
+    @Test
+    public void testInputAndGlobalFlagOrdering() {
+        List<String> args = new FFmpegBuilder()
+                .overrideOutputFiles(false)
+                .setVerbosity(Verbosity.INFO)
+                .setUserAgent("agent")
+                .setStartOffset(2, TimeUnit.SECONDS)
+                .setFormat("lavfi")
+                .readAtNativeFrameRate()
+                .addExtraArgs("-thread_queue_size", "512")
+                .addInput("input1")
+                .addInput("input2")
+                .setPass(2)
+                .setPassDirectory("logs/")
+                .setPassPrefix("pass")
+                .setAudioFilter("volume=1")
+                .setComplexFilter("[0:v][1:v]hstack")
+                .addOutput("output.mp4")
+                .setFormat("mp4")
+                .setVideoBitRate(800000)
+                .done()
+                .build();
+
+        assertEquals(
+                List.of(
+                        "-n",
+                        "-v",
+                        "info",
+                        "-user_agent",
+                        "agent",
+                        "-ss",
+                        "00:00:02",
+                        "-f",
+                        "lavfi",
+                        "-re",
+                        "-thread_queue_size",
+                        "512",
+                        "-i",
+                        "input1",
+                        "-i",
+                        "input2",
+                        "-pass",
+                        "2",
+                        "-passlogfile",
+                        "logs/pass",
+                        "-af",
+                        "volume=1",
+                        "-filter_complex",
+                        "[0:v][1:v]hstack",
+                        "-f",
+                        "mp4",
+                        "-b:v",
+                        "800000",
+                        "output.mp4"),
+                args);
+    }
 }

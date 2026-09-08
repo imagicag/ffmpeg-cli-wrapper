@@ -11,21 +11,27 @@ import java.util.OptionalInt;
  * A Mock Process, which exits with zero, and returns the provided streams.
  *
  */
-class MockProcess implements FFMpegProcess {
+public class MockProcess implements FFMpegProcess {
     final OutputStream stdin;
     final InputStream stdout;
     final InputStream stderr;
+    final boolean awaited;
+    final int exitCode;
 
     public MockProcess(InputStream stdout) {
-        this.stdin = new ByteArrayOutputStream();
-        this.stdout = stdout;
-        this.stderr = new ByteArrayInputStream(new byte[0]);
+        this(new ByteArrayOutputStream(), stdout, new ByteArrayInputStream(new byte[0]));
     }
 
     public MockProcess(OutputStream stdin, InputStream stdout, InputStream stderr) {
+        this(stdin, stdout, stderr, true, 0);
+    }
+
+    public MockProcess(OutputStream stdin, InputStream stdout, InputStream stderr, boolean awaited, int exitCode) {
         this.stdin = stdin;
         this.stdout = stdout;
         this.stderr = stderr;
+        this.awaited = awaited;
+        this.exitCode = exitCode;
     }
 
     @Override
@@ -35,12 +41,12 @@ class MockProcess implements FFMpegProcess {
 
     @Override
     public boolean await(long timeoutInMillis) throws InterruptedException {
-        return true;
+        return awaited;
     }
 
     @Override
     public OptionalInt exitCode() {
-        return OptionalInt.of(0);
+        return OptionalInt.of(exitCode);
     }
 
     @Override

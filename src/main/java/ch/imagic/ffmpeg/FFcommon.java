@@ -164,10 +164,11 @@ abstract class FFcommon {
             try (FFMpegProcess p = runFunc.createProcess(executor, logger, List.of(getAbsolutePath(), "-version"));
                     BufferedReader r = p.stdoutReader()) {
                 var errorReader = pipe1(p.stderr(), OutputStream.nullOutputStream());
-                this.version = r.readLine();
+                String version = r.readLine();
                 r.transferTo(Writer.nullWriter()); // Throw away rest of the output
                 waitAndthrowOnError(errorReader);
                 throwOnError(p);
+                this.version = version;
             }
         }
         return version;

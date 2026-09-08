@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
@@ -123,7 +124,7 @@ public class FFmpeg extends FFcommon {
 
     public synchronized List<Codec> codecs() throws IOException {
         if (this.codecs == null) {
-            codecs = new ArrayList<>();
+            List<Codec> newCodecs = new ArrayList<>();
 
             try (FFMpegProcess p = runFunc.createProcess(executor, logger, List.of(getAbsolutePath(), "-codecs"));
                     BufferedReader r = p.stdoutReader()) {
@@ -134,12 +135,12 @@ public class FFmpeg extends FFcommon {
                     Matcher m = CODECS_REGEX.matcher(line);
                     if (!m.matches()) continue;
 
-                    codecs.add(new Codec(m.group(2), m.group(3), m.group(1)));
+                    newCodecs.add(new Codec(m.group(2), m.group(3), m.group(1)));
                 }
 
                 waitAndthrowOnError(errorReader);
                 throwOnError(p);
-                this.codecs = List.copyOf(codecs);
+                this.codecs = Collections.unmodifiableList(newCodecs);
             }
         }
 
@@ -148,7 +149,7 @@ public class FFmpeg extends FFcommon {
 
     public synchronized List<Format> formats() throws IOException {
         if (this.formats == null) {
-            formats = new ArrayList<>();
+            List<Format> newFormats = new ArrayList<>();
             try (FFMpegProcess p = runFunc.createProcess(executor, logger, List.of(getAbsolutePath(), "-formats"));
                     BufferedReader r = p.stdoutReader()) {
                 var errorReader = pipe1(p.stderr(), OutputStream.nullOutputStream());
@@ -157,12 +158,12 @@ public class FFmpeg extends FFcommon {
                     Matcher m = FORMATS_REGEX.matcher(line);
                     if (!m.matches()) continue;
 
-                    formats.add(new Format(m.group(2), m.group(3), m.group(1)));
+                    newFormats.add(new Format(m.group(2), m.group(3), m.group(1)));
                 }
 
                 waitAndthrowOnError(errorReader);
                 throwOnError(p);
-                this.formats = List.copyOf(formats);
+                this.formats = Collections.unmodifiableList(newFormats);
             }
         }
         return formats;
@@ -170,7 +171,7 @@ public class FFmpeg extends FFcommon {
 
     public synchronized List<PixelFormat> pixelFormats() throws IOException {
         if (this.pixelFormats == null) {
-            pixelFormats = new ArrayList<>();
+            List<PixelFormat> newPixelFormats = new ArrayList<>();
 
             try (FFMpegProcess p = runFunc.createProcess(executor, logger, List.of(getAbsolutePath(), "-pix_fmts"));
                     BufferedReader r = p.stdoutReader()) {
@@ -181,13 +182,13 @@ public class FFmpeg extends FFcommon {
                     if (!m.matches()) continue;
                     String flags = m.group(1);
 
-                    pixelFormats.add(new PixelFormat(
+                    newPixelFormats.add(new PixelFormat(
                             m.group(2), Integer.parseInt(m.group(3)), Integer.parseInt(m.group(4)), flags));
                 }
 
                 waitAndthrowOnError(errorReader);
                 throwOnError(p);
-                this.pixelFormats = List.copyOf(pixelFormats);
+                this.pixelFormats = Collections.unmodifiableList(newPixelFormats);
             }
         }
 

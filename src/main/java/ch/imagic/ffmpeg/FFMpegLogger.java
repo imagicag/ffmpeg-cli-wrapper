@@ -150,9 +150,13 @@ public interface FFMpegLogger {
                     start = off + i + 1;
 
                     if (baos.size() == 0) {
+                        int lineSize = (off + i) - mystart;
+                        if (lineSize > MAX_LINE_BUFFER) {
+                            downstream.accept("Child pid " + pid + " produced a output line that is longer than ~64k.");
+                            continue;
+                        }
                         downstream.accept("Child pid " + pid + prefix
-                                + new String(rawData, mystart, (off + i) - mystart, StandardCharsets.UTF_8)
-                                        .replace("\r", ""));
+                                + new String(rawData, mystart, lineSize, StandardCharsets.UTF_8).replace("\r", ""));
                         continue;
                     }
 

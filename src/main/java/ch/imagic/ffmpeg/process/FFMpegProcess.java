@@ -10,6 +10,10 @@ public interface FFMpegProcess extends AutoCloseable {
 
     long pid();
 
+    /**
+     * Waits for the process to exit. A negative timeout waits indefinitely, zero checks immediately,
+     * and a positive timeout waits for at most the requested number of milliseconds.
+     */
     boolean await(long timeoutInMillis) throws InterruptedException;
 
     OptionalInt exitCode();

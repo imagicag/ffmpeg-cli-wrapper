@@ -1,6 +1,6 @@
 package ch.imagic.ffmpeg.builder;
 
-import static ch.imagic.ffmpeg.Preconditions.checkNotEmpty;
+import static ch.imagic.ffmpeg.FFmpegUtils.checkNotEmpty;
 
 import ch.imagic.ffmpeg.FFmpegUtils;
 import ch.imagic.ffmpeg.probe.FFmpegProbeResult;

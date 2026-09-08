@@ -49,6 +49,7 @@ class BasicFFMpegProcess implements FFMpegProcess {
     public boolean await(long timeoutInMillis) throws InterruptedException {
         if (timeoutInMillis < 0) {
             process.waitFor();
+            return true;
         }
         return process.waitFor(timeoutInMillis, TimeUnit.MILLISECONDS);
     }

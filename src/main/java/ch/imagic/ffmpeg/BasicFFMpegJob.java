@@ -21,6 +21,10 @@ class BasicFFMpegJob<T> implements FFMpegJob<T> {
 
     public boolean await(long timeout, TimeUnit unit) throws InterruptedException {
         try {
+            if (timeout < 0) {
+                future.get();
+                return true;
+            }
             future.get(timeout, unit);
             return true;
         } catch (ExecutionException e) {

@@ -5,14 +5,6 @@ import java.util.Map;
 
 public class FFmpegStream {
 
-    public enum CodecType {
-        VIDEO,
-        AUDIO,
-        SUBTITLE,
-        DATA,
-        ATTACHMENT
-    }
-
     @SerializedName("index")
     private int index;
 
@@ -26,7 +18,7 @@ public class FFmpegStream {
     private String profile;
 
     @SerializedName("codec_type")
-    private CodecType codecType;
+    private FFmpegCodecType codecType;
 
     @SerializedName("codec_time_base")
     private Fraction codecTimeBase;
@@ -138,7 +130,7 @@ public class FFmpegStream {
     private Map<String, String> tags;
 
     @SerializedName("side_data_list")
-    private SideData[] sideDataList;
+    private FFmpegSideData[] sideDataList;
 
     public int getIndex() {
         return index;
@@ -172,11 +164,11 @@ public class FFmpegStream {
         this.profile = profile;
     }
 
-    public CodecType getCodecType() {
+    public FFmpegCodecType getCodecType() {
         return codecType;
     }
 
-    public void setCodecType(CodecType codecType) {
+    public void setCodecType(FFmpegCodecType codecType) {
         this.codecType = codecType;
     }
 
@@ -468,46 +460,11 @@ public class FFmpegStream {
         this.tags = tags;
     }
 
-    public SideData[] getSideDataList() {
+    public FFmpegSideData[] getSideDataList() {
         return sideDataList;
     }
 
-    public void setSideDataList(SideData[] sideDataList) {
+    public void setSideDataList(FFmpegSideData[] sideDataList) {
         this.sideDataList = sideDataList;
-    }
-
-    public static class SideData {
-        @SerializedName("side_data_type")
-        private String sideDataType;
-
-        @SerializedName("displaymatrix")
-        private String displayMatrix;
-
-        @SerializedName("rotation")
-        private int rotation;
-
-        public String getSideDataType() {
-            return sideDataType;
-        }
-
-        public void setSideDataType(String sideDataType) {
-            this.sideDataType = sideDataType;
-        }
-
-        public String getDisplayMatrix() {
-            return displayMatrix;
-        }
-
-        public void setDisplayMatrix(String displayMatrix) {
-            this.displayMatrix = displayMatrix;
-        }
-
-        public int getRotation() {
-            return rotation;
-        }
-
-        public void setRotation(int rotation) {
-            this.rotation = rotation;
-        }
     }
 }

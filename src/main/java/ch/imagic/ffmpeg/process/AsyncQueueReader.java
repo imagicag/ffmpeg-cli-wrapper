@@ -84,9 +84,6 @@ class AsyncQueueReader extends InputStream {
             if (closed) {
                 throw new IOException("Reader closed");
             }
-            if (error != null) {
-                throw error;
-            }
             if (len <= 0) {
                 return 0;
             }
@@ -100,6 +97,9 @@ class AsyncQueueReader extends InputStream {
 
             byte[] next = queue.poll();
             if (next == null) {
+                if (error != null) {
+                    throw error;
+                }
                 if (eof) {
                     return -1;
                 }
@@ -110,11 +110,10 @@ class AsyncQueueReader extends InputStream {
                 }
             }
 
-            if (error != null) {
-                throw error;
-            }
-
             if (next.length == 0) {
+                if (error != null) {
+                    throw error;
+                }
                 // WAKEUP_GUARD
                 eof = true;
                 return -1;

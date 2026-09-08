@@ -44,6 +44,11 @@ class MockProcess implements FFMpegProcess {
     }
 
     @Override
+    public OutputStream stdin() {
+        return stdin;
+    }
+
+    @Override
     public InputStream stdout() {
         return stdout;
     }

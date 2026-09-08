@@ -25,8 +25,8 @@ public class FFmpegGetInfoTest {
 
     @Before
     public void before() throws IOException {
-        when(runFunc.createProcess(Mockito.any(), Mockito.any(), argThatHasItem("-version")))
-                .thenAnswer(new NewProcessAnswer("ffmpeg-version"));
+        // when(runFunc.createProcess(Mockito.any(), Mockito.any(), argThatHasItem("-version")))
+        //        .thenAnswer(new NewProcessAnswer("ffmpeg-version"));
 
         when(runFunc.createProcess(Mockito.any(), Mockito.any(), argThatHasItem("-codecs")))
                 .thenAnswer(new NewProcessAnswer("ffmpeg-codecs"));

@@ -130,7 +130,14 @@ public interface FFMpegLogger {
                 info.accept("Started child process with pid " + pid + " " + String.join(" ", commandLine));
             }
 
-            private void handle(String prefix, ByteArrayOutputStream baos, long pid, byte[] rawData, int off, int len, Consumer<String> downstream) {
+            private void handle(
+                    String prefix,
+                    ByteArrayOutputStream baos,
+                    long pid,
+                    byte[] rawData,
+                    int off,
+                    int len,
+                    Consumer<String> downstream) {
                 if (downstream == null) {
                     return;
                 }
@@ -143,31 +150,34 @@ public interface FFMpegLogger {
                     start = off + i + 1;
 
                     if (baos.size() == 0) {
-                        downstream.accept("Child pid " + pid + prefix + new String(rawData, mystart, (off+i)-mystart, StandardCharsets.UTF_8).replace("\r", ""));
+                        downstream.accept("Child pid " + pid + prefix
+                                + new String(rawData, mystart, (off + i) - mystart, StandardCharsets.UTF_8)
+                                        .replace("\r", ""));
                         continue;
                     }
 
-                    int toCopy = (off+i)-mystart;
+                    int toCopy = (off + i) - mystart;
                     if (baos.size() + toCopy > MAX_LINE_BUFFER) {
                         baos.reset();
                         downstream.accept("Child pid " + pid + " produced a output line that is longer than ~64k.");
                         continue;
                     }
                     baos.write(rawData, mystart, toCopy);
-                    downstream.accept("Child pid " + pid + prefix + baos.toString(StandardCharsets.UTF_8).replace("\r", ""));
+                    downstream.accept("Child pid " + pid + prefix
+                            + baos.toString(StandardCharsets.UTF_8).replace("\r", ""));
                     baos.reset();
                 }
 
                 if (start < off + len) {
-                    int toCopy = (off+len)-start;
+                    int toCopy = (off + len) - start;
                     if (baos.size() + toCopy > MAX_LINE_BUFFER) {
                         baos.reset();
-                        downstream.accept("Child pid " + pid + " produced a unfinished output line that is longer than ~64k.");
+                        downstream.accept(
+                                "Child pid " + pid + " produced a unfinished output line that is longer than ~64k.");
                         return;
                     }
-                    baos.write(rawData, start, (off+len)-start);
+                    baos.write(rawData, start, (off + len) - start);
                 }
-
             }
 
             @Override
@@ -192,13 +202,19 @@ public interface FFMpegLogger {
                 if (st != null) {
                     synchronized (st.infoBuffer) {
                         if (info != null && st.infoBuffer.size() > 0) {
-                            info.accept("Child pid " + pid + " trailing STDOUT: " + st.infoBuffer.toString(StandardCharsets.UTF_8).replace("\r", ""));
+                            info.accept("Child pid " + pid + " trailing STDOUT: "
+                                    + st.infoBuffer
+                                            .toString(StandardCharsets.UTF_8)
+                                            .replace("\r", ""));
                             st.infoBuffer.reset();
                         }
                     }
                     synchronized (st.errorBuffer) {
                         if (error != null && st.errorBuffer.size() > 0) {
-                            error.accept("Child pid " + pid + " trailing STDERR: " + st.errorBuffer.toString(StandardCharsets.UTF_8).replace("\r", ""));
+                            error.accept("Child pid " + pid + " trailing STDERR: "
+                                    + st.errorBuffer
+                                            .toString(StandardCharsets.UTF_8)
+                                            .replace("\r", ""));
                             st.errorBuffer.reset();
                         }
                     }
@@ -207,7 +223,6 @@ public interface FFMpegLogger {
                 if (exitCode == 0) {
                     if (info != null) {
                         info.accept("Child pid " + pid + " finished successfully");
-
                     }
                     return;
                 }

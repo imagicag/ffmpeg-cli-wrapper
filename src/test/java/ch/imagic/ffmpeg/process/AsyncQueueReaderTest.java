@@ -31,8 +31,7 @@ public class AsyncQueueReaderTest {
             expected[i] = (byte) i;
         }
 
-        try (InputStream reader = new AsyncQueueReader(
-                executor, new ByteArrayInputStream(expected), ignored -> {})) {
+        try (InputStream reader = new AsyncQueueReader(executor, new ByteArrayInputStream(expected), ignored -> {})) {
             assertArrayEquals(expected, reader.readAllBytes());
             assertEquals(-1, reader.read());
         }
@@ -74,17 +73,14 @@ public class AsyncQueueReaderTest {
     @Test
     public void awaitsWorkerWhileConsumerIsRunning() throws IOException, InterruptedException {
         CountDownLatch consumerStarted = new CountDownLatch(1);
-        AsyncQueueReader reader = new AsyncQueueReader(
-                executor,
-                new ByteArrayInputStream(new byte[] {1}),
-                ignored -> {
-                    consumerStarted.countDown();
-                    try {
-                        Thread.sleep(2_000);
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                    }
-                });
+        AsyncQueueReader reader = new AsyncQueueReader(executor, new ByteArrayInputStream(new byte[] {1}), ignored -> {
+            consumerStarted.countDown();
+            try {
+                Thread.sleep(2_000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        });
 
         assertTrue(consumerStarted.await(1, TimeUnit.SECONDS));
         assertFalse(reader.awaitAsyncTermination(200, TimeUnit.MILLISECONDS));

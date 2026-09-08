@@ -1,5 +1,4 @@
-FFmpeg Java CLI Wrapper
-===========
+# FFmpeg Java CLI Wrapper
 Based on ffmpeg-cli-wrapper version 0.8.0 by Andrew Brampton (c) 2013-2022,
 see https://github.com/bramp/ffmpeg-cli-wrapper for more details.
 
@@ -7,8 +6,27 @@ This project focuses on providing a ffmpeg-cli-wrapper for java with minimal dep
 usability in edge cases that were difficult to achieve with the original version.
 Minimum required java version is java 17.
 
-Install
--------
+## Notable added features
+- Canceling of ongoing calls to ffmpeg.
+  - Supports polling with timeout 
+  - Asynchronous canceling
+
+- Versatile per-call configurable logging
+  - 1 line of code integration with most logging frameworks.
+  - Log stdout/stderr or just start/stop of ffmpeg separately with fine grained control. 
+
+- FFProbe supports parsing using custom JSON schema classes.
+  - You can also just get the raw JSON as String
+
+- Bring your own thread pool!
+  - Supports any implementation of "Executor"
+
+- Trusts your binary!
+  - By default, no checks are performed that the ffmpeg binary is indeed ffmpeg and not something else, saving a lot of time.
+  - Same for ffprobe
+  - Much faster, less log lines, less child processes!
+
+## Usage
 
 Maven:
 ```xml
@@ -18,10 +36,6 @@ Maven:
   <version>0.1.0</version>
 </dependency>
 ```
-
-Usage
------
-
 ### Video Encoding
 
 Code:

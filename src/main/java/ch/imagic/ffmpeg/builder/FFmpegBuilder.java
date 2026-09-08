@@ -2,7 +2,6 @@ package ch.imagic.ffmpeg.builder;
 
 import static ch.imagic.ffmpeg.Preconditions.checkNotEmpty;
 
-import ch.imagic.ffmpeg.FFMpegLogger;
 import ch.imagic.ffmpeg.FFmpegUtils;
 import ch.imagic.ffmpeg.probe.FFmpegProbeResult;
 import java.net.URI;

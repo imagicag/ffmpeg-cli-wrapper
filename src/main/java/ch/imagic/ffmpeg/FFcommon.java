@@ -131,7 +131,7 @@ abstract class FFcommon {
         if (this.version == null) {
             try (FFMpegProcess p = runFunc.createProcess(executor, logger, List.of(getAbsolutePath(), "-version"));
                     BufferedReader r = p.stdoutReader()) {
-                var errorReader = pipeOne(p.stderr(), OutputStream.nullOutputStream());
+                var errorReader = pipe1(p.stderr(), OutputStream.nullOutputStream());
                 this.version = r.readLine();
                 r.transferTo(Writer.nullWriter()); // Throw away rest of the output
                 waitAndthrowOnError(errorReader);
@@ -141,21 +141,23 @@ abstract class FFcommon {
         return version;
     }
 
-    protected void pipeTwo(InputStream in1, OutputStream out1, InputStream in2, OutputStream out2) throws IOException {
+    protected void pipe3(
+            InputStream in1, OutputStream out1, InputStream in2, OutputStream out2, InputStream in3, OutputStream out3)
+            throws IOException {
         try (in1;
                 in2) {
-            var future1 = pipeOne(in1, out1);
-            var future2 = pipeOne(in2, out2);
-
-            // Catch whichever one fails first if any.
-            waitAndthrowOnError(CompletableFuture.anyOf(future1, future2));
-            // Make sure we wait for both.
-            waitAndthrowOnError(future1);
-            waitAndthrowOnError(future2);
+            var future1 = pipe1(in1, out1);
+            var future2 = pipe1(in2, out2);
+            var future3 = pipe1(in3, out3);
+            List<CompletableFuture<?>> futures = new ArrayList<>(List.of(future1, future2, future3));
+            while (!futures.isEmpty()) {
+                waitAndthrowOnError(CompletableFuture.anyOf(futures.toArray(CompletableFuture[]::new)));
+                futures.removeIf(CompletableFuture::isDone);
+            }
         }
     }
 
-    protected CompletableFuture<Void> pipeOne(InputStream in, OutputStream outputStream) {
+    protected CompletableFuture<Void> pipe1(InputStream in, OutputStream outputStream) {
         CompletableFuture<Void> future = new CompletableFuture<>();
         Thread t = Thread.currentThread();
         executor.execute(() -> {
@@ -188,48 +190,10 @@ abstract class FFcommon {
      * @return The full path and arguments to execute the binary.
      * @throws IOException If there is an error capturing output from the binary
      */
-    public List<String> path(List<String> args) throws IOException {
+    protected List<String> path(List<String> args) throws IOException {
         List<String> command = new ArrayList<>(args.size() + 1);
         command.add(getAbsolutePath());
         command.addAll(args);
         return List.copyOf(command);
-    }
-    /**
-     * Runs the binary (ffmpeg) with the supplied args. Blocking until finished.
-     *
-     * @param args The arguments to pass to the binary.
-     * @throws IOException If there is a problem executing the binary.
-     */
-    public void run(List<String> args) throws IOException {
-        this.run(args, OutputStream.nullOutputStream(), OutputStream.nullOutputStream());
-    }
-
-    /**
-     * Runs the binary (ffmpeg) with the supplied args. Blocking until finished.
-     *
-     * If the OutputStream throws an exception then the ffmpeg process is killed as soon as possible.
-     *
-     * @param args The arguments to pass to the binary.
-     * @throws IOException If there is a problem executing the binary or if the output stream throws in its write
-     */
-    public void run(List<String> args, OutputStream stdout) throws IOException {
-        this.run(args, stdout, OutputStream.nullOutputStream());
-    }
-
-    /**
-     * Runs the binary (ffmpeg) with the supplied args. Blocking until finished.
-     *
-     * If the OutputStream throws an exception then the ffmpeg process is killed as soon as possible.
-     *
-     * @param args The arguments to pass to the binary.
-     * @throws IOException If there is a problem executing the binary or if the output stream throws in its write
-     */
-    public void run(List<String> args, OutputStream stdout, OutputStream stderr) throws IOException {
-        Objects.requireNonNull(args);
-
-        try (FFMpegProcess p = runFunc.createProcess(executor, logger, path(args))) {
-            pipeTwo(p.stdout(), stdout, p.stderr(), stderr);
-            throwOnError(p);
-        }
     }
 }

@@ -11,8 +11,12 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.function.Function;
 
 /**
  * Wrapper around FFprobe
@@ -52,8 +56,8 @@ public class FFprobe extends FFcommon {
         super(executor, logger, ffprobeBinary, processFactory);
     }
 
-    public FFmpegProbeResult probe(String mediaPath) throws IOException {
-        return probe(mediaPath, null);
+    public FFMpegJob<FFmpegProbeResult> probe(File mediaPath) throws IOException {
+        return probe(mediaPath, OutputStream.nullOutputStream());
     }
 
     /**
@@ -67,27 +71,10 @@ public class FFprobe extends FFcommon {
         return version().startsWith("ffprobe");
     }
 
-    /**
-     * Throws an exception if this is an unsupported version of ffprobe.
-     *
-     * @throws IllegalArgumentException if this is not the official ffprobe binary.
-     * @throws IOException If a I/O error occurs while executing ffprobe.
-     */
-    private void checkIfFFprobe() throws IllegalArgumentException, IOException {
-        if (!isFFprobe()) {
-            throw new IllegalArgumentException("This binary '" + path + "' is not a supported version of ffprobe");
-        }
-    }
-
-    @Override
-    public void run(List<String> args) throws IOException {
-        checkIfFFprobe();
-        super.run(args);
-    }
-
-    protected JsonElement probeGson(String mediaPath, String userAgent) throws IOException {
-        checkIfFFprobe();
-
+    protected <T> FFMpegJob<T> probeGson(
+            File mediaPath, OutputStream stdErr, Function<JsonElement, T> mapper, String... additionalArguments)
+            throws IOException {
+        Objects.requireNonNull(mapper);
         List<String> args = new ArrayList<>();
 
         // TODO Add:
@@ -95,35 +82,53 @@ public class FFprobe extends FFcommon {
         // .add("--show_frames")
 
         args.addAll(List.of(getAbsolutePath(), "-v", "quiet"));
-
-        if (userAgent != null) {
-            args.addAll(List.of("-user_agent", userAgent));
-        }
-
+        args.addAll(Arrays.asList(additionalArguments));
         args.addAll(List.of(
-                "-print_format", "json", "-show_error", "-show_format", "-show_streams", "-show_chapters", mediaPath));
-
-        try (FFMpegProcess p = runFunc.createProcess(executor, logger, List.copyOf(args));
-                BufferedReader r = p.stdoutReader()) {
-            var errorReader = pipeOne(p.stderr(), OutputStream.nullOutputStream());
-            JsonElement element = JsonParser.parseReader(r);
-
-            waitAndthrowOnError(errorReader);
-            throwOnError(p);
-            return element;
+                "-print_format",
+                "json",
+                "-show_error",
+                "-show_format",
+                "-show_streams",
+                "-show_chapters",
+                mediaPath.getAbsolutePath()));
+        CompletableFuture<T> future = new CompletableFuture<>();
+        FFMpegProcess p = runFunc.createProcess(executor, logger, List.copyOf(args));
+        if (p == null) {
+            throw new IllegalStateException("FFMpegProcessFactory returned null");
         }
+        Thread thr = Thread.currentThread();
+        executor.execute(() -> {
+            try (p;
+                    BufferedReader r = p.stdoutReader()) {
+                if (thr == Thread.currentThread()) {
+                    throw new IllegalStateException("Bad executor");
+                }
+                var errorReader = pipe1(p.stderr(), stdErr);
+                JsonElement element = JsonParser.parseReader(r);
+
+                waitAndthrowOnError(errorReader);
+                throwOnError(p);
+                future.complete(mapper.apply(element));
+            } catch (Throwable t) {
+                future.completeExceptionally(t);
+            }
+        });
+
+        return new BasicFFMpegJob<>(future, p);
     }
 
-    public String probeJson(String mediaPath, String userAgent) throws IOException {
-        return probeGson(mediaPath, userAgent).toString();
+    public FFMpegJob<String> probeJson(File mediaPath, OutputStream stdErr, String... additionalArguments)
+            throws IOException {
+        return probeGson(mediaPath, stdErr, JsonElement::toString, additionalArguments);
     }
 
-    public FFmpegProbeResult probe(String mediaPath, String userAgent) throws IOException {
-        return probe(mediaPath, userAgent, FFmpegProbeResult.class);
+    public FFMpegJob<FFmpegProbeResult> probe(File mediaPath, OutputStream stdErr, String... additionalArguments)
+            throws IOException {
+        return probe(mediaPath, stdErr, FFmpegProbeResult.class, additionalArguments);
     }
 
-    public <T> T probe(String mediaPath, String userAgent, Class<T> clazz) throws IOException {
-        JsonElement elem = probeGson(mediaPath, userAgent);
-        return gson.fromJson(elem, clazz);
+    public <T> FFMpegJob<T> probe(File mediaPath, OutputStream stdErr, Class<T> clazz, String... additionalArguments)
+            throws IOException {
+        return probeGson(mediaPath, stdErr, elem -> gson.fromJson(elem, clazz), additionalArguments);
     }
 }

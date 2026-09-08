@@ -7,17 +7,15 @@ import ch.imagic.ffmpeg.info.PixelFormat;
 import ch.imagic.ffmpeg.nut.Fraction;
 import ch.imagic.ffmpeg.process.FFMpegProcess;
 import ch.imagic.ffmpeg.process.FFMpegProcessFactory;
-import ch.imagic.ffmpeg.progress.ProgressListener;
-import ch.imagic.ffmpeg.progress.ProgressParser;
-import ch.imagic.ffmpeg.progress.TcpProgressParser;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -110,7 +108,6 @@ public class FFmpeg extends FFcommon {
     public FFmpeg(Executor executor, FFMpegLogger logger, File ffmpegBinary, FFMpegProcessFactory processFactory)
             throws IOException {
         super(executor, logger, ffmpegBinary, processFactory);
-        version();
     }
 
     /**
@@ -124,27 +121,13 @@ public class FFmpeg extends FFcommon {
         return version().startsWith("ffmpeg");
     }
 
-    /**
-     * Throws an exception if this is an unsupported version of ffmpeg.
-     *
-     * @throws IllegalArgumentException if this is not the official ffmpeg binary.
-     * @throws IOException If a I/O error occurs while executing ffmpeg.
-     */
-    private void checkIfFFmpeg() throws IllegalArgumentException, IOException {
-        if (!isFFmpeg()) {
-            throw new IllegalArgumentException("This binary '" + path + "' is not a supported version of ffmpeg");
-        }
-    }
-
     public synchronized List<Codec> codecs() throws IOException {
-        checkIfFFmpeg();
-
         if (this.codecs == null) {
             codecs = new ArrayList<>();
 
             try (FFMpegProcess p = runFunc.createProcess(executor, logger, List.of(getAbsolutePath(), "-codecs"));
                     BufferedReader r = p.stdoutReader()) {
-                var errorReader = pipeOne(p.stderr(), OutputStream.nullOutputStream());
+                var errorReader = pipe1(p.stderr(), OutputStream.nullOutputStream());
 
                 String line;
                 while ((line = r.readLine()) != null) {
@@ -164,13 +147,11 @@ public class FFmpeg extends FFcommon {
     }
 
     public synchronized List<Format> formats() throws IOException {
-        checkIfFFmpeg();
-
         if (this.formats == null) {
             formats = new ArrayList<>();
             try (FFMpegProcess p = runFunc.createProcess(executor, logger, List.of(getAbsolutePath(), "-formats"));
                     BufferedReader r = p.stdoutReader()) {
-                var errorReader = pipeOne(p.stderr(), OutputStream.nullOutputStream());
+                var errorReader = pipe1(p.stderr(), OutputStream.nullOutputStream());
                 String line;
                 while ((line = r.readLine()) != null) {
                     Matcher m = FORMATS_REGEX.matcher(line);
@@ -188,14 +169,12 @@ public class FFmpeg extends FFcommon {
     }
 
     public synchronized List<PixelFormat> pixelFormats() throws IOException {
-        checkIfFFmpeg();
-
         if (this.pixelFormats == null) {
             pixelFormats = new ArrayList<>();
 
             try (FFMpegProcess p = runFunc.createProcess(executor, logger, List.of(getAbsolutePath(), "-pix_fmts"));
                     BufferedReader r = p.stdoutReader()) {
-                var errorReader = pipeOne(p.stderr(), OutputStream.nullOutputStream());
+                var errorReader = pipe1(p.stderr(), OutputStream.nullOutputStream());
                 String line;
                 while ((line = r.readLine()) != null) {
                     Matcher m = PIXEL_FORMATS_REGEX.matcher(line);
@@ -215,40 +194,67 @@ public class FFmpeg extends FFcommon {
         return pixelFormats;
     }
 
-    protected ProgressParser createProgressParser(ProgressListener listener) throws IOException {
-        // TODO In future create the best kind for this OS, unix socket, named pipe, or TCP.
-        try {
-            // Default to TCP because it is supported across all OSes, and is better than UDP because it
-            // provides good properties such as in-order packets, reliability, error checking, etc.
-            return new TcpProgressParser(Objects.requireNonNull(listener));
-        } catch (URISyntaxException e) {
-            throw new IOException(e);
-        }
-    }
+    /**
+     * Runs the binary (ffmpeg) with the supplied args.
+     *
+     * If the OutputStream throws an exception then the ffmpeg process is killed as soon as possible.
+     *
+     * The execution happens in the background and the returned FFMpegJob can be used to cancel or wait (with a timeout) for the job.
+     *
+     * @param args The arguments to pass to the binary.
+     * @throws IOException If there is a problem executing the binary
+     */
+    protected FFMpegJob<Void> runJob(List<String> args, OutputStream stdout, OutputStream stderr, InputStream stdin)
+            throws IOException {
+        Objects.requireNonNull(args);
+        Objects.requireNonNull(stdout);
+        Objects.requireNonNull(stderr);
 
-    @Override
-    public void run(List<String> args) throws IOException {
-        checkIfFFmpeg();
-        super.run(args);
-    }
+        Thread thr = Thread.currentThread();
+        CompletableFuture<Void> future = new CompletableFuture<>();
+        FFMpegProcess p = runFunc.createProcess(executor, logger, path(args));
 
-    public void run(FFmpegBuilder builder) throws IOException {
-        run(builder, null);
-    }
-
-    public void run(FFmpegBuilder builder, ProgressListener listener) throws IOException {
-        Objects.requireNonNull(builder);
-
-        if (listener != null) {
-            try (ProgressParser progressParser = createProgressParser(listener)) {
-                progressParser.start();
-                builder = builder.addProgress(progressParser.getUri());
-
-                run(builder.build());
+        executor.execute(() -> {
+            if (thr == Thread.currentThread()) {
+                p.close();
+                throw new IllegalStateException("Bad executor");
             }
-        } else {
-            run(builder.build());
-        }
+
+            try (p) {
+                pipe3(p.stdout(), stdout, p.stderr(), stderr, stdin, p.stdin());
+                throwOnError(p);
+                future.complete(null);
+            } catch (Throwable t) {
+                future.completeExceptionally(t);
+            }
+        });
+
+        return new BasicFFMpegJob<>(future, p);
+    }
+
+    public FFMpegJob<Void> run(FFmpegBuilder builder) throws IOException {
+        Objects.requireNonNull(builder);
+        return runJob(
+                builder.build(),
+                OutputStream.nullOutputStream(),
+                OutputStream.nullOutputStream(),
+                InputStream.nullInputStream());
+    }
+
+    public FFMpegJob<Void> run(FFmpegBuilder builder, OutputStream stdOut) throws IOException {
+        Objects.requireNonNull(builder);
+        return runJob(builder.build(), stdOut, OutputStream.nullOutputStream(), InputStream.nullInputStream());
+    }
+
+    public FFMpegJob<Void> run(FFmpegBuilder builder, OutputStream stdOut, OutputStream stderr) throws IOException {
+        Objects.requireNonNull(builder);
+        return runJob(builder.build(), stdOut, stderr, InputStream.nullInputStream());
+    }
+
+    public FFMpegJob<Void> run(FFmpegBuilder builder, OutputStream stdOut, OutputStream stderr, InputStream stdin)
+            throws IOException {
+        Objects.requireNonNull(builder);
+        return runJob(builder.build(), stdOut, stderr, stdin);
     }
 
     public FFmpegBuilder builder() {

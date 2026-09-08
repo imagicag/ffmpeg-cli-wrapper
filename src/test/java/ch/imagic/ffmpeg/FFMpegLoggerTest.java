@@ -18,8 +18,7 @@ public class FFMpegLoggerTest {
         sendStdout(logger, 7, "hel");
         sendStdout(logger, 7, "lo\r\nnext\r\n");
 
-        assertEquals(
-                List.of("Child pid 7 STDOUT: hello", "Child pid 7 STDOUT: next"), info);
+        assertEquals(List.of("Child pid 7 STDOUT: hello", "Child pid 7 STDOUT: next"), info);
     }
 
     @Test
@@ -45,9 +44,7 @@ public class FFMpegLoggerTest {
         logger.onProcessDeath(9, 1);
 
         assertEquals(List.of("Child pid 9 trailing STDOUT: last output"), info);
-        assertEquals(
-                List.of("Child pid 9 trailing STDERR: last error", "Child pid 9 finished with error 1"),
-                error);
+        assertEquals(List.of("Child pid 9 trailing STDERR: last error", "Child pid 9 finished with error 1"), error);
     }
 
     @Test

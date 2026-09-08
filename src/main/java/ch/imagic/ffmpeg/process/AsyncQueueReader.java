@@ -3,8 +3,8 @@ package ch.imagic.ffmpeg.process;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InterruptedIOException;
-import java.util.concurrent.Executor;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executor;
 import java.util.concurrent.LinkedTransferQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TransferQueue;
@@ -50,7 +50,7 @@ class AsyncQueueReader extends InputStream {
                     try {
                         logger.accept(recevied);
                     } catch (Throwable e) {
-                        //Don't care, if logger itself fails, loggers that fail are silly.
+                        // Don't care, if logger itself fails, loggers that fail are silly.
                     }
                     feed(recevied);
                 }

@@ -4,6 +4,7 @@ import ch.imagic.ffmpeg.FFMpegLogger;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.OptionalInt;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
@@ -15,6 +16,7 @@ class BasicFFMpegProcess implements FFMpegProcess {
     private final Executor executor;
     private final FFMpegLogger logger;
     private final Process process;
+    private final OutputStream stdin;
     private final InputStream stdout;
     private final InputStream stderr;
     private final AtomicBoolean exitToggle = new AtomicBoolean(false);
@@ -23,6 +25,7 @@ class BasicFFMpegProcess implements FFMpegProcess {
         this.executor = executor;
         this.process = proc;
         this.logger = logger;
+        this.stdin = proc.getOutputStream();
         if (logger.wantsRawStdout()) {
             this.stdout = new AsyncQueueReader(
                     executor, proc.getInputStream(), data -> logger.onRawStdout(pid(), data, 0, data.length));
@@ -60,6 +63,11 @@ class BasicFFMpegProcess implements FFMpegProcess {
     }
 
     @Override
+    public OutputStream stdin() {
+        return stdin;
+    }
+
+    @Override
     public InputStream stdout() {
         return stdout;
     }
@@ -85,6 +93,11 @@ class BasicFFMpegProcess implements FFMpegProcess {
         }
         try {
             stderr.close();
+        } catch (IOException e) {
+            // DC
+        }
+        try {
+            stdin.close();
         } catch (IOException e) {
             // DC
         }

@@ -142,24 +142,6 @@ public class ExamplesTest {
         assertEquals(expected, actual);
     }
 
-    // Set the working directory of ffmpeg
-    @Ignore
-    @Test
-    public void testExample5() throws IOException {
-        FFMpegProcessFactory func = FFMpegProcessFactory.defaultFactory();
-
-        FFmpeg ffmpeg = new FFmpeg(new File("/path/to/ffmpeg"), func);
-        FFprobe ffprobe = new FFprobe(new File("/path/to/ffprobe"), func);
-
-        FFmpegBuilder builder =
-                new FFmpegBuilder().setInput("input").addOutput("output.mp4").done();
-
-        FFmpegExecutor executor = new FFmpegExecutor(ffmpeg, ffprobe);
-
-        // Run a two-pass encode
-        executor.createTwoPassJob(builder).run();
-    }
-
     // Create a video from images
     @Ignore
     @Test

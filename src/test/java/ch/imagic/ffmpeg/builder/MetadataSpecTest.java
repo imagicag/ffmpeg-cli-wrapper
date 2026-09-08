@@ -2,9 +2,9 @@ package ch.imagic.ffmpeg.builder;
 
 import static ch.imagic.ffmpeg.builder.MetadataSpecifier.*;
 import static ch.imagic.ffmpeg.builder.StreamSpecifier.id;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class MetadataSpecTest {
 

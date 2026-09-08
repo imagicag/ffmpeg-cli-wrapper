@@ -1,8 +1,8 @@
 package ch.imagic.ffmpeg.progress;
 
 import static ch.imagic.ffmpeg.Helper.combineResource;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import ch.imagic.ffmpeg.fixtures.Progresses;
 import java.io.IOException;
@@ -11,7 +11,7 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.net.URISyntaxException;
 import java.util.List;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class TcpProgressParserTest extends AbstractProgressParserTest {
 
@@ -25,7 +25,7 @@ public class TcpProgressParserTest extends AbstractProgressParserTest {
         parser.start();
 
         Socket client = new Socket(uri.getHost(), uri.getPort());
-        assertTrue("Socket is connected", client.isConnected());
+        assertTrue(client.isConnected(), "Socket is connected");
 
         InputStream inputStream = combineResource(Progresses.allFiles);
         OutputStream outputStream = client.getOutputStream();

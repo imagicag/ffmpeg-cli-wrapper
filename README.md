@@ -6,6 +6,16 @@ This project focuses on providing a ffmpeg-cli-wrapper for java with minimal dep
 usability in edge cases that were difficult to achieve with the original version.
 Minimum required java version is java 17.
 
+## Test coverage
+
+Run the test suite and generate a JaCoCo coverage report with:
+
+```shell
+./mvnw test
+```
+
+The HTML report is written to `target/site/jacoco/index.html`.
+
 ## Notable added features
 - Canceling of ongoing calls to ffmpeg.
   - Supports polling with timeout 

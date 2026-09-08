@@ -1,9 +1,9 @@
 package ch.imagic.ffmpeg.process;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -13,13 +13,13 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 public class AsyncQueueReaderTest {
     private final ExecutorService executor = Executors.newCachedThreadPool();
 
-    @After
+    @AfterEach
     public void tearDown() {
         executor.shutdownNow();
     }
@@ -89,7 +89,7 @@ public class AsyncQueueReaderTest {
         assertTrue(reader.awaitAsyncTermination(5, TimeUnit.SECONDS));
         long elapsedMillis = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
 
-        assertTrue("Expected to wait at least one second, waited " + elapsedMillis + " ms", elapsedMillis >= 1_000);
+        assertTrue(elapsedMillis >= 1_000, "Expected to wait at least one second, waited " + elapsedMillis + " ms");
         reader.close();
     }
 

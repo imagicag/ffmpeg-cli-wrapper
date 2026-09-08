@@ -1,16 +1,17 @@
 package ch.imagic.ffmpeg;
 
 import static ch.imagic.ffmpeg.FFmpegUtils.*;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.concurrent.TimeUnit;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class FFmpegUtilsTest {
 
-    @Test(expected = AssertionError.class)
+    @Test
     public void testAbstractUtilsClass() {
-        new FFmpegUtils();
+        assertThrows(AssertionError.class, FFmpegUtils::new);
     }
 
     @Test
@@ -40,13 +41,13 @@ public class FFmpegUtilsTest {
         assertEquals(-1, parseBitrate("N/A"));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testParseBitrateInvalidEmpty() {
-        parseBitrate("");
+        assertThrows(IllegalArgumentException.class, () -> parseBitrate(""));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testParseBitrateInvalidNumber() {
-        parseBitrate("12.3");
+        assertThrows(IllegalArgumentException.class, () -> parseBitrate("12.3"));
     }
 }

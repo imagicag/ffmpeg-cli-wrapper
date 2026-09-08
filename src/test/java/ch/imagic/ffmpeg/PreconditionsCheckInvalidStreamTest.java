@@ -1,37 +1,24 @@
 package ch.imagic.ffmpeg;
 
-import java.net.URI;
-import java.util.Arrays;
-import java.util.List;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-@RunWith(Parameterized.class)
+import java.net.URI;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+
 public class PreconditionsCheckInvalidStreamTest {
 
-    @Parameters(name = "{0}")
-    public static List<String> data() {
-        return Arrays.asList(
-                // Illegal schemes
+    @ParameterizedTest(name = "{0}")
+    @ValueSource(
+            strings = {
                 "http://www.example.com/",
                 "https://live.twitch.tv/app/live_",
                 "ftp://236.0.0.1:2000",
-
-                // Missing ports
                 "udp://10.1.0.102/",
-                "tcp://127.0.0.1/");
-    }
-
-    private final URI uri;
-
-    public PreconditionsCheckInvalidStreamTest(String url) {
-        this.uri = URI.create(url);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testUri() {
-        Preconditions.checkValidStream(uri);
+                "tcp://127.0.0.1/"
+            })
+    public void testUri(String url) {
+        URI uri = URI.create(url);
+        assertThrows(IllegalArgumentException.class, () -> Preconditions.checkValidStream(uri));
     }
 }

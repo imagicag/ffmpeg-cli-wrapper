@@ -1,7 +1,7 @@
 package ch.imagic.ffmpeg.progress;
 
 import static ch.imagic.ffmpeg.Helper.loadResource;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import ch.imagic.ffmpeg.fixtures.Progresses;
 import java.io.IOException;
@@ -11,7 +11,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.URISyntaxException;
 import java.util.List;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class UdpProgressParserTest extends AbstractProgressParserTest {
 

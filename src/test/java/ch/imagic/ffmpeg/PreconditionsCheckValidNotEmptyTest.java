@@ -1,26 +1,12 @@
 package ch.imagic.ffmpeg;
 
-import java.util.Arrays;
-import java.util.List;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
-@RunWith(Parameterized.class)
 public class PreconditionsCheckValidNotEmptyTest {
-    @Parameterized.Parameters(name = "{0}")
-    public static List<String> data() {
-        return Arrays.asList("bob", " hello ");
-    }
-
-    private final String input;
-
-    public PreconditionsCheckValidNotEmptyTest(String input) {
-        this.input = input;
-    }
-
-    @Test
-    public void testUri() {
+    @ParameterizedTest(name = "{0}")
+    @ValueSource(strings = {"bob", " hello "})
+    public void testUri(String input) {
         Preconditions.checkNotEmpty(input, "test must not throw exception");
     }
 }

@@ -1,9 +1,9 @@
 package ch.imagic.ffmpeg.gson;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import ch.imagic.ffmpeg.probe.FFmpegDisposition;
 import com.google.gson.Gson;
@@ -13,14 +13,14 @@ import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import java.io.StringReader;
 import java.util.Optional;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 public class FFmpegDispositionAdapterTest {
 
     static Gson gson;
 
-    @BeforeClass
+    @BeforeAll
     public static void setupGson() {
         GsonBuilder builder = new GsonBuilder();
         builder.registerTypeAdapter(FFmpegDisposition.class, new FFmpegDispositionAdapter());

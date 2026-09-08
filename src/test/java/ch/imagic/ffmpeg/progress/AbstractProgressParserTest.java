@@ -1,6 +1,7 @@
 package ch.imagic.ffmpeg.progress;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.net.URI;
@@ -8,16 +9,12 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.Timeout;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 
+@Timeout(10)
 public abstract class AbstractProgressParserTest {
-
-    @Rule
-    public Timeout timeout = new Timeout(10, TimeUnit.SECONDS);
 
     final List<Progress> progesses = Collections.synchronizedList(new ArrayList<Progress>());
 
@@ -31,7 +28,7 @@ public abstract class AbstractProgressParserTest {
         }
     };
 
-    @Before
+    @BeforeEach
     public void setupParser() throws IOException, URISyntaxException {
         synchronized (progesses) {
             progesses.clear();
@@ -58,14 +55,14 @@ public abstract class AbstractProgressParserTest {
         assertTrue(progesses.isEmpty());
     }
 
-    @Test(expected = IllegalThreadStateException.class)
+    @Test
     public void testDoubleStart() throws IOException {
         parser.start();
-        parser.start();
+        assertThrows(IllegalThreadStateException.class, parser::start);
         assertTrue(progesses.isEmpty());
     }
 
-    @Test()
+    @Test
     public void testStopNoStart() throws IOException {
         parser.stop();
         assertTrue(progesses.isEmpty());

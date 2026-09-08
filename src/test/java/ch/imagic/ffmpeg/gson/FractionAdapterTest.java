@@ -1,18 +1,18 @@
 package ch.imagic.ffmpeg.gson;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import ch.imagic.ffmpeg.probe.Fraction;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import java.util.List;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 public class FractionAdapterTest {
     static Gson gson;
 
-    @BeforeClass
+    @BeforeAll
     public static void setupGson() {
         GsonBuilder builder = new GsonBuilder();
         builder.registerTypeAdapter(Fraction.class, new FractionAdapter());

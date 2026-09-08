@@ -1,7 +1,7 @@
 package ch.imagic.ffmpeg;
 
 import static ch.imagic.ffmpeg.FFmpegTest.argThatHasItem;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import ch.imagic.ffmpeg.fixtures.Samples;
@@ -14,14 +14,17 @@ import ch.imagic.ffmpeg.process.FFMpegProcessFactory;
 import com.google.gson.Gson;
 import java.io.File;
 import java.io.IOException;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class FFprobeTest {
 
     @Mock
@@ -31,7 +34,7 @@ public class FFprobeTest {
 
     static final Gson gson = FFmpegUtils.getGson();
 
-    @Before
+    @BeforeEach
     public void before() throws IOException {
         when(runFunc.createProcess(Mockito.any(), Mockito.any(), argThatHasItem("-version")))
                 .thenAnswer(new NewProcessAnswer("ffprobe-version"));

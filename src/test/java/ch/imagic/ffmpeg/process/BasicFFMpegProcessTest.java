@@ -1,7 +1,7 @@
 package ch.imagic.ffmpeg.process;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import ch.imagic.ffmpeg.FFMpegLogger;
 import java.io.ByteArrayInputStream;
@@ -13,13 +13,13 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 public class BasicFFMpegProcessTest {
     private final ExecutorService executor = Executors.newCachedThreadPool();
 
-    @After
+    @AfterEach
     public void tearDown() {
         executor.shutdownNow();
     }

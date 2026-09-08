@@ -1,7 +1,7 @@
 package ch.imagic.ffmpeg;
 
 import static ch.imagic.ffmpeg.FFmpegTest.argThatHasItem;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
 import ch.imagic.ffmpeg.builder.FFmpegBuilder;
@@ -13,18 +13,18 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 /**
  * Ensures the examples in the Examples on github continue to work.
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class ExamplesTest {
 
     @Mock
@@ -32,15 +32,15 @@ public class ExamplesTest {
 
     FFmpeg ffmpeg;
 
-    @Ignore
-    @Before
+    @Disabled
+    @BeforeEach
     public void before() throws IOException {
         when(runFunc.createProcess(Mockito.any(), Mockito.any(), argThatHasItem("-version")))
                 .thenAnswer(new NewProcessAnswer("ffmpeg-version"));
         ffmpeg = new FFmpeg(new File("ffmpeg"), runFunc);
     }
 
-    @Ignore
+    @Disabled
     @Test
     public void testExample1() throws IOException {
         ffmpeg = new FFmpeg(new File("ffmpeg\\win64\\bin\\ffmpeg.exe"), runFunc);
@@ -83,7 +83,7 @@ public class ExamplesTest {
         assertEquals(expected, actual);
     }
 
-    @Ignore
+    @Disabled
     @Test
     public void testExample2() throws IOException {
         FFmpegBuilder builder = new FFmpegBuilder()
@@ -107,7 +107,7 @@ public class ExamplesTest {
         assertEquals(expected, actual);
     }
 
-    @Ignore
+    @Disabled
     @Test
     public void testExample3() throws IOException {
         FFmpegBuilder builder = new FFmpegBuilder()
@@ -127,7 +127,7 @@ public class ExamplesTest {
     }
 
     // Read from RTSP (IP camera)
-    @Ignore
+    @Disabled
     @Test
     public void testExample4() throws IOException {
         FFmpegBuilder builder = new FFmpegBuilder()
@@ -143,7 +143,7 @@ public class ExamplesTest {
     }
 
     // Create a video from images
-    @Ignore
+    @Disabled
     @Test
     public void testExample6() throws IOException {
         FFmpegBuilder builder = new FFmpegBuilder()
@@ -158,7 +158,7 @@ public class ExamplesTest {
         assertEquals(expected, actual);
     }
 
-    @Ignore
+    @Disabled
     @Test
     public void testExample7() throws IOException {
         FFmpegBuilder builder = new FFmpegBuilder()
@@ -195,7 +195,7 @@ public class ExamplesTest {
     }
 
     // Transcode to iOS HEVC format, with video filter set before output
-    @Ignore
+    @Disabled
     @Test
     public void testExample8() throws IOException {
         FFmpegBuilder builder = new FFmpegBuilder()
@@ -218,7 +218,7 @@ public class ExamplesTest {
     }
 
     // Convert a stereo mp3 into two mono tracks.
-    @Ignore
+    @Disabled
     @Test
     public void testExample9() throws IOException {
         FFmpegBuilder builder = new FFmpegBuilder()
@@ -242,7 +242,7 @@ public class ExamplesTest {
     }
 
     // A test with videos added in a loop.
-    @Ignore
+    @Disabled
     @Test
     public void testExample10() throws IOException {
         String expected = "ffmpeg -y -v error"
@@ -286,7 +286,7 @@ public class ExamplesTest {
 
     // Directly use a Process instead of a FFmpegJob
     @Test
-    @Ignore("because this test will invoke /path/to/ffmpeg.")
+    @Disabled("because this test will invoke /path/to/ffmpeg.")
     public void testExample11() throws IOException, InterruptedException {
         FFmpegBuilder builder =
                 new FFmpegBuilder().setInput("input").addOutput("output.mp4").done();
@@ -305,7 +305,7 @@ public class ExamplesTest {
         p.destroy();
     }
 
-    @Ignore
+    @Disabled
     @Test
     public void testExampleExample() throws IOException {
         FFmpegBuilder builder = new FFmpegBuilder()

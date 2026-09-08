@@ -1,23 +1,26 @@
 package ch.imagic.ffmpeg;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import java.nio.file.Path;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 public class FFcommonTest {
 
-    @Rule
-    public TemporaryFolder temporaryFolder = new TemporaryFolder();
+    @TempDir
+    Path temporaryFolder;
 
     @Test
     public void getSystemBinaryReturnsFirstCaseInsensitiveMatch() throws Exception {
-        File firstDirectory = temporaryFolder.newFolder("first");
-        File secondDirectory = temporaryFolder.newFolder("second");
+        File firstDirectory = temporaryFolder.resolve("first").toFile();
+        File secondDirectory = temporaryFolder.resolve("second").toFile();
+        assertTrue(firstDirectory.mkdir());
+        assertTrue(secondDirectory.mkdir());
         File first = executableFile(firstDirectory, "FFmpeg");
         executableFile(secondDirectory, "ffmpeg");
 
@@ -29,15 +32,18 @@ public class FFcommonTest {
 
     @Test
     public void getSystemBinaryFindsExeFile() throws Exception {
-        File directory = temporaryFolder.newFolder("bin");
+        File directory = temporaryFolder.resolve("bin").toFile();
+        assertTrue(directory.mkdir());
         File executable = executableFile(directory, "FFPROBE.EXE");
 
         assertEquals(executable, FFcommon.getSystemBinary("ffprobe", directory.getPath(), true));
     }
 
-    @Test(expected = FileNotFoundException.class)
+    @Test
     public void getSystemBinaryThrowsWhenNotFound() throws Exception {
-        FFcommon.getSystemBinary("missing", temporaryFolder.getRoot().getPath(), false);
+        assertThrows(
+                FileNotFoundException.class,
+                () -> FFcommon.getSystemBinary("missing", temporaryFolder.toString(), false));
     }
 
     private File executableFile(File directory, String name) throws Exception {

@@ -14,25 +14,6 @@ public class FFmpegUtilsTest {
     }
 
     @Test
-    public void testMillisecondsToString() {
-        assertEquals("00:01:03.123", millisecondsToString(63123));
-        assertEquals("00:01:03", millisecondsToString(63000));
-        assertEquals("01:23:45.678", millisecondsToString(5025678));
-        assertEquals("00:00:00", millisecondsToString(0));
-        assertEquals("00:00:00.001", millisecondsToString(1));
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testMillisecondsToStringNegative() {
-        millisecondsToString(-1);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testMillisecondsToStringNegativeMinValue() {
-        millisecondsToString(Long.MIN_VALUE);
-    }
-
-    @Test
     public void testToTimecode() {
         assertEquals("00:00:00", toTimecode(0, TimeUnit.NANOSECONDS));
         assertEquals("00:00:00.000000001", toTimecode(1, TimeUnit.NANOSECONDS));

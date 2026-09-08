@@ -1,4 +1,4 @@
-package ch.imagic.ffmpeg.nut;
+package ch.imagic.ffmpeg.probe;
 
 import java.io.Serial;
 import java.util.Objects;

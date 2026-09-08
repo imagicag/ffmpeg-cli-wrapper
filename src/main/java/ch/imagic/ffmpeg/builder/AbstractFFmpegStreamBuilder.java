@@ -5,7 +5,7 @@ import static ch.imagic.ffmpeg.Preconditions.checkNotEmpty;
 import static ch.imagic.ffmpeg.Preconditions.checkValidStream;
 import static ch.imagic.ffmpeg.builder.MetadataSpecifier.checkValidKey;
 
-import ch.imagic.ffmpeg.nut.Fraction;
+import ch.imagic.ffmpeg.probe.Fraction;
 import ch.imagic.ffmpeg.options.AudioEncodingOptions;
 import ch.imagic.ffmpeg.options.EncodingOptions;
 import ch.imagic.ffmpeg.options.MainEncodingOptions;

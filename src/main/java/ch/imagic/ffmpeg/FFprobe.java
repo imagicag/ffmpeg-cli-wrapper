@@ -34,6 +34,10 @@ public class FFprobe extends FFcommon {
                 FFMpegProcessFactory.defaultFactory());
     }
 
+    public FFprobe(File ffmpegBinary) throws IOException {
+        this(getDefaultExecutor(), FFMpegLogger.noop(), ffmpegBinary, FFMpegProcessFactory.defaultFactory());
+    }
+
     public FFprobe(File ffmpegBinary, FFMpegProcessFactory processFactory) throws IOException {
         this(getDefaultExecutor(), FFMpegLogger.noop(), ffmpegBinary, processFactory);
     }
@@ -91,6 +95,7 @@ public class FFprobe extends FFcommon {
                 "-show_streams",
                 "-show_chapters",
                 mediaPath.getAbsolutePath()));
+
         CompletableFuture<T> future = new CompletableFuture<>();
         FFMpegProcess p = runFunc.createProcess(executor, logger, List.copyOf(args));
         if (p == null) {

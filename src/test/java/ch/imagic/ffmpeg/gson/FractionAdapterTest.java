@@ -2,7 +2,7 @@ package ch.imagic.ffmpeg.gson;
 
 import static org.junit.Assert.assertEquals;
 
-import ch.imagic.ffmpeg.nut.Fraction;
+import ch.imagic.ffmpeg.probe.Fraction;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import java.util.List;

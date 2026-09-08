@@ -6,7 +6,7 @@ import static java.util.concurrent.TimeUnit.*;
 import ch.imagic.ffmpeg.gson.FractionAdapter;
 import ch.imagic.ffmpeg.gson.LowercaseEnumTypeAdapterFactory;
 import ch.imagic.ffmpeg.gson.NamedBitsetAdapter;
-import ch.imagic.ffmpeg.nut.Fraction;
+import ch.imagic.ffmpeg.probe.Fraction;
 import ch.imagic.ffmpeg.probe.FFmpegDisposition;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -23,18 +23,6 @@ public final class FFmpegUtils {
 
     FFmpegUtils() {
         throw new AssertionError("No instances for you!");
-    }
-
-    /**
-     * Convert milliseconds to "hh:mm:ss.ms" String representation.
-     *
-     * @param milliseconds time duration in milliseconds
-     * @return time duration in human-readable format
-     * @deprecated please use #toTimecode() instead.
-     */
-    @Deprecated
-    public static String millisecondsToString(long milliseconds) {
-        return toTimecode(milliseconds, MILLISECONDS);
     }
 
     /**

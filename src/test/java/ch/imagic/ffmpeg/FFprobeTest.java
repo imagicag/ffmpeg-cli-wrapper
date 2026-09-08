@@ -6,7 +6,7 @@ import static org.mockito.Mockito.*;
 
 import ch.imagic.ffmpeg.fixtures.Samples;
 import ch.imagic.ffmpeg.lang.NewProcessAnswer;
-import ch.imagic.ffmpeg.nut.Fraction;
+import ch.imagic.ffmpeg.probe.Fraction;
 import ch.imagic.ffmpeg.probe.FFmpegChapter;
 import ch.imagic.ffmpeg.probe.FFmpegProbeResult;
 import ch.imagic.ffmpeg.probe.FFmpegStream;

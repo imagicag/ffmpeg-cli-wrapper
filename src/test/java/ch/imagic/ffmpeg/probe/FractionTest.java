@@ -1,4 +1,4 @@
-package ch.imagic.ffmpeg.nut;
+package ch.imagic.ffmpeg.probe;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;

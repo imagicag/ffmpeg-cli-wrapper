@@ -1,6 +1,6 @@
 package ch.imagic.ffmpeg.options;
 
-import ch.imagic.ffmpeg.nut.Fraction;
+import ch.imagic.ffmpeg.probe.Fraction;
 import java.beans.ConstructorProperties;
 
 /**

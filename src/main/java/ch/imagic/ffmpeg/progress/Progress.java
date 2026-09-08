@@ -3,15 +3,11 @@ package ch.imagic.ffmpeg.progress;
 import static ch.imagic.ffmpeg.FFmpegUtils.fromTimecode;
 
 import ch.imagic.ffmpeg.FFmpegUtils;
-import ch.imagic.ffmpeg.nut.Fraction;
+import ch.imagic.ffmpeg.probe.Fraction;
 import java.util.Objects;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 // TODO Change to be immutable
 public class Progress {
-
-    static final Logger LOG = LoggerFactory.getLogger(Progress.class);
 
     public enum Status {
         CONTINUE("continue"),
@@ -190,7 +186,7 @@ public class Progress {
                     // AV_CODEC_FLAG_PSNR
                     // stream_%d_%d_psnr_all
                 } else {
-                    LOG.warn("skipping unhandled key: {} = {}", key, value);
+                    //LOG.warn("skipping unhandled key: {} = {}", key, value);
                 }
 
                 return false; // Either way, not supported

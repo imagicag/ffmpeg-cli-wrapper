@@ -11,12 +11,14 @@ import java.io.InterruptedIOException;
 import java.io.OutputStream;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.regex.Pattern;
 
 /** Private class to contain common methods for both FFmpeg and FFprobe. */
 abstract class FFcommon {
@@ -41,8 +43,7 @@ abstract class FFcommon {
         if (DEFAULT_FFMPEG_BINARY == null) {
             synchronized (FFcommon.class) {
                 if (DEFAULT_FFMPEG_BINARY == null) {
-                    // TODO actually find the binary here or FileNotFoundException.
-                    DEFAULT_FFMPEG_BINARY = new File("/usr/bin/ffmpeg");
+                    DEFAULT_FFMPEG_BINARY = getSystemBinary("ffmpeg");
                 }
             }
         }
@@ -56,13 +57,42 @@ abstract class FFcommon {
         if (DEFAULT_FFPROBE_BINARY == null) {
             synchronized (FFcommon.class) {
                 if (DEFAULT_FFPROBE_BINARY == null) {
-                    // TODO actually find the binary here or FileNotFoundException.
-                    DEFAULT_FFPROBE_BINARY = new File("/usr/bin/ffprobe");
+                    DEFAULT_FFPROBE_BINARY = getSystemBinary("ffprobe");
                 }
             }
         }
 
         return DEFAULT_FFPROBE_BINARY;
+    }
+
+    protected static File getSystemBinary(String name) throws FileNotFoundException {
+        return getSystemBinary(name, System.getenv("PATH"), File.separatorChar == '\\');
+    }
+
+    protected static File getSystemBinary(String name, String path, boolean isWindows) throws FileNotFoundException {
+        Objects.requireNonNull(name, "name");
+        if (path == null) {
+            throw new FileNotFoundException("Could not find " + name + " because PATH env var is missing");
+        }
+
+        LinkedList<String> directories = new LinkedList<>(List.of(path.split(Pattern.quote(File.pathSeparator), -1)));
+        directories.addFirst(".");
+
+        for (String directoryName : directories) {
+            File directory = new File(directoryName.isEmpty() ? "." : directoryName);
+            File[] files = directory.listFiles();
+            if (files == null) {
+                continue;
+            }
+
+            for (File file : files) {
+                if (file.getName().equalsIgnoreCase(isWindows ? name + ".exe" : name) && file.isFile() && file.canExecute()) {
+                    return file;
+                }
+            }
+        }
+
+        throw new FileNotFoundException("Could not find " + name + " in PATH");
     }
 
     final Executor executor;
@@ -157,15 +187,15 @@ abstract class FFcommon {
         }
     }
 
-    protected CompletableFuture<Void> pipe1(InputStream in, OutputStream outputStream) {
+    protected CompletableFuture<Void> pipe1(InputStream in, OutputStream out) {
         CompletableFuture<Void> future = new CompletableFuture<>();
         Thread t = Thread.currentThread();
         executor.execute(() -> {
             if (t == Thread.currentThread()) {
                 throw new IllegalStateException("Bad executor");
             }
-            try (in) {
-                in.transferTo(outputStream);
+            try (in; out) {
+                in.transferTo(out);
             } catch (IOException e) {
                 future.completeExceptionally(e);
                 // DC

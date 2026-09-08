@@ -4,7 +4,7 @@ import ch.imagic.ffmpeg.builder.FFmpegBuilder;
 import ch.imagic.ffmpeg.info.Codec;
 import ch.imagic.ffmpeg.info.Format;
 import ch.imagic.ffmpeg.info.PixelFormat;
-import ch.imagic.ffmpeg.nut.Fraction;
+import ch.imagic.ffmpeg.probe.Fraction;
 import ch.imagic.ffmpeg.process.FFMpegProcess;
 import ch.imagic.ffmpeg.process.FFMpegProcessFactory;
 import java.io.BufferedReader;
@@ -201,6 +201,8 @@ public class FFmpeg extends FFcommon {
      *
      * The execution happens in the background and the returned FFMpegJob can be used to cancel or wait (with a timeout) for the job.
      *
+     * Unless this function throws an exception the stdin InputStream is closed once it is no longer needed.
+     *
      * @param args The arguments to pass to the binary.
      * @throws IOException If there is a problem executing the binary
      */
@@ -220,7 +222,7 @@ public class FFmpeg extends FFcommon {
                 throw new IllegalStateException("Bad executor");
             }
 
-            try (p) {
+            try (p; stdin) {
                 pipe3(p.stdout(), stdout, p.stderr(), stderr, stdin, p.stdin());
                 throwOnError(p);
                 future.complete(null);
@@ -241,16 +243,25 @@ public class FFmpeg extends FFcommon {
                 InputStream.nullInputStream());
     }
 
+    /**
+     * This function closes the stream parameters unless it throws an exception.
+     */
     public FFMpegJob<Void> run(FFmpegBuilder builder, OutputStream stdOut) throws IOException {
         Objects.requireNonNull(builder);
         return runJob(builder.build(), stdOut, OutputStream.nullOutputStream(), InputStream.nullInputStream());
     }
 
+    /**
+     * This function closes the stream parameters unless it throws an exception.
+     */
     public FFMpegJob<Void> run(FFmpegBuilder builder, OutputStream stdOut, OutputStream stderr) throws IOException {
         Objects.requireNonNull(builder);
         return runJob(builder.build(), stdOut, stderr, InputStream.nullInputStream());
     }
 
+    /**
+     * This function closes the stream parameters unless it throws an exception.
+     */
     public FFMpegJob<Void> run(FFmpegBuilder builder, OutputStream stdOut, OutputStream stderr, InputStream stdin)
             throws IOException {
         Objects.requireNonNull(builder);

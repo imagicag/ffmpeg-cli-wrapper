@@ -31,7 +31,7 @@ public class FFmpegBuilderTest {
     public void testNormal() {
 
         List<String> args = new FFmpegBuilder()
-                .setVerbosity(Verbosity.DEBUG)
+                .setVerbosity(Verbosity.TRACE)
                 .setUserAgent(
                         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.82 Safari/537.36")
                 .setInput("input")
@@ -58,7 +58,7 @@ public class FFmpegBuilderTest {
                 List.of(
                         "-y",
                         "-v",
-                        "debug",
+                        "trace",
                         "-user_agent",
                         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.82 Safari/537.36",
                         "-ss",
@@ -105,6 +105,38 @@ public class FFmpegBuilderTest {
                 .build();
 
         assertEquals(args, List.of("-y", "-v", "error", "-i", "input", "-vn", "-an", "-sn", "output"));
+    }
+
+    @Test
+    public void testSafe() {
+        FFmpegBuilder safeBuilder = new FFmpegBuilder().setSafe(true);
+        safeBuilder.setInput("input").addOutput("output");
+
+        assertEquals(true, safeBuilder.getSafe());
+        assertEquals(List.of("-y", "-v", "error", "-safe", "1", "-i", "input", "output"), safeBuilder.build());
+
+        FFmpegBuilder unsafeBuilder = new FFmpegBuilder().setSafe(false);
+        unsafeBuilder.setInput("input").addOutput("output");
+
+        assertEquals(false, unsafeBuilder.getSafe());
+        assertEquals(List.of("-y", "-v", "error", "-safe", "0", "-i", "input", "output"), unsafeBuilder.build());
+    }
+
+    @Test
+    public void testExitOnError() {
+        FFmpegBuilder builder = new FFmpegBuilder()
+                .setExitOnError(true)
+                .setInput("input")
+                .addOutput("output")
+                .done();
+
+        assertEquals(true, builder.getExitOnError());
+        assertEquals(List.of("-y", "-v", "error", "-xerror", "-i", "input", "output"), builder.build());
+
+        builder.setExitOnError(false);
+
+        assertEquals(false, builder.getExitOnError());
+        assertEquals(List.of("-y", "-v", "error", "-i", "input", "output"), builder.build());
     }
 
     @Test
@@ -423,6 +455,36 @@ public class FFmpegBuilderTest {
     @Test
     public void testNothing() {
         assertThrows(IllegalArgumentException.class, () -> new FFmpegBuilder().build());
+    }
+
+    @Test
+    public void testNoOutput() {
+        FFmpegBuilder builder = new FFmpegBuilder()
+                .setVerbosity(Verbosity.TRACE)
+                .setInput("input.mp4")
+                .noOutput();
+
+        assertEquals(true, builder.getNoOutput());
+        assertEquals(List.of("-y", "-v", "trace", "-i", "input.mp4"), builder.build());
+    }
+
+    @Test
+    public void testAddingOutputClearsNoOutput() {
+        FFmpegBuilder filenameBuilder = new FFmpegBuilder().noOutput();
+        filenameBuilder.addOutput("output.mp4");
+        assertEquals(false, filenameBuilder.getNoOutput());
+
+        FFmpegBuilder uriBuilder = new FFmpegBuilder().noOutput();
+        uriBuilder.addOutput(URI.create("udp://localhost:1234"));
+        assertEquals(false, uriBuilder.getNoOutput());
+
+        FFmpegBuilder outputBuilder = new FFmpegBuilder().noOutput();
+        outputBuilder.addOutput(new FFmpegOutputBuilder().setFilename("output.mp4"));
+        assertEquals(false, outputBuilder.getNoOutput());
+
+        FFmpegBuilder stdoutBuilder = new FFmpegBuilder().noOutput();
+        stdoutBuilder.addStdoutOutput();
+        assertEquals(false, stdoutBuilder.getNoOutput());
     }
 
     @Test

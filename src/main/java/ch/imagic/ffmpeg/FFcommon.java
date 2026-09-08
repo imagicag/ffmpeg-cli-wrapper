@@ -138,11 +138,19 @@ abstract class FFcommon {
     }
 
     protected void throwOnError(FFMpegProcess p) throws IOException {
+        throwOnError(p, false);
+    }
+
+    protected void throwOnError(FFMpegProcess p, boolean allowAnyExitCode) throws IOException {
         try {
-            // TODO In java 8 use waitFor(long timeout, TimeUnit unit)
             if (!p.await(1000)) {
                 throw new IOException(getAbsolutePath() + " pid " + p.pid() + " didnt exit in time");
             }
+
+            if (allowAnyExitCode) {
+                return;
+            }
+
             int code = p.exitCode().orElse(-1);
             if (code != 0) {
                 throw new IOException(getAbsolutePath() + " pid " + p.pid() + " exited with code " + code);
@@ -163,7 +171,7 @@ abstract class FFcommon {
         if (this.version == null) {
             try (FFMpegProcess p = runFunc.createProcess(executor, logger, List.of(getAbsolutePath(), "-version"));
                     BufferedReader r = p.stdoutReader()) {
-                var errorReader = pipe1(p.stderr(), OutputStream.nullOutputStream());
+                var errorReader = pipe1(p.stderr(), FFMpegStreamConsumer.noop());
                 String version = r.readLine();
                 r.transferTo(Writer.nullWriter()); // Throw away rest of the output
                 waitAndthrowOnError(errorReader);
@@ -174,8 +182,15 @@ abstract class FFcommon {
         return version;
     }
 
-    protected void pipe3(
-            InputStream in1, OutputStream out1, InputStream in2, OutputStream out2, InputStream in3, OutputStream out3)
+    protected record Pipe3Result<A, B, C>(A a, B b, C c) {}
+
+    protected <A, B, C> Pipe3Result<A, B, C> pipe3(
+            InputStream in1,
+            FFMpegStreamConsumer<A> out1,
+            InputStream in2,
+            FFMpegStreamConsumer<B> out2,
+            InputStream in3,
+            FFMpegStreamConsumer<C> out3)
             throws IOException {
         try (in1;
                 in2) {
@@ -187,24 +202,27 @@ abstract class FFcommon {
                 waitAndthrowOnError(CompletableFuture.anyOf(futures.toArray(CompletableFuture[]::new)));
                 futures.removeIf(CompletableFuture::isDone);
             }
+
+            return new Pipe3Result<>(future1.getNow(null), future2.getNow(null), future3.getNow(null));
         }
     }
 
-    protected CompletableFuture<Void> pipe1(InputStream in, OutputStream out) {
-        CompletableFuture<Void> future = new CompletableFuture<>();
+    protected <T> CompletableFuture<T> pipe1(InputStream in, FFMpegStreamConsumer<T> out) {
+        CompletableFuture<T> future = new CompletableFuture<>();
         Thread t = Thread.currentThread();
         executor.execute(() -> {
             if (t == Thread.currentThread()) {
                 throw new IllegalStateException("Bad executor");
             }
-            try (in;
-                    out) {
-                in.transferTo(out);
-            } catch (IOException e) {
+            T result;
+            try (in) {
+                result = out.consume(in);
+                in.transferTo(OutputStream.nullOutputStream());
+            } catch (Throwable e) {
                 future.completeExceptionally(e);
-                // DC
+                return;
             }
-            future.complete(null);
+            future.complete(result);
         });
         return future;
     }

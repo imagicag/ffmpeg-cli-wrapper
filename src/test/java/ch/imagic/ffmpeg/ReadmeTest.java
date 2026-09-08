@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import ch.imagic.ffmpeg.builder.FFmpegBuilder;
+import ch.imagic.ffmpeg.builder.Strict;
 import ch.imagic.ffmpeg.fixtures.Samples;
 import ch.imagic.ffmpeg.probe.FFmpegCodecType;
 import ch.imagic.ffmpeg.probe.FFmpegFormat;
@@ -55,7 +56,7 @@ public class ReadmeTest {
                     .setVideoCodec("libx264")
                     .setVideoFrameRate(24, 1)
                     .setVideoResolution(640, 480)
-                    .setStrict(FFmpegBuilder.Strict.EXPERIMENTAL)
+                    .setStrict(Strict.EXPERIMENTAL)
                     .done();
 
             FFMpegJob<Void> job = ffmpeg.run(builder);

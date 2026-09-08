@@ -18,21 +18,6 @@ import java.util.concurrent.TimeUnit;
  */
 public class FFmpegBuilder {
 
-    public enum Strict {
-        VERY, // strictly conform to a older more strict version of the specifications or reference
-        // software
-        STRICT, // strictly conform to all the things in the specificiations no matter what consequences
-        NORMAL, // normal
-        UNOFFICIAL, // allow unofficial extensions
-        EXPERIMENTAL;
-
-        // ffmpeg command line requires these options in lower case
-        @Override
-        public String toString() {
-            return name().toLowerCase();
-        }
-    }
-
     /** Log level options: https://ffmpeg.org/ffmpeg.html#Generic-options */
     public enum Verbosity {
         QUIET,
@@ -42,7 +27,8 @@ public class FFmpegBuilder {
         WARNING,
         INFO,
         VERBOSE,
-        DEBUG;
+        DEBUG,
+        TRACE;
 
         @Override
         public String toString() {
@@ -51,30 +37,33 @@ public class FFmpegBuilder {
     }
 
     // Global Settings
-    boolean override = true;
-    int pass = 0;
-    String passDirectory = "";
-    String passPrefix;
-    Verbosity verbosity = Verbosity.ERROR;
-    URI progress;
-    String userAgent;
+    protected boolean override = true;
+    protected int pass = 0;
+    protected String passDirectory = "";
+    protected String passPrefix;
+    protected Verbosity verbosity = Verbosity.ERROR;
+    protected URI progress;
+    protected String userAgent;
+    protected boolean exitOnError;
 
     // Input settings
-    String format;
-    Long startOffset; // in millis
-    boolean readAtNativeFrameRate = false;
-    final List<String> inputs = new ArrayList<>();
-    final Map<String, FFmpegProbeResult> inputProbes = new TreeMap<>();
+    protected String format;
+    protected Long startOffset; // in millis
+    protected boolean readAtNativeFrameRate = false;
+    protected Boolean safe;
+    protected final List<String> inputs = new ArrayList<>();
+    protected final Map<String, FFmpegProbeResult> inputProbes = new TreeMap<>();
 
-    final List<String> extraArgs = new ArrayList<>();
+    protected final List<String> extraArgs = new ArrayList<>();
 
     // Output
-    final List<FFmpegOutputBuilder> outputs = new ArrayList<>();
+    protected boolean noOutput;
+    protected final List<FFmpegOutputBuilder> outputs = new ArrayList<>();
 
     // Filters
-    String audioFilter;
-    String videoFilter;
-    String complexFilter;
+    protected String audioFilter;
+    protected String videoFilter;
+    protected String complexFilter;
 
     public FFmpegBuilder overrideOutputFiles(boolean override) {
         this.override = override;
@@ -83,6 +72,82 @@ public class FFmpegBuilder {
 
     public boolean getOverrideOutputFiles() {
         return this.override;
+    }
+
+    public int getPass() {
+        return pass;
+    }
+
+    public String getPassDirectory() {
+        return passDirectory;
+    }
+
+    public String getPassPrefix() {
+        return passPrefix;
+    }
+
+    public Verbosity getVerbosity() {
+        return verbosity;
+    }
+
+    public URI getProgress() {
+        return progress;
+    }
+
+    public String getUserAgent() {
+        return userAgent;
+    }
+
+    public boolean getExitOnError() {
+        return exitOnError;
+    }
+
+    public String getFormat() {
+        return format;
+    }
+
+    public Long getStartOffset() {
+        return startOffset;
+    }
+
+    public boolean getReadAtNativeFrameRate() {
+        return readAtNativeFrameRate;
+    }
+
+    public Boolean getSafe() {
+        return safe;
+    }
+
+    public List<String> getInputs() {
+        return inputs;
+    }
+
+    public Map<String, FFmpegProbeResult> getInputProbes() {
+        return inputProbes;
+    }
+
+    public List<String> getExtraArgs() {
+        return extraArgs;
+    }
+
+    public List<FFmpegOutputBuilder> getOutputs() {
+        return outputs;
+    }
+
+    public boolean getNoOutput() {
+        return noOutput;
+    }
+
+    public String getAudioFilter() {
+        return audioFilter;
+    }
+
+    public String getVideoFilter() {
+        return videoFilter;
+    }
+
+    public String getComplexFilter() {
+        return complexFilter;
     }
 
     public FFmpegBuilder setPass(int pass) {
@@ -111,8 +176,30 @@ public class FFmpegBuilder {
         return this;
     }
 
+    /**
+     * Stops FFmpeg when it encounters a processing error that it could otherwise recover from.
+     *
+     * @param exitOnError whether to emit {@code -xerror}
+     * @return this
+     */
+    public FFmpegBuilder setExitOnError(boolean exitOnError) {
+        this.exitOnError = exitOnError;
+        return this;
+    }
+
     public FFmpegBuilder readAtNativeFrameRate() {
         this.readAtNativeFrameRate = true;
+        return this;
+    }
+
+    /**
+     * Enables or disables FFmpeg's input filename safety checks.
+     *
+     * @param safe whether input filenames must be considered safe
+     * @return this
+     */
+    public FFmpegBuilder setSafe(boolean safe) {
+        this.safe = safe;
         return this;
     }
 
@@ -214,6 +301,21 @@ public class FFmpegBuilder {
     }
 
     /**
+     * Allows building a command without an output destination.
+     *
+     * Use this function with care because it allows ffmpeg commands to exit with any exit code as
+     * any ffmpeg command without an output will never exit with 0.
+     *
+     * This makes verification if the command ran successfully difficult.
+     *
+     * This is probably only useful if you are looking to use ffmpeg to parse stdout file headers.
+     */
+    public FFmpegBuilder noOutput() {
+        this.noOutput = true;
+        return this;
+    }
+
+    /**
      * Adds new output file.
      *
      * @param filename output file path
@@ -221,6 +323,7 @@ public class FFmpegBuilder {
      */
     public FFmpegOutputBuilder addOutput(String filename) {
         FFmpegOutputBuilder output = new FFmpegOutputBuilder(this, filename);
+        noOutput = false;
         outputs.add(output);
         return output;
     }
@@ -233,6 +336,7 @@ public class FFmpegBuilder {
      */
     public FFmpegOutputBuilder addOutput(URI uri) {
         FFmpegOutputBuilder output = new FFmpegOutputBuilder(this, uri);
+        noOutput = false;
         outputs.add(output);
         return output;
     }
@@ -254,6 +358,7 @@ public class FFmpegBuilder {
      * @return this
      */
     public FFmpegBuilder addOutput(FFmpegOutputBuilder output) {
+        noOutput = false;
         outputs.add(output);
         return this;
     }
@@ -273,7 +378,7 @@ public class FFmpegBuilder {
         if (inputs.isEmpty()) {
             throw new IllegalArgumentException("At least one input must be specified");
         }
-        if (outputs.isEmpty()) {
+        if (outputs.isEmpty() && !noOutput) {
             throw new IllegalArgumentException("At least one output must be specified");
         }
 
@@ -282,6 +387,10 @@ public class FFmpegBuilder {
 
         if (userAgent != null) {
             args.addAll(List.of("-user_agent", userAgent));
+        }
+
+        if (exitOnError) {
+            args.add("-xerror");
         }
 
         if (startOffset != null) {
@@ -294,6 +403,10 @@ public class FFmpegBuilder {
 
         if (readAtNativeFrameRate) {
             args.add("-re");
+        }
+
+        if (safe != null) {
+            args.addAll(List.of("-safe", safe ? "1" : "0"));
         }
 
         if (progress != null) {

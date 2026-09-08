@@ -134,6 +134,24 @@ public class FFmpegOutputBuilderTest {
     }
 
     @Test
+    public void testVideoBFrames() {
+        FFmpegOutputBuilder output = new FFmpegBuilder()
+                .setInput("input.mp4")
+                .addOutput("output.mp4")
+                .setVideoBFrames(0);
+
+        assertEquals(Integer.valueOf(0), output.getVideoBFrames());
+        assertEquals(
+                List.of("-y", "-v", "error", "-i", "input.mp4", "-bf", "0", "output.mp4"),
+                output.done().build());
+    }
+
+    @Test
+    public void testVideoBFramesMustNotBeNegative() {
+        assertThrows(IllegalArgumentException.class, () -> new FFmpegOutputBuilder().setVideoBFrames(-1));
+    }
+
+    @Test
     public void testAudioBitRateAndQualityConflict() {
         assertThrows(
                 IllegalStateException.class,

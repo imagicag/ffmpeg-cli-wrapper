@@ -1,5 +1,6 @@
 package ch.imagic.ffmpeg;
 
+import ch.imagic.ffmpeg.builder.Strict;
 import ch.imagic.ffmpeg.probe.FFmpegProbeResult;
 import ch.imagic.ffmpeg.process.FFMpegProcess;
 import ch.imagic.ffmpeg.process.FFMpegProcessFactory;
@@ -9,7 +10,6 @@ import com.google.gson.JsonParser;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -25,6 +25,8 @@ import java.util.function.Function;
 public class FFprobe extends FFcommon {
 
     static final Gson gson = FFmpegUtils.getGson();
+
+    protected Strict strict;
 
     public FFprobe() throws IOException {
         this(
@@ -61,7 +63,7 @@ public class FFprobe extends FFcommon {
     }
 
     public FFMpegJob<FFmpegProbeResult> probe(File mediaPath) throws IOException {
-        return probe(mediaPath, OutputStream.nullOutputStream());
+        return probe(mediaPath, FFMpegStreamConsumer.noop());
     }
 
     /**
@@ -75,8 +77,20 @@ public class FFprobe extends FFcommon {
         return version().startsWith("ffprobe");
     }
 
+    public Strict getStrict() {
+        return strict;
+    }
+
+    public FFprobe setStrict(Strict strict) {
+        this.strict = strict;
+        return this;
+    }
+
     protected <T> FFMpegJob<T> probeGson(
-            String mediaPath, OutputStream stdErr, Function<JsonElement, T> mapper, String... additionalArguments)
+            String mediaPath,
+            FFMpegStreamConsumer<Void> stdErr,
+            Function<JsonElement, T> mapper,
+            String... additionalArguments)
             throws IOException {
         Objects.requireNonNull(mapper);
         List<String> args = new ArrayList<>();
@@ -86,6 +100,9 @@ public class FFprobe extends FFcommon {
         // .add("--show_frames")
 
         args.addAll(List.of(getAbsolutePath(), "-v", "quiet"));
+        if (strict != null) {
+            args.addAll(List.of("-strict", strict.toString()));
+        }
         args.addAll(Arrays.asList(additionalArguments));
         args.addAll(List.of(
                 "-print_format", "json", "-show_error", "-show_format", "-show_streams", "-show_chapters", mediaPath));
@@ -116,25 +133,25 @@ public class FFprobe extends FFcommon {
         return new BasicFFMpegJob<>(future, p);
     }
 
-    public FFMpegJob<String> probeJson(File mediaPath, OutputStream stdErr, String... additionalArguments)
+    public FFMpegJob<String> probeJson(File mediaPath, FFMpegStreamConsumer<Void> stdErr, String... additionalArguments)
             throws IOException {
         return probeGson(mediaPath.getAbsolutePath(), stdErr, JsonElement::toString, additionalArguments);
     }
 
-    public FFMpegJob<FFmpegProbeResult> probe(File mediaPath, OutputStream stdErr, String... additionalArguments)
-            throws IOException {
+    public FFMpegJob<FFmpegProbeResult> probe(
+            File mediaPath, FFMpegStreamConsumer<Void> stdErr, String... additionalArguments) throws IOException {
         return probe(mediaPath, stdErr, FFmpegProbeResult.class, additionalArguments);
     }
 
     public <T> FFMpegJob<T> probe(
-            File mediaPath, OutputStream stdErr, Class<T> resultClass, String... additionalArguments)
+            File mediaPath, FFMpegStreamConsumer<Void> stdErr, Class<T> resultClass, String... additionalArguments)
             throws IOException {
         return probeGson(
                 mediaPath.getAbsolutePath(), stdErr, elem -> gson.fromJson(elem, resultClass), additionalArguments);
     }
 
     public <T> FFMpegJob<T> probe(
-            String mediaPath, OutputStream stdErr, Class<T> resultClass, String... additionalArguments)
+            String mediaPath, FFMpegStreamConsumer<Void> stdErr, Class<T> resultClass, String... additionalArguments)
             throws IOException {
         return probeGson(mediaPath, stdErr, elem -> gson.fromJson(elem, resultClass), additionalArguments);
     }

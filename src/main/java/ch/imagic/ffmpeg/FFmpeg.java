@@ -11,13 +11,13 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.function.BiFunction;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -26,6 +26,10 @@ import java.util.regex.Pattern;
  *
  */
 public class FFmpeg extends FFcommon {
+
+    protected static <A, B> BiFunction<A, B, A> first() {
+        return (a, _b) -> a;
+    }
 
     public static final Fraction FPS_30 = Fraction.getFraction(30, 1);
     public static final Fraction FPS_29_97 = Fraction.getFraction(30000, 1001);
@@ -128,7 +132,7 @@ public class FFmpeg extends FFcommon {
 
             try (FFMpegProcess p = runFunc.createProcess(executor, logger, List.of(getAbsolutePath(), "-codecs"));
                     BufferedReader r = p.stdoutReader()) {
-                var errorReader = pipe1(p.stderr(), OutputStream.nullOutputStream());
+                var errorReader = pipe1(p.stderr(), FFMpegStreamConsumer.noop());
 
                 String line;
                 while ((line = r.readLine()) != null) {
@@ -152,7 +156,7 @@ public class FFmpeg extends FFcommon {
             List<Format> newFormats = new ArrayList<>();
             try (FFMpegProcess p = runFunc.createProcess(executor, logger, List.of(getAbsolutePath(), "-formats"));
                     BufferedReader r = p.stdoutReader()) {
-                var errorReader = pipe1(p.stderr(), OutputStream.nullOutputStream());
+                var errorReader = pipe1(p.stderr(), FFMpegStreamConsumer.noop());
                 String line;
                 while ((line = r.readLine()) != null) {
                     Matcher m = FORMATS_REGEX.matcher(line);
@@ -175,7 +179,7 @@ public class FFmpeg extends FFcommon {
 
             try (FFMpegProcess p = runFunc.createProcess(executor, logger, List.of(getAbsolutePath(), "-pix_fmts"));
                     BufferedReader r = p.stdoutReader()) {
-                var errorReader = pipe1(p.stderr(), OutputStream.nullOutputStream());
+                var errorReader = pipe1(p.stderr(), FFMpegStreamConsumer.noop());
                 String line;
                 while ((line = r.readLine()) != null) {
                     Matcher m = PIXEL_FORMATS_REGEX.matcher(line);
@@ -207,14 +211,21 @@ public class FFmpeg extends FFcommon {
      * @param args The arguments to pass to the binary.
      * @throws IOException If there is a problem executing the binary
      */
-    protected FFMpegJob<Void> runJob(List<String> args, OutputStream stdout, OutputStream stderr, InputStream stdin)
+    protected <A, B, T> FFMpegJob<T> runJob(
+            List<String> args,
+            boolean allowAnyExitCode,
+            FFMpegStreamConsumer<A> stdout,
+            FFMpegStreamConsumer<B> stderr,
+            BiFunction<A, B, T> merger,
+            InputStream stdin)
             throws IOException {
         Objects.requireNonNull(args);
         Objects.requireNonNull(stdout);
         Objects.requireNonNull(stderr);
+        Objects.requireNonNull(merger);
 
         Thread thr = Thread.currentThread();
-        CompletableFuture<Void> future = new CompletableFuture<>();
+        CompletableFuture<T> future = new CompletableFuture<>();
         FFMpegProcess p = runFunc.createProcess(executor, logger, path(args));
 
         executor.execute(() -> {
@@ -225,9 +236,10 @@ public class FFmpeg extends FFcommon {
 
             try (p;
                     stdin) {
-                pipe3(p.stdout(), stdout, p.stderr(), stderr, stdin, p.stdin());
-                throwOnError(p);
-                future.complete(null);
+                var pipeResult = pipe3(
+                        p.stdout(), stdout, p.stderr(), stderr, stdin, FFMpegStreamConsumer.toOutputStream(p.stdin()));
+                throwOnError(p, allowAnyExitCode);
+                future.complete(merger.apply(pipeResult.a(), pipeResult.b()));
             } catch (Throwable t) {
                 future.completeExceptionally(t);
             }
@@ -240,34 +252,68 @@ public class FFmpeg extends FFcommon {
         Objects.requireNonNull(builder);
         return runJob(
                 builder.build(),
-                OutputStream.nullOutputStream(),
-                OutputStream.nullOutputStream(),
+                builder.getNoOutput(),
+                FFMpegStreamConsumer.noop(),
+                FFMpegStreamConsumer.noop(),
+                first(),
+                InputStream.nullInputStream());
+    }
+
+    public <T> FFMpegJob<T> run(FFmpegBuilder builder, FFMpegStreamConsumer<T> stdOut) throws IOException {
+        Objects.requireNonNull(builder);
+        return runJob(
+                builder.build(),
+                builder.getNoOutput(),
+                stdOut,
+                FFMpegStreamConsumer.noop(),
+                first(),
+                InputStream.nullInputStream());
+    }
+
+    public <T> FFMpegJob<T> runCaptureStderr(FFmpegBuilder builder, FFMpegStreamConsumer<T> stderr) throws IOException {
+        Objects.requireNonNull(builder);
+        return runJob(
+                builder.build(),
+                builder.getNoOutput(),
+                FFMpegStreamConsumer.noop(),
+                stderr,
+                (ignored, result) -> result,
                 InputStream.nullInputStream());
     }
 
     /**
-     * This function closes the stream parameters unless it throws an exception.
+     * Consumes stdOut and stdErr in separate threads and later once ffmpeg is finished merge the results using the merger function.
+     * Any exception thrown is propagated to FFMpegJob#get, however only the first exception to occur is reported,
+     * further exceptions are discarded. The ffmpeg process is already stopped/exited by the time the merger function is invoked.
+     * If any of the stream consumers throw then that causes the ffmpeg process to be stopped soon after.
+     *
+     * This function returns as soon as the ffmpeg process was started.
+     *
+     * The job can be killed/canceled with the returned job handle.
+     * Closing the job handle stops the ffmpeg process as soon as possible.
      */
-    public FFMpegJob<Void> run(FFmpegBuilder builder, OutputStream stdOut) throws IOException {
-        Objects.requireNonNull(builder);
-        return runJob(builder.build(), stdOut, OutputStream.nullOutputStream(), InputStream.nullInputStream());
-    }
-
-    /**
-     * This function closes the stream parameters unless it throws an exception.
-     */
-    public FFMpegJob<Void> run(FFmpegBuilder builder, OutputStream stdOut, OutputStream stderr) throws IOException {
-        Objects.requireNonNull(builder);
-        return runJob(builder.build(), stdOut, stderr, InputStream.nullInputStream());
-    }
-
-    /**
-     * This function closes the stream parameters unless it throws an exception.
-     */
-    public FFMpegJob<Void> run(FFmpegBuilder builder, OutputStream stdOut, OutputStream stderr, InputStream stdin)
+    public <T, A, B> FFMpegJob<T> run(
+            FFmpegBuilder builder,
+            FFMpegStreamConsumer<A> stdOut,
+            FFMpegStreamConsumer<B> stderr,
+            BiFunction<A, B, T> merger)
             throws IOException {
         Objects.requireNonNull(builder);
-        return runJob(builder.build(), stdOut, stderr, stdin);
+        return runJob(builder.build(), builder.getNoOutput(), stdOut, stderr, merger, InputStream.nullInputStream());
+    }
+
+    /**
+     * This function closes the stream parameters unless it throws an exception.
+     */
+    public <T, A, B> FFMpegJob<T> run(
+            FFmpegBuilder builder,
+            FFMpegStreamConsumer<A> stdOut,
+            FFMpegStreamConsumer<B> stderr,
+            BiFunction<A, B, T> merger,
+            InputStream stdin)
+            throws IOException {
+        Objects.requireNonNull(builder);
+        return runJob(builder.build(), builder.getNoOutput(), stdOut, stderr, merger, stdin);
     }
 
     public FFmpegBuilder builder() {

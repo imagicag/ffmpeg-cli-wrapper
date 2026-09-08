@@ -23,7 +23,7 @@ The HTML report is written to `target/site/jacoco/index.html`.
 
 - Versatile per-call configurable logging
   - 1 line of code integration with most logging frameworks.
-  - Log stdout/stderr or just start/stop of ffmpeg separately with fine grained control. 
+  - Log stdout/stderr or just start/stop of ffmpeg separately with fine-grained control.
 
 - FFProbe supports parsing using custom JSON schema classes.
   - You can also just get the raw JSON as String
@@ -35,6 +35,13 @@ The HTML report is written to `target/site/jacoco/index.html`.
   - By default, no checks are performed that the ffmpeg binary is indeed ffmpeg and not something else, saving a lot of time.
   - Same for ffprobe
   - Much faster, less log lines, less child processes!
+
+- Stream processing
+  - Support for processing streams from stdin or to stdout with InputStreams/OutputStreams on the java side.
+
+- Stdout/Stderr parsing of ffmpeg
+  - Useful to read metainformation about the file.
+  - Can be used to determine if the moov atom is before mdat (check if mp4 quickstart is enabled) for example.
 
 ## Usage
 
@@ -54,6 +61,7 @@ import ch.imagic.ffmpeg.FFMpegJob;
 import ch.imagic.ffmpeg.FFmpeg;
 import ch.imagic.ffmpeg.FFprobe;
 import ch.imagic.ffmpeg.builder.FFmpegBuilder;
+import ch.imagic.ffmpeg.builder.Strict;
 import ch.imagic.ffmpeg.probe.FFmpegProbeResult;
 import java.io.File;
 import java.io.IOException;
@@ -61,8 +69,7 @@ import java.util.concurrent.TimeUnit;
 
 public class EncodingExample {
   public static void main(String[] args) throws IOException, InterruptedException {
-    FFmpeg ffmpeg = new FFmpeg(new File("/path/to/ffmpeg"),
-        ch.imagic.ffmpeg.process.FFMpegProcessFactory.defaultFactory());
+    FFmpeg ffmpeg = new FFmpeg(new File("/path/to/ffmpeg"));
     FFprobe ffprobe = new FFprobe(new File("/path/to/ffprobe"));
     FFmpegProbeResult input = ffprobe.probe(new File("input.mp4")).get();
 
@@ -80,7 +87,7 @@ public class EncodingExample {
           .setVideoCodec("libx264")     // Video using x264
           .setVideoFrameRate(24, 1)     // At 24 frames per second
           .setVideoResolution(640, 480) // At 640x480 resolution
-          .setStrict(FFmpegBuilder.Strict.EXPERIMENTAL)
+          .setStrict(Strict.EXPERIMENTAL)
           .done();
 
     FFMpegJob<Void> job = ffmpeg.run(builder);
@@ -90,6 +97,53 @@ public class EncodingExample {
     }
 
     job.get(); // Throws IOException if ffmpeg failed
+  }
+}
+```
+
+### Check MP4 Quickstart
+
+FFmpeg's trace output lists MP4 atoms in file order. The following checks whether the `moov` atom
+appears before `mdat`, which indicates that MP4 Quickstart is enabled:
+
+```java
+import ch.imagic.ffmpeg.FFMpegJob;
+import ch.imagic.ffmpeg.FFmpeg;
+import ch.imagic.ffmpeg.builder.FFmpegBuilder;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.util.concurrent.TimeUnit;
+
+public class QuickstartExample {
+  public static void main(String[] args) throws IOException {
+    FFmpeg ffmpeg = new FFmpeg(new File("/path/to/ffmpeg"));
+
+    FFmpegBuilder builder = new FFmpegBuilder()
+        .setVerbosity(FFmpegBuilder.Verbosity.TRACE)
+        .setInput("input.mp4")
+        .addStdoutOutput()
+          .setDuration(0, TimeUnit.MILLISECONDS)
+          .setFormat("null")
+          .done();
+
+    try (FFMpegJob<Boolean> job = ffmpeg.runCaptureStderr(builder, input -> {
+      BufferedReader reader = new BufferedReader(new InputStreamReader(input, StandardCharsets.UTF_8));
+      String line;
+      while ((line = reader.readLine()) != null) {
+        if (line.contains("type:'moov'")) {
+          return true;
+        } else if (line.contains("type:'mdat'")) {
+          return false;
+        }
+      }
+
+      throw new IOException("Failed to find moov or mdat atom");
+    })) {
+      System.out.println("MP4 Quickstart is enabled: " + job.get());
+    }
   }
 }
 ```

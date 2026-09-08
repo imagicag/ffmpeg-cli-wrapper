@@ -52,48 +52,46 @@ public abstract class AbstractFFmpegStreamBuilder<T extends AbstractFFmpegStream
     final FFmpegBuilder parent;
 
     /** Output filename or uri. Only one may be set */
-    public String filename;
+    protected String filename;
 
-    public URI uri;
+    protected URI uri;
 
-    public String format;
+    protected String format;
 
-    public Long startOffset; // in milliseconds
-    public Long duration; // in milliseconds
+    protected Long startOffset; // in milliseconds
+    protected Long duration; // in milliseconds
 
-    public final List<String> metaTags = new ArrayList<>();
+    protected final List<String> metaTags = new ArrayList<>();
 
-    public boolean audioEnabled = true;
-    public String audioCodec;
-    public int audioChannels;
-    public int audioSampleRate;
-    public String audioPreset;
+    protected boolean audioEnabled = true;
+    protected String audioCodec;
+    protected int audioChannels;
+    protected int audioSampleRate;
+    protected String audioPreset;
 
-    public boolean videoEnabled = true;
-    public String videoCodec;
-    public boolean videoCopyInkf;
-    public Fraction videoFrameRate;
-    public int videoWidth;
-    public int videoHeight;
-    public String videoSize;
-    public String videoMovFlags;
-    public Integer videoFrames;
-    public String videoPixelFormat;
+    protected boolean videoEnabled = true;
+    protected String videoCodec;
+    protected boolean videoCopyInkf;
+    protected Fraction videoFrameRate;
+    protected int videoWidth;
+    protected int videoHeight;
+    protected String videoSize;
+    protected String videoMovFlags;
+    protected Integer videoFrames;
+    protected String videoPixelFormat;
 
-    public boolean subtitleEnabled = true;
-    public String subtitlePreset;
+    protected boolean subtitleEnabled = true;
+    protected String subtitlePreset;
     private String subtitleCodec;
 
-    public String preset;
-    public String presetFilename;
-    public final List<String> extraArgs = new ArrayList<>();
+    protected String preset;
+    protected String presetFilename;
+    protected final List<String> extraArgs = new ArrayList<>();
 
-    public FFmpegBuilder.Strict strict = FFmpegBuilder.Strict.NORMAL;
+    protected Strict strict = Strict.NORMAL;
 
-    public long targetSize = 0; // in bytes
-    public long passPaddingBitrate = 1024; // in bits per second
-
-    public boolean throwWarnings = true; // TODO Either delete this, or apply it consistently
+    protected long targetSize = 0; // in bytes
+    protected long passPaddingBitrate = 1024; // in bits per second
 
     protected AbstractFFmpegStreamBuilder() {
         this.parent = null;
@@ -210,6 +208,114 @@ public abstract class AbstractFFmpegStreamBuilder<T extends AbstractFFmpegStream
 
     public URI getUri() {
         return uri;
+    }
+
+    public String getFormat() {
+        return format;
+    }
+
+    public Long getStartOffset() {
+        return startOffset;
+    }
+
+    public Long getDuration() {
+        return duration;
+    }
+
+    public List<String> getMetaTags() {
+        return metaTags;
+    }
+
+    public boolean getAudioEnabled() {
+        return audioEnabled;
+    }
+
+    public String getAudioCodec() {
+        return audioCodec;
+    }
+
+    public int getAudioChannels() {
+        return audioChannels;
+    }
+
+    public int getAudioSampleRate() {
+        return audioSampleRate;
+    }
+
+    public String getAudioPreset() {
+        return audioPreset;
+    }
+
+    public boolean getVideoEnabled() {
+        return videoEnabled;
+    }
+
+    public String getVideoCodec() {
+        return videoCodec;
+    }
+
+    public boolean getVideoCopyInkf() {
+        return videoCopyInkf;
+    }
+
+    public Fraction getVideoFrameRate() {
+        return videoFrameRate;
+    }
+
+    public int getVideoWidth() {
+        return videoWidth;
+    }
+
+    public int getVideoHeight() {
+        return videoHeight;
+    }
+
+    public String getVideoSize() {
+        return videoSize;
+    }
+
+    public String getVideoMovFlags() {
+        return videoMovFlags;
+    }
+
+    public Integer getVideoFrames() {
+        return videoFrames;
+    }
+
+    public String getVideoPixelFormat() {
+        return videoPixelFormat;
+    }
+
+    public boolean getSubtitleEnabled() {
+        return subtitleEnabled;
+    }
+
+    public String getSubtitlePreset() {
+        return subtitlePreset;
+    }
+
+    public String getPreset() {
+        return preset;
+    }
+
+    public String getPresetFilename() {
+        return presetFilename;
+    }
+
+    public List<String> getExtraArgs() {
+        return extraArgs;
+    }
+
+    public Strict getStrict() {
+        return strict;
+    }
+
+    public long getTargetSize() {
+        return targetSize;
+    }
+
+    public long getPassPaddingBitrate() {
+        return passPaddingBitrate;
     }
 
     public T setFormat(String format) {
@@ -468,7 +574,7 @@ public abstract class AbstractFFmpegStreamBuilder<T extends AbstractFFmpegStream
         return getThis();
     }
 
-    public T setStrict(FFmpegBuilder.Strict strict) {
+    public T setStrict(Strict strict) {
         this.strict = Objects.requireNonNull(strict);
         return getThis();
     }
@@ -625,7 +731,7 @@ public abstract class AbstractFFmpegStreamBuilder<T extends AbstractFFmpegStream
     }
 
     protected void addGlobalFlags(FFmpegBuilder parent, List<String> args) {
-        if (strict != FFmpegBuilder.Strict.NORMAL) {
+        if (strict != Strict.NORMAL) {
             args.addAll(List.of("-strict", strict.toString()));
         }
 

@@ -29,6 +29,7 @@ public class FFmpegOutputBuilder extends AbstractFFmpegStreamBuilder<FFmpegOutpu
     public String videoPreset;
     public String videoFilter;
     public String videoBitStreamFilter;
+    protected Integer videoBFrames;
 
     public FFmpegOutputBuilder() {
         super();
@@ -83,6 +84,23 @@ public class FFmpegOutputBuilder extends AbstractFFmpegStreamBuilder<FFmpegOutpu
         requireArgument(quality > 0, "quality must be positive");
         this.videoEnabled = true;
         this.videoQuality = quality;
+        return this;
+    }
+
+    public Integer getVideoBFrames() {
+        return videoBFrames;
+    }
+
+    /**
+     * Sets the maximum number of consecutive B-frames. A value of zero disables B-frames.
+     *
+     * @param frames maximum number of consecutive B-frames
+     * @return this
+     */
+    public FFmpegOutputBuilder setVideoBFrames(int frames) {
+        requireArgument(frames >= 0, "B-frame count must not be negative");
+        this.videoEnabled = true;
+        this.videoBFrames = frames;
         return this;
     }
 
@@ -313,6 +331,10 @@ public class FFmpegOutputBuilder extends AbstractFFmpegStreamBuilder<FFmpegOutpu
             args.addAll(List.of("-qscale:v", formatDecimalInteger(videoQuality)));
         }
 
+        if (videoBFrames != null) {
+            args.addAll(List.of("-bf", videoBFrames.toString()));
+        }
+
         if (videoPreset != null && !videoPreset.isEmpty()) {
             args.addAll(List.of("-vpre", videoPreset));
         }
@@ -337,7 +359,7 @@ public class FFmpegOutputBuilder extends AbstractFFmpegStreamBuilder<FFmpegOutpu
             args.addAll(List.of("-sample_fmt", audioSampleFormat));
         }
 
-        if (audioBitRate > 0 && audioQuality != null && throwWarnings) {
+        if (audioBitRate > 0 && audioQuality != null) {
             // I'm not sure, but it seems audioQuality overrides audioBitRate, so don't allow both
             throw new IllegalStateException("Only one of audioBitRate and audioQuality can be set");
         }

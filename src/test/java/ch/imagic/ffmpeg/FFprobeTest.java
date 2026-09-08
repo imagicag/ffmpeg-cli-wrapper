@@ -4,6 +4,7 @@ import static ch.imagic.ffmpeg.FFmpegTest.argThatHasItem;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import ch.imagic.ffmpeg.builder.Strict;
 import ch.imagic.ffmpeg.fixtures.Samples;
 import ch.imagic.ffmpeg.lang.MockProcess;
 import ch.imagic.ffmpeg.lang.NewProcessAnswer;
@@ -200,7 +201,8 @@ public class FFprobeTest {
 
         assertEquals(
                 "{\"answer\":42}",
-                ffprobe.probeJson(media, stderr, "-select_streams", "v:0").get());
+                ffprobe.probeJson(media, FFMpegStreamConsumer.toOutputStream(stderr), "-select_streams", "v:0")
+                        .get());
 
         verify(runFunc)
                 .createProcess(
@@ -223,11 +225,40 @@ public class FFprobeTest {
     }
 
     @Test
+    public void probeWithStrictBuildsCommand() throws Exception {
+        File media = new File("media.mp4");
+        when(runFunc.createProcess(Mockito.any(), Mockito.any(), Mockito.anyList()))
+                .thenReturn(process("{}", "", 0));
+
+        assertSame(ffprobe, ffprobe.setStrict(Strict.EXPERIMENTAL));
+        assertEquals(Strict.EXPERIMENTAL, ffprobe.getStrict());
+        ffprobe.probeJson(media, FFMpegStreamConsumer.noop()).get();
+
+        verify(runFunc)
+                .createProcess(
+                        Mockito.any(),
+                        Mockito.any(),
+                        Mockito.eq(List.of(
+                                ffprobe.getPath().getAbsolutePath(),
+                                "-v",
+                                "quiet",
+                                "-strict",
+                                "experimental",
+                                "-print_format",
+                                "json",
+                                "-show_error",
+                                "-show_format",
+                                "-show_streams",
+                                "-show_chapters",
+                                media.getAbsolutePath())));
+    }
+
+    @Test
     public void genericStringOverloadUsesPathVerbatimAndRequestedClass() throws Exception {
         when(runFunc.createProcess(Mockito.any(), Mockito.any(), Mockito.anyList()))
                 .thenReturn(process("{\"value\":\"ok\"}", "", 0));
 
-        ProbeValue result = ffprobe.probe("pipe:0", OutputStream.nullOutputStream(), ProbeValue.class, "-show_data")
+        ProbeValue result = ffprobe.probe("pipe:0", FFMpegStreamConsumer.noop(), ProbeValue.class, "-show_data")
                 .get();
 
         assertEquals("ok", result.value);
@@ -243,7 +274,8 @@ public class FFprobeTest {
 
         IOException failure = assertThrows(
                 IOException.class,
-                () -> ffprobe.probeJson(new File("media"), stderr).get());
+                () -> ffprobe.probeJson(new File("media"), FFMpegStreamConsumer.toOutputStream(stderr))
+                        .get());
 
         assertTrue(failure.getMessage().contains("exited with code 9"));
         assertEquals("probe failed", stderr.toString(StandardCharsets.UTF_8));
@@ -256,7 +288,7 @@ public class FFprobeTest {
 
         IOException failure = assertThrows(
                 IOException.class,
-                () -> ffprobe.probeJson(new File("media"), OutputStream.nullOutputStream())
+                () -> ffprobe.probeJson(new File("media"), FFMpegStreamConsumer.noop())
                         .get());
 
         assertNotNull(failure.getCause());
@@ -268,8 +300,7 @@ public class FFprobeTest {
                 .thenReturn(null);
 
         assertThrows(
-                IllegalStateException.class,
-                () -> ffprobe.probeJson(new File("media"), OutputStream.nullOutputStream()));
+                IllegalStateException.class, () -> ffprobe.probeJson(new File("media"), FFMpegStreamConsumer.noop()));
     }
 
     private static MockProcess process(String stdout, String stderr, int exitCode) {

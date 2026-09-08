@@ -137,7 +137,13 @@ public class FFmpegTest {
         ByteArrayOutputStream stdout = new ByteArrayOutputStream();
         ByteArrayOutputStream stderr = new ByteArrayOutputStream();
 
-        ffmpeg.run(builder(), stdout, stderr, bytes("process stdin")).get();
+        ffmpeg.run(
+                        builder(),
+                        FFMpegStreamConsumer.toOutputStream(stdout),
+                        FFMpegStreamConsumer.toOutputStream(stderr),
+                        (a, b) -> null,
+                        bytes("process stdin"))
+                .get();
 
         assertEquals("process stdin", processStdin.toString(StandardCharsets.UTF_8));
         assertEquals("process stdout", stdout.toString(StandardCharsets.UTF_8));
@@ -157,7 +163,12 @@ public class FFmpegTest {
 
         IOException failure = assertThrows(
                 IOException.class,
-                () -> ffmpeg.run(builder(), OutputStream.nullOutputStream(), stderr, InputStream.nullInputStream())
+                () -> ffmpeg.run(
+                                builder(),
+                                FFMpegStreamConsumer.toOutputStream(OutputStream.nullOutputStream()),
+                                FFMpegStreamConsumer.toOutputStream(stderr),
+                                (a, b) -> null,
+                                InputStream.nullInputStream())
                         .get());
 
         assertTrue(failure.getMessage().contains("exited with code 23"));
@@ -176,9 +187,22 @@ public class FFmpegTest {
         };
 
         IOException failure = assertThrows(
-                IOException.class, () -> ffmpeg.run(builder(), failingOutput).get());
+                IOException.class,
+                () -> ffmpeg.run(builder(), FFMpegStreamConsumer.toOutputStream(failingOutput))
+                        .get());
 
         assertEquals("cannot write output", failure.getMessage());
+    }
+
+    @Test
+    public void runReturnsStdoutConsumerResult() throws Exception {
+        when(runFunc.createProcess(Mockito.any(), Mockito.any(), Mockito.anyList()))
+                .thenReturn(new MockProcess(bytes("process output")));
+
+        String result = ffmpeg.run(builder(), input -> new String(input.readAllBytes(), StandardCharsets.UTF_8))
+                .get();
+
+        assertEquals("process output", result);
     }
 
     private void assertQueryRetries(String option, String failedOutput, String successfulOutput, IoQuery query)

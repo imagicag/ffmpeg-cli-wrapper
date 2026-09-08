@@ -1,7 +1,9 @@
 package ch.imagic.ffmpeg;
 
 import java.io.IOException;
+import java.util.OptionalInt;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiConsumer;
 
 public interface FFMpegJob<T> extends AutoCloseable {
     /**
@@ -20,13 +22,27 @@ public interface FFMpegJob<T> extends AutoCloseable {
     T get() throws IOException;
 
     /**
+     * This function registers a action to be executed when the job is done or canceled for whatever reason.
+     * If the job is already completed then the function may instantly execute the action in the current thread.
+     */
+    void whenComplete(BiConsumer<T, Throwable> action);
+
+    OptionalInt getExitCode();
+
+    /**
      * Kill the job as soon as possible.
      * This function has no effect is the job happens to already be completed or is in the process of completing.
      */
     void kill();
 
     /**
-     * Try with resources alias for kill.
+     * This function does the same thing as kill() with the addition of making
+     * concurrent and future calls to get() fail with a fixed IOException instead of a cancellation exception.
+     *
+     * It has no effect on callbacks registered using thenAccept
+     *
+     * Not calling this function does not cause a resource leak if the ffmpeg process has already terminated (get or kill were invoked).
+     * The resources are also released when ffmpeg eventually terminates by itself, whenever that may be.
      */
     @Override
     void close();

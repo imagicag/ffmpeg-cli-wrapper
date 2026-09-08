@@ -48,37 +48,37 @@ public class FFprobeTest {
         when(runFunc.createProcess(
                         Mockito.any(),
                         Mockito.any(),
-                        argThatHasItem(new File(Samples.big_buck_bunny_720p_1mb).getAbsolutePath())))
+                        argThatHasItem(new File(Samples.BIG_BUCK_BUNNY_720P_1MB).getAbsolutePath())))
                 .thenAnswer(new NewProcessAnswer("ffprobe-big_buck_bunny_720p_1mb.mp4"));
 
         when(runFunc.createProcess(
                         Mockito.any(),
                         Mockito.any(),
-                        argThatHasItem(new File(Samples.always_on_my_mind).getAbsolutePath())))
+                        argThatHasItem(new File(Samples.ALWAYS_ON_MY_MIND).getAbsolutePath())))
                 .thenAnswer(new NewProcessAnswer("ffprobe-always_on_my_mind.mp4"));
 
         when(runFunc.createProcess(
                         Mockito.any(),
                         Mockito.any(),
-                        argThatHasItem(new File(Samples.start_pts_test).getAbsolutePath())))
+                        argThatHasItem(new File(Samples.START_PTS_TEST).getAbsolutePath())))
                 .thenAnswer(new NewProcessAnswer("ffprobe-start_pts_test"));
 
         when(runFunc.createProcess(
                         Mockito.any(),
                         Mockito.any(),
-                        argThatHasItem(new File(Samples.divide_by_zero).getAbsolutePath())))
+                        argThatHasItem(new File(Samples.DIVIDE_BY_ZERO).getAbsolutePath())))
                 .thenAnswer(new NewProcessAnswer("ffprobe-divide-by-zero"));
 
         when(runFunc.createProcess(
                         Mockito.any(),
                         Mockito.any(),
-                        argThatHasItem(new File(Samples.book_with_chapters).getAbsolutePath())))
+                        argThatHasItem(new File(Samples.BOOK_WITH_CHAPTERS).getAbsolutePath())))
                 .thenAnswer(new NewProcessAnswer("book_with_chapters.m4b"));
 
         when(runFunc.createProcess(
                         Mockito.any(),
                         Mockito.any(),
-                        argThatHasItem(new File(Samples.side_data_list).getAbsolutePath())))
+                        argThatHasItem(new File(Samples.SIDE_DATA_LIST).getAbsolutePath())))
                 .thenAnswer(new NewProcessAnswer("ffprobe-side_data_list"));
 
         ffprobe = new FFprobe(runFunc);
@@ -95,7 +95,7 @@ public class FFprobeTest {
     @Test
     public void testProbeVideo() throws IOException {
         FFmpegProbeResult info =
-                ffprobe.probe(new File(Samples.big_buck_bunny_720p_1mb)).get();
+                ffprobe.probe(new File(Samples.BIG_BUCK_BUNNY_720P_1MB)).get();
         assertFalse(info.hasError());
 
         // Only a quick sanity check until we do something better
@@ -113,7 +113,7 @@ public class FFprobeTest {
     @Test
     public void testProbeBookWithChapters() throws IOException {
         FFmpegProbeResult info =
-                ffprobe.probe(new File(Samples.book_with_chapters)).get();
+                ffprobe.probe(new File(Samples.BOOK_WITH_CHAPTERS)).get();
         assertFalse(info.hasError());
         assertEquals(24, info.getChapters().size());
 
@@ -138,7 +138,7 @@ public class FFprobeTest {
     @Test
     public void testProbeVideo2() throws IOException {
         FFmpegProbeResult info =
-                ffprobe.probe(new File(Samples.always_on_my_mind)).get();
+                ffprobe.probe(new File(Samples.ALWAYS_ON_MY_MIND)).get();
         assertFalse(info.hasError());
 
         // Only a quick sanity check until we do something better
@@ -159,7 +159,7 @@ public class FFprobeTest {
 
     @Test
     public void testProbeStartPts() throws IOException {
-        FFmpegProbeResult info = ffprobe.probe(new File(Samples.start_pts_test)).get();
+        FFmpegProbeResult info = ffprobe.probe(new File(Samples.START_PTS_TEST)).get();
         assertFalse(info.hasError());
 
         // Check edge case with a time larger than an integer
@@ -169,7 +169,7 @@ public class FFprobeTest {
     @Test
     public void testProbeDivideByZero() throws IOException {
         // https://github.com/bramp/ffmpeg-cli-wrapper/issues/10
-        FFmpegProbeResult info = ffprobe.probe(new File(Samples.divide_by_zero)).get();
+        FFmpegProbeResult info = ffprobe.probe(new File(Samples.DIVIDE_BY_ZERO)).get();
         assertFalse(info.hasError());
 
         assertEquals(Fraction.ZERO, info.getStreams().get(1).getCodecTimeBase());
@@ -179,7 +179,7 @@ public class FFprobeTest {
 
     @Test
     public void testProbeSideDataList() throws IOException {
-        FFmpegProbeResult info = ffprobe.probe(new File(Samples.side_data_list)).get();
+        FFmpegProbeResult info = ffprobe.probe(new File(Samples.SIDE_DATA_LIST)).get();
 
         // Check edge case with a time larger than an integer
         assertEquals(1, info.getStreams().get(0).getSideDataList().length);

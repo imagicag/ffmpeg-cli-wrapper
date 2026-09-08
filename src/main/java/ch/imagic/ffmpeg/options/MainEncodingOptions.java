@@ -1,7 +1,5 @@
 package ch.imagic.ffmpeg.options;
 
-import java.beans.ConstructorProperties;
-
 /**
  */
 public class MainEncodingOptions {
@@ -9,7 +7,6 @@ public class MainEncodingOptions {
     public final Long startOffset;
     public final Long duration;
 
-    @ConstructorProperties({"format", "startOffset", "duration"})
     public MainEncodingOptions(String format, Long startOffset, Long duration) {
         this.format = format;
         this.startOffset = startOffset;

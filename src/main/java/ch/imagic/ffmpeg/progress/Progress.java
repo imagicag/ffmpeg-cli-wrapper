@@ -52,16 +52,16 @@ public class Progress {
     public long bitrate = 0;
 
     /** Output file size (in bytes) */
-    public long total_size = 0;
+    public long totalSize = 0;
 
     /** Output time (in nanoseconds) */
     // TODO Change this to a java.time.Duration
-    public long out_time_ns = 0;
+    public long outTimeNs = 0;
 
-    public long dup_frames = 0;
+    public long dupFrames = 0;
 
     /** Number of frames dropped */
-    public long drop_frames = 0;
+    public long dropFrames = 0;
 
     /** Speed of transcoding. 1 means realtime, 2 means twice realtime. */
     public float speed = 0;
@@ -77,19 +77,19 @@ public class Progress {
             long frame,
             float fps,
             long bitrate,
-            long total_size,
-            long out_time_ns,
-            long dup_frames,
-            long drop_frames,
+            long totalSize,
+            long outTimeNs,
+            long dupFrames,
+            long dropFrames,
             float speed,
             Status status) {
         this.frame = frame;
         this.fps = Fraction.getFraction(fps);
         this.bitrate = bitrate;
-        this.total_size = total_size;
-        this.out_time_ns = out_time_ns;
-        this.dup_frames = dup_frames;
-        this.drop_frames = drop_frames;
+        this.totalSize = totalSize;
+        this.outTimeNs = outTimeNs;
+        this.dupFrames = dupFrames;
+        this.dropFrames = dropFrames;
         this.speed = speed;
         this.status = status;
     }
@@ -137,9 +137,9 @@ public class Progress {
 
             case "total_size":
                 if (value.equals("N/A")) {
-                    total_size = -1;
+                    totalSize = -1;
                 } else {
-                    total_size = Long.parseLong(value);
+                    totalSize = Long.parseLong(value);
                 }
                 return false;
 
@@ -147,22 +147,22 @@ public class Progress {
                 // This is a duplicate of the "out_time" field, but expressed as a int instead of string.
                 // Note this value is in microseconds, not milliseconds, and is based on AV_TIME_BASE which
                 // could change.
-                // out_time_ns = Long.parseLong(value) * 1000;
+                // outTimeNs = Long.parseLong(value) * 1000;
                 return false;
 
             case "out_time_us":
                 return false;
 
             case "out_time":
-                out_time_ns = fromTimecode(value);
+                outTimeNs = fromTimecode(value);
                 return false;
 
             case "dup_frames":
-                dup_frames = Long.parseLong(value);
+                dupFrames = Long.parseLong(value);
                 return false;
 
             case "drop_frames":
-                drop_frames = Long.parseLong(value);
+                dropFrames = Long.parseLong(value);
                 return false;
 
             case "speed":
@@ -204,10 +204,10 @@ public class Progress {
         Progress progress1 = (Progress) o;
         return frame == progress1.frame
                 && bitrate == progress1.bitrate
-                && total_size == progress1.total_size
-                && out_time_ns == progress1.out_time_ns
-                && dup_frames == progress1.dup_frames
-                && drop_frames == progress1.drop_frames
+                && totalSize == progress1.totalSize
+                && outTimeNs == progress1.outTimeNs
+                && dupFrames == progress1.dupFrames
+                && dropFrames == progress1.dropFrames
                 && Float.compare(progress1.speed, speed) == 0
                 && Objects.equals(fps, progress1.fps)
                 && Objects.equals(status, progress1.status);
@@ -215,7 +215,7 @@ public class Progress {
 
     @Override
     public int hashCode() {
-        return Objects.hash(frame, fps, bitrate, total_size, out_time_ns, dup_frames, drop_frames, speed, status);
+        return Objects.hash(frame, fps, bitrate, totalSize, outTimeNs, dupFrames, dropFrames, speed, status);
     }
 
     @Override
@@ -226,14 +226,14 @@ public class Progress {
                 + fps
                 + ", bitrate="
                 + bitrate
-                + ", total_size="
-                + total_size
-                + ", out_time_ns="
-                + out_time_ns
-                + ", dup_frames="
-                + dup_frames
-                + ", drop_frames="
-                + drop_frames
+                + ", totalSize="
+                + totalSize
+                + ", outTimeNs="
+                + outTimeNs
+                + ", dupFrames="
+                + dupFrames
+                + ", dropFrames="
+                + dropFrames
                 + ", speed="
                 + speed
                 + ", status="

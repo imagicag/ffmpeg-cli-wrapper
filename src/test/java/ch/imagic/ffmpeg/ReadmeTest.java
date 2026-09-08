@@ -36,7 +36,7 @@ public class ReadmeTest {
 
     @Test
     public void testVideoEncoding() throws IOException, InterruptedException {
-        File inputFile = new File(Samples.big_buck_bunny_720p_1mb);
+        File inputFile = new File(Samples.BIG_BUCK_BUNNY_720P_1MB);
         FFmpegProbeResult input = ffprobe.probe(inputFile).get();
         Path outputPath = Files.createTempFile("readme-encoding-", ".mp4");
 
@@ -93,7 +93,7 @@ public class ReadmeTest {
     @Test
     public void testGetMediaInformation() throws IOException {
         FFmpegProbeResult probeResult =
-                ffprobe.probe(new File(Samples.big_buck_bunny_720p_1mb)).get();
+                ffprobe.probe(new File(Samples.BIG_BUCK_BUNNY_720P_1MB)).get();
 
         FFmpegFormat format = probeResult.getFormat();
         String line1 = String.format(

@@ -8,31 +8,31 @@ public final class Samples {
     // Test sample files (only a handful to keep the repo small)
     public static final String TEST_PREFIX = "src/test/resources/ch/imagic/ffmpeg/samples/";
 
-    public static final String base_big_buck_bunny_720p_1mb = "big_buck_bunny_720p_1mb.mp4";
-    public static final String base_testscreen_jpg = "testscreen.jpg";
-    public static final String base_test_mp3 = "test.mp3";
-    public static final String base_video_with_reserved_color_space = "video_with_reserved_color_space.mp4";
+    public static final String BASE_BIG_BUCK_BUNNY_720P_1MB = "big_buck_bunny_720p_1mb.mp4";
+    public static final String BASE_TESTSCREEN_JPG = "testscreen.jpg";
+    public static final String BASE_TEST_MP3 = "test.mp3";
+    public static final String BASE_VIDEO_WITH_RESERVED_COLOR_SPACE = "video_with_reserved_color_space.mp4";
 
-    public static final String big_buck_bunny_720p_1mb = TEST_PREFIX + base_big_buck_bunny_720p_1mb;
-    public static final String testscreen_jpg = TEST_PREFIX + base_testscreen_jpg;
-    public static final String test_mp3 = TEST_PREFIX + base_test_mp3;
-    public static final String video_with_reserved_color_space = TEST_PREFIX + base_video_with_reserved_color_space;
+    public static final String BIG_BUCK_BUNNY_720P_1MB = TEST_PREFIX + BASE_BIG_BUCK_BUNNY_720P_1MB;
+    public static final String TESTSCREEN_JPG = TEST_PREFIX + BASE_TESTSCREEN_JPG;
+    public static final String TEST_MP3 = TEST_PREFIX + BASE_TEST_MP3;
+    public static final String VIDEO_WITH_RESERVED_COLOR_SPACE = TEST_PREFIX + BASE_VIDEO_WITH_RESERVED_COLOR_SPACE;
 
-    private static final String book_m4b = "book_with_chapters.m4b";
-    public static final String book_with_chapters = TEST_PREFIX + book_m4b;
-    private static final String base_side_data_list = "side_data_list";
-    public static final String side_data_list = TEST_PREFIX + base_side_data_list;
+    private static final String BOOK_M4B = "book_with_chapters.m4b";
+    public static final String BOOK_WITH_CHAPTERS = TEST_PREFIX + BOOK_M4B;
+    private static final String BASE_SIDE_DATA_LIST = "side_data_list";
+    public static final String SIDE_DATA_LIST = TEST_PREFIX + BASE_SIDE_DATA_LIST;
 
     // We don't have the following files
     public static final String FAKE_PREFIX = "fake/";
 
-    public static final String always_on_my_mind = FAKE_PREFIX + "Always On My Mind [Program Only] - Adelén.mp4";
+    public static final String ALWAYS_ON_MY_MIND = FAKE_PREFIX + "Always On My Mind [Program Only] - Adelén.mp4";
 
-    public static final String start_pts_test = FAKE_PREFIX + "start_pts_test_1mb.ts";
+    public static final String START_PTS_TEST = FAKE_PREFIX + "start_pts_test_1mb.ts";
 
-    public static final String divide_by_zero = FAKE_PREFIX + "Divide By Zero.mp4";
+    public static final String DIVIDE_BY_ZERO = FAKE_PREFIX + "Divide By Zero.mp4";
 
     // TODO Change to a temp directory
     // TODO Generate random names, so we can run tests concurrently
-    public static final String output_mp4 = "output.mp4";
+    public static final String OUTPUT_MP4 = "output.mp4";
 }

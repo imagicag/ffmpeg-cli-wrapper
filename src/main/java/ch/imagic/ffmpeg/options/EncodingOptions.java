@@ -1,7 +1,5 @@
 package ch.imagic.ffmpeg.options;
 
-import java.beans.ConstructorProperties;
-
 /**
  */
 public class EncodingOptions {
@@ -10,7 +8,6 @@ public class EncodingOptions {
     public final AudioEncodingOptions audio;
     public final VideoEncodingOptions video;
 
-    @ConstructorProperties({"main", "audio", "video"})
     public EncodingOptions(MainEncodingOptions main, AudioEncodingOptions audio, VideoEncodingOptions video) {
         this.main = main;
         this.audio = audio;

@@ -185,18 +185,18 @@ public class FFmpegBuilderTest {
         assertEquals(audio.enabled, actualAudio.enabled);
         assertEquals(audio.codec, actualAudio.codec);
         assertEquals(audio.channels, actualAudio.channels);
-        assertEquals(audio.sample_rate, actualAudio.sample_rate);
-        assertEquals(audio.sample_format, actualAudio.sample_format);
-        assertEquals(audio.bit_rate, actualAudio.bit_rate);
+        assertEquals(audio.sampleRate, actualAudio.sampleRate);
+        assertEquals(audio.sampleFormat, actualAudio.sampleFormat);
+        assertEquals(audio.bitRate, actualAudio.bitRate);
         assertEquals(audio.quality, actualAudio.quality);
 
         VideoEncodingOptions actualVideo = options.getVideo();
         assertEquals(video.enabled, actualVideo.enabled);
         assertEquals(video.codec, actualVideo.codec);
-        assertEquals(video.frame_rate, actualVideo.frame_rate);
+        assertEquals(video.frameRate, actualVideo.frameRate);
         assertEquals(video.width, actualVideo.width);
         assertEquals(video.height, actualVideo.height);
-        assertEquals(video.bit_rate, actualVideo.bit_rate);
+        assertEquals(video.bitRate, actualVideo.bitRate);
         assertEquals(video.frames, actualVideo.frames);
         assertEquals(video.filter, actualVideo.filter);
         assertEquals(video.preset, actualVideo.preset);

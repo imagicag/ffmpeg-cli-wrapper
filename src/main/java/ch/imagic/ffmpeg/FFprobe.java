@@ -76,7 +76,7 @@ public class FFprobe extends FFcommon {
     }
 
     protected <T> FFMpegJob<T> probeGson(
-            File mediaPath, OutputStream stdErr, Function<JsonElement, T> mapper, String... additionalArguments)
+            String mediaPath, OutputStream stdErr, Function<JsonElement, T> mapper, String... additionalArguments)
             throws IOException {
         Objects.requireNonNull(mapper);
         List<String> args = new ArrayList<>();
@@ -94,7 +94,7 @@ public class FFprobe extends FFcommon {
                 "-show_format",
                 "-show_streams",
                 "-show_chapters",
-                mediaPath.getAbsolutePath()));
+                mediaPath));
 
         CompletableFuture<T> future = new CompletableFuture<>();
         FFMpegProcess p = runFunc.createProcess(executor, logger, List.copyOf(args));
@@ -124,7 +124,7 @@ public class FFprobe extends FFcommon {
 
     public FFMpegJob<String> probeJson(File mediaPath, OutputStream stdErr, String... additionalArguments)
             throws IOException {
-        return probeGson(mediaPath, stdErr, JsonElement::toString, additionalArguments);
+        return probeGson(mediaPath.getAbsolutePath(), stdErr, JsonElement::toString, additionalArguments);
     }
 
     public FFMpegJob<FFmpegProbeResult> probe(File mediaPath, OutputStream stdErr, String... additionalArguments)
@@ -132,8 +132,13 @@ public class FFprobe extends FFcommon {
         return probe(mediaPath, stdErr, FFmpegProbeResult.class, additionalArguments);
     }
 
-    public <T> FFMpegJob<T> probe(File mediaPath, OutputStream stdErr, Class<T> clazz, String... additionalArguments)
+    public <T> FFMpegJob<T> probe(File mediaPath, OutputStream stdErr, Class<T> resultClass, String... additionalArguments)
             throws IOException {
-        return probeGson(mediaPath, stdErr, elem -> gson.fromJson(elem, clazz), additionalArguments);
+        return probeGson(mediaPath.getAbsolutePath(), stdErr, elem -> gson.fromJson(elem, resultClass), additionalArguments);
+    }
+
+    public <T> FFMpegJob<T> probe(String mediaPath, OutputStream stdErr, Class<T> resultClass, String... additionalArguments)
+            throws IOException {
+        return probeGson(mediaPath, stdErr, elem -> gson.fromJson(elem, resultClass), additionalArguments);
     }
 }

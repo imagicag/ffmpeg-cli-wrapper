@@ -32,7 +32,7 @@ Maven:
 ```xml
 <dependency>
   <groupId>ch.imagic</groupId>
-  <artifactId>ffmpeg-cli</artifactId>
+  <artifactId>ffmpeg-java</artifactId>
   <version>0.1.0</version>
 </dependency>
 ```
@@ -40,96 +40,78 @@ Maven:
 
 Code:
 ```java
-FFmpeg ffmpeg = new FFmpeg("/path/to/ffmpeg");
-FFprobe ffprobe = new FFprobe("/path/to/ffprobe");
+import ch.imagic.ffmpeg.FFMpegJob;
+import ch.imagic.ffmpeg.FFmpeg;
+import ch.imagic.ffmpeg.FFprobe;
+import ch.imagic.ffmpeg.builder.FFmpegBuilder;
+import ch.imagic.ffmpeg.probe.FFmpegProbeResult;
+import java.io.File;
+import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
-FFmpegBuilder builder = new FFmpegBuilder()
+public class EncodingExample {
+  public static void main(String[] args) throws IOException, InterruptedException {
+    FFmpeg ffmpeg = new FFmpeg(new File("/path/to/ffmpeg"),
+        ch.imagic.ffmpeg.process.FFMpegProcessFactory.defaultFactory());
+    FFprobe ffprobe = new FFprobe(new File("/path/to/ffprobe"));
+    FFmpegProbeResult input = ffprobe.probe(new File("input.mp4")).get();
 
-  .setInput("input.mp4")     // Filename, or a FFmpegProbeResult
-  .overrideOutputFiles(true) // Override the output if it exists
+    FFmpegBuilder builder = new FFmpegBuilder()
+        .setInput(input)           // Target-size encoding needs the probed duration
+        .overrideOutputFiles(true) // Override the output if it exists
+        .addOutput("output.mp4")  // Filename for the destination
+          .setFormat("mp4")       // Format is inferred from filename, or can be set
+          .setTargetSize(250_000)  // Aim for a 250 KB file
+          .disableSubtitle()       // No subtitles
+          .setAudioChannels(1)         // Mono audio
+          .setAudioCodec("aac")        // Using the AAC codec
+          .setAudioSampleRate(48_000)  // At 48 kHz
+          .setAudioBitRate(32_768)      // At 32 kbit/s
+          .setVideoCodec("libx264")     // Video using x264
+          .setVideoFrameRate(24, 1)     // At 24 frames per second
+          .setVideoResolution(640, 480) // At 640x480 resolution
+          .setStrict(FFmpegBuilder.Strict.EXPERIMENTAL)
+          .done();
 
-  .addOutput("output.mp4")   // Filename for the destination
-    .setFormat("mp4")        // Format is inferred from filename, or can be set
-    .setTargetSize(250_000)  // Aim for a 250KB file
+    FFMpegJob<Void> job = ffmpeg.run(builder);
+    if (!job.await(10, TimeUnit.SECONDS)) {
+      job.kill();
+      throw new IOException("ffmpeg took too long to transcode");
+    }
 
-    .disableSubtitle()       // No subtiles
-
-    .setAudioChannels(1)         // Mono audio
-    .setAudioCodec("aac")        // using the aac codec
-    .setAudioSampleRate(48_000)  // at 48KHz
-    .setAudioBitRate(32768)      // at 32 kbit/s
-
-    .setVideoCodec("libx264")     // Video using x264
-    .setVideoFrameRate(24, 1)     // at 24 frames per second
-    .setVideoResolution(640, 480) // at 640x480 resolution
-
-    .setStrict(FFmpegBuilder.Strict.EXPERIMENTAL); // Allow FFmpeg to use experimental specs
-
-FFmpegExecutor executor = new FFmpegExecutor(ffmpeg, ffprobe);
-
-// Run a one-pass encode
-executor.createJob(builder).run();
-
-// Or run a two-pass encode (which is better quality at the cost of being slower)
-executor.createTwoPassJob(builder).run();
+    job.get(); // Throws IOException if ffmpeg failed
+  }
+}
 ```
 
 ### Get Media Information
 
 Code:
 ```java
-FFprobe ffprobe = new FFprobe("/path/to/ffprobe");
-FFmpegProbeResult probeResult = ffprobe.probe("input.mp4");
+import ch.imagic.ffmpeg.FFprobe;
+import ch.imagic.ffmpeg.probe.FFmpegFormat;
+import ch.imagic.ffmpeg.probe.FFmpegProbeResult;
+import ch.imagic.ffmpeg.probe.FFmpegStream;
+import java.io.File;
 
-FFmpegFormat format = probeResult.getFormat();
-System.out.format("%nFile: '%s' ; Format: '%s' ; Duration: %.3fs", 
-	format.filename, 
-	format.format_long_name,
-	format.duration
-);
+public class ProbeExample {
+  public static void main(String[] args) throws Exception {
+    FFprobe ffprobe = new FFprobe(new File("/path/to/ffprobe"));
+    FFmpegProbeResult probeResult = ffprobe.probe(new File("input.mp4")).get();
 
-FFmpegStream stream = probeResult.getStreams().get(0);
-System.out.format("%nCodec: '%s' ; Width: %dpx ; Height: %dpx",
-	stream.codec_long_name,
-	stream.width,
-	stream.height
-);
-```
+    FFmpegFormat format = probeResult.getFormat();
+    System.out.format("%nFile: '%s' ; Format: '%s' ; Duration: %.3fs",
+        format.getFilename(),
+        format.getFormatLongName(),
+        format.getDuration());
 
-### Get progress while encoding
-```java
-FFmpegExecutor executor = new FFmpegExecutor(ffmpeg, ffprobe);
-
-FFmpegProbeResult in = ffprobe.probe("input.flv");
-
-FFmpegBuilder builder = new FFmpegBuilder()
-	.setInput(in) // Or filename
-	.addOutput("output.mp4")
-	.done();
-
-FFmpegJob job = executor.createJob(builder, new ProgressListener() {
-
-	// Using the FFmpegProbeResult determine the duration of the input
-	final double duration_ns = in.getFormat().duration * TimeUnit.SECONDS.toNanos(1);
-
-	@Override
-	public void progress(Progress progress) {
-		double percentage = progress.out_time_ns / duration_ns;
-
-		// Print out interesting information about the progress
-		System.out.println(String.format(
-			"[%.0f%%] status:%s frame:%d time:%s ms fps:%.0f speed:%.2fx",
-			percentage * 100,
-			progress.status,
-			progress.frame,
-			FFmpegUtils.toTimecode(progress.out_time_ns, TimeUnit.NANOSECONDS),
-			progress.fps.doubleValue(),
-			progress.speed
-		));
-	}
-});
-
-job.run();
+    FFmpegStream stream = probeResult.getStreams().get(0);
+    System.out.format("%nCodec: '%s' ; Width: %dpx ; Height: %dpx%n",
+        stream.getCodecLongName(),
+        stream.getWidth(),
+        stream.getHeight());
+  }
+}
 ```
 
 

@@ -128,8 +128,8 @@ public class ProbeExample {
 Licence (Simplified BSD License)
 --------------------------------
 ```
-Copyright (c) 2026, Imagic Bildverarbeitung AG, Sägereistrasse 29, 8152 Glattbrugg, Switzerland
-Copyright (c) 2016-2022, Andrew Brampton
+Copyright (c) 2016, Andrew Brampton
+Copyright (c) 2026, Imagic Bildverarbeitung AG, Sägereistrasse 29, 8152 Glattbrugg, Switzerland, for modifications made by Imagic Bildverarbeitung AG
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without

@@ -186,7 +186,7 @@ public class Progress {
                     // AV_CODEC_FLAG_PSNR
                     // stream_%d_%d_psnr_all
                 } else {
-                    //LOG.warn("skipping unhandled key: {} = {}", key, value);
+                    // LOG.warn("skipping unhandled key: {} = {}", key, value);
                 }
 
                 return false; // Either way, not supported

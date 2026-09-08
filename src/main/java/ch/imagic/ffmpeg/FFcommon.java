@@ -86,7 +86,9 @@ abstract class FFcommon {
             }
 
             for (File file : files) {
-                if (file.getName().equalsIgnoreCase(isWindows ? name + ".exe" : name) && file.isFile() && file.canExecute()) {
+                if (file.getName().equalsIgnoreCase(isWindows ? name + ".exe" : name)
+                        && file.isFile()
+                        && file.canExecute()) {
                     return file;
                 }
             }
@@ -194,7 +196,8 @@ abstract class FFcommon {
             if (t == Thread.currentThread()) {
                 throw new IllegalStateException("Bad executor");
             }
-            try (in; out) {
+            try (in;
+                    out) {
                 in.transferTo(out);
             } catch (IOException e) {
                 future.completeExceptionally(e);

@@ -3,11 +3,11 @@ package ch.imagic.ffmpeg;
 import static ch.imagic.ffmpeg.Preconditions.checkNotEmpty;
 import static java.util.concurrent.TimeUnit.*;
 
+import ch.imagic.ffmpeg.gson.FFmpegDispositionAdapter;
 import ch.imagic.ffmpeg.gson.FractionAdapter;
 import ch.imagic.ffmpeg.gson.LowercaseEnumTypeAdapterFactory;
-import ch.imagic.ffmpeg.gson.FFmpegDispositionAdapter;
-import ch.imagic.ffmpeg.probe.Fraction;
 import ch.imagic.ffmpeg.probe.FFmpegDisposition;
+import ch.imagic.ffmpeg.probe.Fraction;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import java.util.concurrent.TimeUnit;

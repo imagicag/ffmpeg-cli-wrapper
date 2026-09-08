@@ -222,7 +222,8 @@ public class FFmpeg extends FFcommon {
                 throw new IllegalStateException("Bad executor");
             }
 
-            try (p; stdin) {
+            try (p;
+                    stdin) {
                 pipe3(p.stdout(), stdout, p.stderr(), stderr, stdin, p.stdin());
                 throwOnError(p);
                 future.complete(null);

@@ -45,21 +45,6 @@ public class FFmpeg extends FFcommon {
     public static final String AUDIO_FORMAT_FLT = "flt"; // 32
     public static final String AUDIO_FORMAT_DBL = "dbl"; // 64
 
-    @Deprecated
-    public static final String AUDIO_DEPTH_U8 = AUDIO_FORMAT_U8;
-
-    @Deprecated
-    public static final String AUDIO_DEPTH_S16 = AUDIO_FORMAT_S16;
-
-    @Deprecated
-    public static final String AUDIO_DEPTH_S32 = AUDIO_FORMAT_S32;
-
-    @Deprecated
-    public static final String AUDIO_DEPTH_FLT = AUDIO_FORMAT_FLT;
-
-    @Deprecated
-    public static final String AUDIO_DEPTH_DBL = AUDIO_FORMAT_DBL;
-
     public static final int AUDIO_SAMPLE_8000 = 8000;
     public static final int AUDIO_SAMPLE_11025 = 11025;
     public static final int AUDIO_SAMPLE_12000 = 12000;

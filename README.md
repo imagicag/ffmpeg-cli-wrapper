@@ -4,17 +4,13 @@ see https://github.com/bramp/ffmpeg-cli-wrapper for more details.
 
 This project focuses on providing a ffmpeg-cli-wrapper for java with minimal dependencies and improved
 usability in edge cases that were difficult to achieve with the original version.
+
+## Runtime dependencies
+
 Minimum required java version is java 17.
+This library only needs the Gson JSON parser as a runtime java dependency.
 
-## Test coverage
-
-Run the test suite and generate a JaCoCo coverage report with:
-
-```shell
-./mvnw test
-```
-
-The HTML report is written to `target/site/jacoco/index.html`.
+Other than that you just need to supply your own or system installed ffmpeg/ffprobe binary.
 
 ## Notable added features
 - Canceling of ongoing calls to ffmpeg.
@@ -177,10 +173,18 @@ public class ProbeExample {
   }
 }
 ```
+## Test coverage
+
+Run the test suite and generate a JaCoCo coverage report with:
+
+```shell
+./mvnw test
+```
+
+The HTML report is written to `target/site/jacoco/index.html`.
 
 
-Licence (Simplified BSD License)
---------------------------------
+## Licence (Simplified BSD License)
 ```
 Copyright (c) 2016, Andrew Brampton
 Copyright (c) 2026, Imagic Bildverarbeitung AG, Sägereistrasse 29, 8152 Glattbrugg, Switzerland, for modifications made by Imagic Bildverarbeitung AG

@@ -138,23 +138,6 @@ public class FFmpegOutputBuilder extends AbstractFFmpegStreamBuilder<FFmpegOutpu
     }
 
     /**
-     * Sets the audio bit depth.
-     *
-     * @param bitDepth The sample format, one of the ch.imagic.ffmpeg.FFmpeg#AUDIO_DEPTH_* constants.
-     * @return this
-     * @see ch.imagic.ffmpeg.FFmpeg#AUDIO_DEPTH_U8
-     * @see ch.imagic.ffmpeg.FFmpeg#AUDIO_DEPTH_S16
-     * @see ch.imagic.ffmpeg.FFmpeg#AUDIO_DEPTH_S32
-     * @see ch.imagic.ffmpeg.FFmpeg#AUDIO_DEPTH_FLT
-     * @see ch.imagic.ffmpeg.FFmpeg#AUDIO_DEPTH_DBL
-     * @deprecated use {@link #setAudioSampleFormat} instead.
-     */
-    @Deprecated
-    public FFmpegOutputBuilder setAudioBitDepth(String bitDepth) {
-        return setAudioSampleFormat(bitDepth);
-    }
-
-    /**
      * Sets the audio sample format.
      *
      * @param sampleFormat The sample format, one of the ch.imagic.ffmpeg.FFmpeg#AUDIO_FORMAT_*

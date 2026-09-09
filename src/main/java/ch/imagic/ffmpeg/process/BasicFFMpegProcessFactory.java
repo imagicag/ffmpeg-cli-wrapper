@@ -28,8 +28,12 @@ class BasicFFMpegProcessFactory implements FFMpegProcessFactory {
             throw new IOException("Failed to invoke process '" + String.join(", ", args) + "'", t);
         }
 
-        if (logger.wantsCommandLine()) {
-            logger.onCommandLine(proc.pid(), args);
+        try {
+            if (logger.wantsCommandLine()) {
+                logger.onCommandLine(proc.pid(), args);
+            }
+        } catch (Throwable t) {
+            // IGNORE EXCEPTIONS FROM SILLY LOGGERS
         }
 
         return new BasicFFMpegProcess(executor, logger, proc);

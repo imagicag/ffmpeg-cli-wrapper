@@ -146,6 +146,11 @@ public class BasicFFMpegJobTest {
         }
 
         @Override
+        public boolean isAlive() {
+            return true;
+        }
+
+        @Override
         public boolean await(long timeoutInMillis) {
             return false;
         }

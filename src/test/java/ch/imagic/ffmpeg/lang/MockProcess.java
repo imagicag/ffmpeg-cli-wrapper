@@ -40,6 +40,11 @@ public class MockProcess implements FFMpegProcess {
     }
 
     @Override
+    public boolean isAlive() {
+        return !awaited;
+    }
+
+    @Override
     public boolean await(long timeoutInMillis) throws InterruptedException {
         return awaited;
     }

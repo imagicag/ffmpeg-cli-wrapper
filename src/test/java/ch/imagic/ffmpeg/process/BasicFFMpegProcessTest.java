@@ -154,6 +154,19 @@ public class BasicFFMpegProcessTest {
     }
 
     @Test
+    public void discardsInputAfterRunningProcessClosesItsPipe() throws IOException {
+        TrackingProcess underlying = new TrackingProcess();
+        underlying.alive = true;
+        underlying.stdin.failOnWrite = true;
+        BasicFFMpegProcess process = new BasicFFMpegProcess(executor, FFMpegLogger.noop(), underlying);
+
+        process.stdin().write(new byte[] {1, 2, 3});
+        process.stdin().write(4);
+
+        assertEquals(1, underlying.stdin.writeCalls.get());
+    }
+
+    @Test
     public void rawStdoutAndStderrAreDrainedBeforeDeathCallback() throws Exception {
         byte[] stdout = "stdout data".getBytes(StandardCharsets.UTF_8);
         byte[] stderr = "stderr data".getBytes(StandardCharsets.UTF_8);
@@ -360,9 +373,19 @@ public class BasicFFMpegProcessTest {
         }
     }
 
-    private static final class TrackingOutputStream extends ByteArrayOutputStream {
+    private static final class TrackingOutputStream extends OutputStream {
         private final AtomicInteger closeCalls = new AtomicInteger();
+        private final AtomicInteger writeCalls = new AtomicInteger();
         private volatile boolean failOnClose;
+        private volatile boolean failOnWrite;
+
+        @Override
+        public void write(int data) throws IOException {
+            writeCalls.incrementAndGet();
+            if (failOnWrite) {
+                throw new IOException("write failed");
+            }
+        }
 
         @Override
         public void close() throws IOException {
@@ -370,7 +393,6 @@ public class BasicFFMpegProcessTest {
             if (failOnClose) {
                 throw new IOException("close failed");
             }
-            super.close();
         }
     }
 }

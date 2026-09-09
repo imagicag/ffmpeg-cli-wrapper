@@ -18,9 +18,14 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -303,6 +308,61 @@ public class FFprobeTest {
                 IllegalStateException.class, () -> ffprobe.probeJson(new File("media"), FFMpegStreamConsumer.noop()));
     }
 
+    @Test
+    public void probeClosesBlockingInputAfterJsonParsingFails() throws Exception {
+        BlockingInputStream media = new BlockingInputStream();
+        InputStream malformedJson = new ByteArrayInputStream("not json".getBytes(StandardCharsets.UTF_8)) {
+            @Override
+            public int read(byte[] target, int offset, int length) {
+                try {
+                    assertTrue(media.awaitRead(5, TimeUnit.SECONDS));
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    fail(e);
+                }
+                return super.read(target, offset, length);
+            }
+        };
+        when(runFunc.createProcess(Mockito.any(), Mockito.any(), Mockito.anyList()))
+                .thenReturn(
+                        new MockProcess(OutputStream.nullOutputStream(), malformedJson, InputStream.nullInputStream()));
+
+        IOException failure = assertThrows(
+                IOException.class,
+                () -> ffprobe.probe(media, FFMpegStreamConsumer.noop(), ProbeValue.class)
+                        .get());
+
+        assertNotNull(failure.getCause());
+        assertTrue(media.awaitClosed(5, TimeUnit.SECONDS));
+    }
+
+    @Test
+    public void probeClosesProcessWhenExecutorRejectsJob() throws Exception {
+        AtomicBoolean processClosed = new AtomicBoolean();
+        var process = new MockProcess(InputStream.nullInputStream()) {
+            @Override
+            public void close() {
+                processClosed.set(true);
+            }
+        };
+        FFMpegProcessFactory processFactory = mock(FFMpegProcessFactory.class);
+        when(processFactory.createProcess(Mockito.any(), Mockito.any(), Mockito.anyList()))
+                .thenReturn(process);
+        FFprobe rejectingProbe = new FFprobe(
+                command -> {
+                    throw new RejectedExecutionException("rejected");
+                },
+                FFMpegLogger.noop(),
+                ffprobe.getPath(),
+                processFactory);
+
+        assertThrows(
+                RejectedExecutionException.class,
+                () -> rejectingProbe.probeJson(new File("media"), FFMpegStreamConsumer.noop()));
+
+        assertTrue(processClosed.get());
+    }
+
     private static MockProcess process(String stdout, String stderr, int exitCode) {
         return new MockProcess(
                 OutputStream.nullOutputStream(),
@@ -314,5 +374,35 @@ public class FFprobeTest {
 
     private static class ProbeValue {
         String value;
+    }
+
+    private static final class BlockingInputStream extends InputStream {
+        private final CountDownLatch reading = new CountDownLatch(1);
+        private final CountDownLatch closed = new CountDownLatch(1);
+
+        @Override
+        public int read() throws IOException {
+            reading.countDown();
+            try {
+                closed.await();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new IOException(e);
+            }
+            throw new IOException("closed");
+        }
+
+        @Override
+        public void close() {
+            closed.countDown();
+        }
+
+        private boolean awaitRead(long timeout, TimeUnit unit) throws InterruptedException {
+            return reading.await(timeout, unit);
+        }
+
+        private boolean awaitClosed(long timeout, TimeUnit unit) throws InterruptedException {
+            return closed.await(timeout, unit);
+        }
     }
 }

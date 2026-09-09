@@ -9,6 +9,7 @@ import java.util.concurrent.Executor;
  * Runs a process returning a Reader to its stdout
  *
  */
+@FunctionalInterface
 public interface FFMpegProcessFactory {
 
     /**

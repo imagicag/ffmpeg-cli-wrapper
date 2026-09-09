@@ -77,6 +77,14 @@ public class FFmpeg extends FFcommon {
                 FFMpegProcessFactory.defaultFactory());
     }
 
+    public FFmpeg(File ffmpegBinary) throws IOException {
+        this(getDefaultExecutor(), FFMpegLogger.noop(), ffmpegBinary, FFMpegProcessFactory.defaultFactory());
+    }
+
+    public FFmpeg(Executor executor, File ffmpegBinary) throws IOException {
+        this(executor, FFMpegLogger.noop(), ffmpegBinary, FFMpegProcessFactory.defaultFactory());
+    }
+
     public FFmpeg(File ffmpegBinary, FFMpegProcessFactory processFactory) throws IOException {
         this(getDefaultExecutor(), FFMpegLogger.noop(), ffmpegBinary, processFactory);
     }
@@ -117,7 +125,7 @@ public class FFmpeg extends FFcommon {
 
             try (FFMpegProcess p = runFunc.createProcess(executor, logger, List.of(getAbsolutePath(), "-codecs"));
                     BufferedReader r = p.stdoutReader()) {
-                var errorReader = pipe1(p.stderr(), FFMpegStreamConsumer.noop());
+                var errorReader = pipe1(p.stderr(), FFMpegStreamConsumer.noop(), true);
 
                 String line;
                 while ((line = r.readLine()) != null) {
@@ -127,7 +135,7 @@ public class FFmpeg extends FFcommon {
                     newCodecs.add(new Codec(m.group(2), m.group(3), m.group(1)));
                 }
 
-                waitAndthrowOnError(errorReader);
+                waitAndThrowOnError(errorReader);
                 throwOnError(p);
                 this.codecs = Collections.unmodifiableList(newCodecs);
             }
@@ -141,7 +149,7 @@ public class FFmpeg extends FFcommon {
             List<Format> newFormats = new ArrayList<>();
             try (FFMpegProcess p = runFunc.createProcess(executor, logger, List.of(getAbsolutePath(), "-formats"));
                     BufferedReader r = p.stdoutReader()) {
-                var errorReader = pipe1(p.stderr(), FFMpegStreamConsumer.noop());
+                var errorReader = pipe1(p.stderr(), FFMpegStreamConsumer.noop(), true);
                 String line;
                 while ((line = r.readLine()) != null) {
                     Matcher m = FORMATS_REGEX.matcher(line);
@@ -150,7 +158,7 @@ public class FFmpeg extends FFcommon {
                     newFormats.add(new Format(m.group(2), m.group(3), m.group(1)));
                 }
 
-                waitAndthrowOnError(errorReader);
+                waitAndThrowOnError(errorReader);
                 throwOnError(p);
                 this.formats = Collections.unmodifiableList(newFormats);
             }
@@ -164,7 +172,7 @@ public class FFmpeg extends FFcommon {
 
             try (FFMpegProcess p = runFunc.createProcess(executor, logger, List.of(getAbsolutePath(), "-pix_fmts"));
                     BufferedReader r = p.stdoutReader()) {
-                var errorReader = pipe1(p.stderr(), FFMpegStreamConsumer.noop());
+                var errorReader = pipe1(p.stderr(), FFMpegStreamConsumer.noop(), true);
                 String line;
                 while ((line = r.readLine()) != null) {
                     Matcher m = PIXEL_FORMATS_REGEX.matcher(line);
@@ -175,7 +183,7 @@ public class FFmpeg extends FFcommon {
                             m.group(2), Integer.parseInt(m.group(3)), Integer.parseInt(m.group(4)), flags));
                 }
 
-                waitAndthrowOnError(errorReader);
+                waitAndThrowOnError(errorReader);
                 throwOnError(p);
                 this.pixelFormats = Collections.unmodifiableList(newPixelFormats);
             }
@@ -190,6 +198,11 @@ public class FFmpeg extends FFcommon {
      * <p>The process is stopped if a stream consumer fails. Once the process exits successfully, the
      * consumer results are passed to {@code merger}. Processing failures are reported by {@link
      * FFMpegJob#get()}. Unless this method throws, {@code stdin} is closed when it is no longer needed.
+     *
+     * IMPORTANT:
+     * This function assumes that the InputStream eventually runs EOF. The job will not complete
+     * unless the InputStream reading either throws an exception (Such as socket timeout) or signals EOF.
+     * The same holds true of any output consumer.
      *
      * @param args the arguments to pass to FFmpeg, excluding the binary path
      * @param allowAnyExitCode whether a non-zero process exit code should be accepted
@@ -211,33 +224,47 @@ public class FFmpeg extends FFcommon {
             BiFunction<A, B, T> merger,
             InputStream stdin)
             throws IOException {
-        Objects.requireNonNull(args);
-        Objects.requireNonNull(stdout);
-        Objects.requireNonNull(stderr);
-        Objects.requireNonNull(merger);
+        InputStream toClose = stdin;
+        FFMpegProcess toCloseProcess = null;
+        try {
+            Objects.requireNonNull(args);
+            Objects.requireNonNull(stdout);
+            Objects.requireNonNull(stderr);
+            Objects.requireNonNull(merger);
 
-        Thread thr = Thread.currentThread();
-        CompletableFuture<T> future = new CompletableFuture<>();
-        FFMpegProcess p = runFunc.createProcess(executor, logger, path(args));
+            Thread thr = Thread.currentThread();
+            CompletableFuture<T> future = new CompletableFuture<>();
+            FFMpegProcess p = runFunc.createProcess(executor, logger, path(args));
+            toCloseProcess = p;
+            executor.execute(() -> {
+                if (thr == Thread.currentThread()) {
+                    p.close();
+                    throw new IllegalStateException("Bad executor");
+                }
 
-        executor.execute(() -> {
-            if (thr == Thread.currentThread()) {
-                p.close();
-                throw new IllegalStateException("Bad executor");
-            }
+                try (p;
+                        stdin) {
+                    var pipeResult = pipe3(
+                            p.stdout(),
+                            stdout,
+                            p.stderr(),
+                            stderr,
+                            stdin,
+                            FFMpegStreamConsumer.toOutputStream(p.stdin()));
 
-            try (p;
-                    stdin) {
-                var pipeResult = pipe3(
-                        p.stdout(), stdout, p.stderr(), stderr, stdin, FFMpegStreamConsumer.toOutputStream(p.stdin()));
-                throwOnError(p, allowAnyExitCode);
-                future.complete(merger.apply(pipeResult.a(), pipeResult.b()));
-            } catch (Throwable t) {
-                future.completeExceptionally(t);
-            }
-        });
-
-        return new BasicFFMpegJob<>(future, p);
+                    throwOnError(p, allowAnyExitCode);
+                    future.complete(merger.apply(pipeResult.a(), pipeResult.b()));
+                } catch (Throwable t) {
+                    future.completeExceptionally(t);
+                }
+            });
+            toCloseProcess = null;
+            toClose = null;
+            return new BasicFFMpegJob<>(future, p, stdin);
+        } finally {
+            closeSilently(toClose);
+            closeSilently(toCloseProcess);
+        }
     }
 
     /**
@@ -263,6 +290,9 @@ public class FFmpeg extends FFcommon {
      * Runs the command produced by {@code builder} asynchronously, consumes standard output, and
      * discards standard error.
      *
+     * Note: The job will not complete unless the FFMpegStreamConsumer returns.
+     * Even killing the job does nothing to unblock a FFMpegStreamConsumer.
+     *
      * @param builder builder that supplies the FFmpeg arguments
      * @param stdOut consumer for the process standard output
      * @param <T> standard output consumer result type
@@ -283,6 +313,9 @@ public class FFmpeg extends FFcommon {
     /**
      * Runs the command produced by {@code builder} asynchronously, consumes standard error, and
      * discards standard output.
+     *
+     * Note: The job will not complete unless the FFMpegStreamConsumer returns.
+     * Even killing the job does nothing to unblock a FFMpegStreamConsumer.
      *
      * @param builder builder that supplies the FFmpeg arguments
      * @param stderr consumer for the process standard error
@@ -337,6 +370,13 @@ public class FFmpeg extends FFcommon {
      * process is stopped as soon as possible. Processing failures are reported by {@link FFMpegJob#get()};
      * if multiple operations fail, only the first failure is reported. Unless this method throws,
      * {@code stdin} is closed when it is no longer needed.
+     *
+     * Note: The job will not complete unless the FFMpegStreamConsumers and BiFunction return.
+     * Even killing the job does nothing to unblock a FFMpegStreamConsumer or BiFunction.
+     *
+     * IMPORTANT:
+     * This function assumes that the InputStream eventually runs EOF. The job will not complete
+     * unless the InputStream reading either throws an exception (Such as socket timeout) or signals EOF.
      *
      * @param builder builder that supplies the FFmpeg arguments
      * @param stdOut consumer for the process standard output

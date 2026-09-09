@@ -19,9 +19,12 @@ class BasicFFMpegJob<T> implements FFMpegJob<T> {
 
     private volatile boolean closed = false;
 
-    BasicFFMpegJob(CompletableFuture<T> future, FFMpegProcess process) {
+    private AutoCloseable[] dependants;
+
+    BasicFFMpegJob(CompletableFuture<T> future, FFMpegProcess process, AutoCloseable... dependants) {
         this.future = future;
         this.process = process;
+        this.dependants = dependants;
     }
 
     public boolean await(long timeout, TimeUnit unit) throws InterruptedException {
@@ -82,6 +85,13 @@ class BasicFFMpegJob<T> implements FFMpegJob<T> {
     public void kill() {
         future.completeExceptionally(new CancellationException());
         process.close();
+        for (AutoCloseable closeable : dependants) {
+            try {
+                closeable.close();
+            } catch (Exception e) {
+                // DONT CARE
+            }
+        }
     }
 
     @Override

@@ -18,6 +18,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -203,6 +205,31 @@ public class FFmpegTest {
                 .get();
 
         assertEquals("process output", result);
+    }
+
+    @Test
+    public void runClosesProcessWhenExecutorRejectsJob() throws Exception {
+        AtomicBoolean processClosed = new AtomicBoolean();
+        var process = new MockProcess(InputStream.nullInputStream()) {
+            @Override
+            public void close() {
+                processClosed.set(true);
+            }
+        };
+        FFMpegProcessFactory processFactory = mock(FFMpegProcessFactory.class);
+        when(processFactory.createProcess(Mockito.any(), Mockito.any(), Mockito.anyList()))
+                .thenReturn(process);
+        FFmpeg rejectingFfmpeg = new FFmpeg(
+                command -> {
+                    throw new RejectedExecutionException("rejected");
+                },
+                FFMpegLogger.noop(),
+                ffmpeg.getPath(),
+                processFactory);
+
+        assertThrows(RejectedExecutionException.class, () -> rejectingFfmpeg.run(builder()));
+
+        assertTrue(processClosed.get());
     }
 
     private void assertQueryRetries(String option, String failedOutput, String successfulOutput, IoQuery query)

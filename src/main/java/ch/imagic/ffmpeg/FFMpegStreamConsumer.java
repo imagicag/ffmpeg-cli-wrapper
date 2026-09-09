@@ -3,7 +3,9 @@ package ch.imagic.ffmpeg;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Objects;
 
+@FunctionalInterface
 public interface FFMpegStreamConsumer<T> {
 
     /**
@@ -29,6 +31,14 @@ public interface FFMpegStreamConsumer<T> {
      * Consume a stream to a OutputStream
      */
     static FFMpegStreamConsumer<Void> toOutputStream(OutputStream os) {
+        Objects.requireNonNull(os);
+        if (os instanceof FFMpegStreamConsumer<?> consumer) {
+            return input -> {
+                consumer.consume(input);
+                return null;
+            };
+        }
+
         return input -> {
             try (os) {
                 input.transferTo(os);

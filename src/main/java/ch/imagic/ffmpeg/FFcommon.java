@@ -14,7 +14,9 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -97,6 +99,18 @@ abstract class FFcommon {
         throw new FileNotFoundException("Could not find " + name + " in PATH");
     }
 
+    protected static void closeSilently(AutoCloseable toClose) {
+        if (toClose == null) {
+            return;
+        }
+
+        try {
+            toClose.close();
+        } catch (Exception e) {
+            // DONT CARE
+        }
+    }
+
     final Executor executor;
 
     final FFMpegLogger logger;
@@ -120,12 +134,40 @@ abstract class FFcommon {
         this.runFunc = Objects.requireNonNull(runFunction);
     }
 
-    protected void waitAndthrowOnError(CompletableFuture<?> p) throws IOException {
+    protected void waitAndIgnoreError(CompletableFuture<?> p) throws IOException {
         try {
             p.get();
         } catch (InterruptedException e) {
             throw new InterruptedIOException();
         } catch (ExecutionException e) {
+            // IGNORED
+        }
+    }
+
+    protected void waitAndThrowOnError(CompletableFuture<?> p) throws IOException {
+        try {
+            p.get();
+        } catch (InterruptedException e) {
+            throw new InterruptedIOException();
+        } catch (ExecutionException e) {
+            var cause = e.getCause();
+            if (cause == null) {
+                throw new IOException(e);
+            }
+            if (cause instanceof IOException ioe) {
+                throw ioe;
+            }
+            throw new IOException(cause);
+        }
+    }
+
+    protected void checkNowAndThrowOnError(CompletableFuture<?> p) throws IOException {
+        try {
+            p.getNow(null);
+        } catch (CancellationException e) {
+            // Unreachable for now.
+            throw new IOException(e);
+        } catch (CompletionException e) {
             var cause = e.getCause();
             if (cause == null) {
                 throw new IOException(e);
@@ -171,10 +213,10 @@ abstract class FFcommon {
         if (this.version == null) {
             try (FFMpegProcess p = runFunc.createProcess(executor, logger, List.of(getAbsolutePath(), "-version"));
                     BufferedReader r = p.stdoutReader()) {
-                var errorReader = pipe1(p.stderr(), FFMpegStreamConsumer.noop());
+                var errorReader = pipe1(p.stderr(), FFMpegStreamConsumer.noop(), true);
                 String version = r.readLine();
                 r.transferTo(Writer.nullWriter()); // Throw away rest of the output
-                waitAndthrowOnError(errorReader);
+                waitAndThrowOnError(errorReader);
                 throwOnError(p);
                 this.version = version;
             }
@@ -194,12 +236,12 @@ abstract class FFcommon {
             throws IOException {
         try (in1;
                 in2) {
-            var future1 = pipe1(in1, out1);
-            var future2 = pipe1(in2, out2);
-            var future3 = pipe1(in3, out3);
+            var future1 = pipe1(in1, out1, true);
+            var future2 = pipe1(in2, out2, true);
+            var future3 = pipe1(in3, out3, true);
             List<CompletableFuture<?>> futures = new ArrayList<>(List.of(future1, future2, future3));
             while (!futures.isEmpty()) {
-                waitAndthrowOnError(CompletableFuture.anyOf(futures.toArray(CompletableFuture[]::new)));
+                waitAndThrowOnError(CompletableFuture.anyOf(futures.toArray(CompletableFuture[]::new)));
                 futures.removeIf(CompletableFuture::isDone);
             }
 
@@ -207,7 +249,7 @@ abstract class FFcommon {
         }
     }
 
-    protected <T> CompletableFuture<T> pipe1(InputStream in, FFMpegStreamConsumer<T> out) {
+    protected <T> CompletableFuture<T> pipe1(InputStream in, FFMpegStreamConsumer<T> out, boolean consumeAll) {
         CompletableFuture<T> future = new CompletableFuture<>();
         Thread t = Thread.currentThread();
         executor.execute(() -> {
@@ -217,7 +259,9 @@ abstract class FFcommon {
             T result;
             try (in) {
                 result = out.consume(in);
-                in.transferTo(OutputStream.nullOutputStream());
+                if (consumeAll) {
+                    in.transferTo(OutputStream.nullOutputStream());
+                }
             } catch (Throwable e) {
                 future.completeExceptionally(e);
                 return;

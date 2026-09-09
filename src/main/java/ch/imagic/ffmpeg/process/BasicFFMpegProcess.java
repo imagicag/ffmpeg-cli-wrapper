@@ -13,7 +13,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 class BasicFFMpegProcess implements FFMpegProcess {
     private static final long CLOSE_TIMEOUT_MILLIS = 10_000;
 
-    private final Executor executor;
     private final FFMpegLogger logger;
     private final Process process;
     private final OutputStream stdin;
@@ -22,10 +21,9 @@ class BasicFFMpegProcess implements FFMpegProcess {
     private final AtomicBoolean exitToggle = new AtomicBoolean(false);
 
     BasicFFMpegProcess(Executor executor, FFMpegLogger logger, Process proc) {
-        this.executor = executor;
         this.process = proc;
         this.logger = logger;
-        this.stdin = proc.getOutputStream();
+        this.stdin = new FFmpegStdinOutputStream(proc.getOutputStream());
         if (logger.wantsRawStdout()) {
             this.stdout = new AsyncQueueReader(
                     executor, proc.getInputStream(), data -> logger.onRawStdout(pid(), data, 0, data.length));
@@ -43,6 +41,11 @@ class BasicFFMpegProcess implements FFMpegProcess {
     @Override
     public long pid() {
         return process.pid();
+    }
+
+    @Override
+    public boolean isAlive() {
+        return process.isAlive();
     }
 
     @Override

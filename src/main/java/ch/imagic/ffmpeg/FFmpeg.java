@@ -200,16 +200,23 @@ public class FFmpeg extends FFcommon {
     }
 
     /**
-     * Runs the binary (ffmpeg) with the supplied args.
+     * Runs FFmpeg asynchronously with the supplied arguments and stream handlers.
      *
-     * If the OutputStream throws an exception then the ffmpeg process is killed as soon as possible.
+     * <p>The process is stopped if a stream consumer fails. Once the process exits successfully, the
+     * consumer results are passed to {@code merger}. Processing failures are reported by {@link
+     * FFMpegJob#get()}. Unless this method throws, {@code stdin} is closed when it is no longer needed.
      *
-     * The execution happens in the background and the returned FFMpegJob can be used to cancel or wait (with a timeout) for the job.
-     *
-     * Unless this function throws an exception the stdin InputStream is closed once it is no longer needed.
-     *
-     * @param args The arguments to pass to the binary.
-     * @throws IOException If there is a problem executing the binary
+     * @param args the arguments to pass to FFmpeg, excluding the binary path
+     * @param allowAnyExitCode whether a non-zero process exit code should be accepted
+     * @param stdout consumer for the process standard output
+     * @param stderr consumer for the process standard error
+     * @param merger function that combines the standard output and standard error consumer results
+     * @param stdin input supplied to the process standard input
+     * @param <A> standard output consumer result type
+     * @param <B> standard error consumer result type
+     * @param <T> merged job result type
+     * @return a handle for awaiting, cancelling, or obtaining the result of the running process
+     * @throws IOException if the FFmpeg process cannot be started
      */
     protected <A, B, T> FFMpegJob<T> runJob(
             List<String> args,
@@ -248,6 +255,14 @@ public class FFmpeg extends FFcommon {
         return new BasicFFMpegJob<>(future, p);
     }
 
+    /**
+     * Runs the command produced by {@code builder} asynchronously and discards standard output and
+     * standard error.
+     *
+     * @param builder builder that supplies the FFmpeg arguments
+     * @return a handle for the running process
+     * @throws IOException if the FFmpeg process cannot be started
+     */
     public FFMpegJob<Void> run(FFmpegBuilder builder) throws IOException {
         Objects.requireNonNull(builder);
         return runJob(
@@ -259,6 +274,16 @@ public class FFmpeg extends FFcommon {
                 InputStream.nullInputStream());
     }
 
+    /**
+     * Runs the command produced by {@code builder} asynchronously, consumes standard output, and
+     * discards standard error.
+     *
+     * @param builder builder that supplies the FFmpeg arguments
+     * @param stdOut consumer for the process standard output
+     * @param <T> standard output consumer result type
+     * @return a handle whose result is produced by {@code stdOut}
+     * @throws IOException if the FFmpeg process cannot be started
+     */
     public <T> FFMpegJob<T> run(FFmpegBuilder builder, FFMpegStreamConsumer<T> stdOut) throws IOException {
         Objects.requireNonNull(builder);
         return runJob(
@@ -270,6 +295,16 @@ public class FFmpeg extends FFcommon {
                 InputStream.nullInputStream());
     }
 
+    /**
+     * Runs the command produced by {@code builder} asynchronously, consumes standard error, and
+     * discards standard output.
+     *
+     * @param builder builder that supplies the FFmpeg arguments
+     * @param stderr consumer for the process standard error
+     * @param <T> standard error consumer result type
+     * @return a handle whose result is produced by {@code stderr}
+     * @throws IOException if the FFmpeg process cannot be started
+     */
     public <T> FFMpegJob<T> runCaptureStderr(FFmpegBuilder builder, FFMpegStreamConsumer<T> stderr) throws IOException {
         Objects.requireNonNull(builder);
         return runJob(
@@ -282,15 +317,22 @@ public class FFmpeg extends FFcommon {
     }
 
     /**
-     * Consumes stdOut and stdErr in separate threads and later once ffmpeg is finished merge the results using the merger function.
-     * Any exception thrown is propagated to FFMpegJob#get, however only the first exception to occur is reported,
-     * further exceptions are discarded. The ffmpeg process is already stopped/exited by the time the merger function is invoked.
-     * If any of the stream consumers throw then that causes the ffmpeg process to be stopped soon after.
+     * Runs the command produced by {@code builder} asynchronously and consumes standard output and
+     * standard error concurrently.
      *
-     * This function returns as soon as the ffmpeg process was started.
+     * <p>After FFmpeg exits, {@code merger} combines the two consumer results. If a consumer fails, the
+     * process is stopped as soon as possible. Processing failures are reported by {@link FFMpegJob#get()};
+     * if multiple operations fail, only the first failure is reported.
      *
-     * The job can be killed/canceled with the returned job handle.
-     * Closing the job handle stops the ffmpeg process as soon as possible.
+     * @param builder builder that supplies the FFmpeg arguments
+     * @param stdOut consumer for the process standard output
+     * @param stderr consumer for the process standard error
+     * @param merger function that combines the standard output and standard error consumer results
+     * @param <T> merged job result type
+     * @param <A> standard output consumer result type
+     * @param <B> standard error consumer result type
+     * @return a handle for awaiting, cancelling, or obtaining the result of the running process
+     * @throws IOException if the FFmpeg process cannot be started
      */
     public <T, A, B> FFMpegJob<T> run(
             FFmpegBuilder builder,
@@ -303,7 +345,24 @@ public class FFmpeg extends FFcommon {
     }
 
     /**
-     * This function closes the stream parameters unless it throws an exception.
+     * Runs the command produced by {@code builder} asynchronously, consumes standard output and
+     * standard error concurrently, and supplies {@code stdin} to the process.
+     *
+     * <p>After FFmpeg exits, {@code merger} combines the two consumer results. If a consumer fails, the
+     * process is stopped as soon as possible. Processing failures are reported by {@link FFMpegJob#get()};
+     * if multiple operations fail, only the first failure is reported. Unless this method throws,
+     * {@code stdin} is closed when it is no longer needed.
+     *
+     * @param builder builder that supplies the FFmpeg arguments
+     * @param stdOut consumer for the process standard output
+     * @param stderr consumer for the process standard error
+     * @param merger function that combines the standard output and standard error consumer results
+     * @param stdin input supplied to the process standard input
+     * @param <T> merged job result type
+     * @param <A> standard output consumer result type
+     * @param <B> standard error consumer result type
+     * @return a handle for awaiting, cancelling, or obtaining the result of the running process
+     * @throws IOException if the FFmpeg process cannot be started
      */
     public <T, A, B> FFMpegJob<T> run(
             FFmpegBuilder builder,

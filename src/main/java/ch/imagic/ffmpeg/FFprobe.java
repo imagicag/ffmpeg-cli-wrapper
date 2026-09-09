@@ -62,6 +62,13 @@ public class FFprobe extends FFcommon {
         super(executor, logger, ffprobeBinary, processFactory);
     }
 
+    /**
+     * Probes a media file asynchronously and discards standard error.
+     *
+     * @param mediaPath media file to probe
+     * @return a handle whose result contains the detected media information
+     * @throws IOException if the FFprobe process cannot be started
+     */
     public FFMpegJob<FFmpegProbeResult> probe(File mediaPath) throws IOException {
         return probe(mediaPath, FFMpegStreamConsumer.noop());
     }
@@ -86,6 +93,21 @@ public class FFprobe extends FFcommon {
         return this;
     }
 
+    /**
+     * Probes a media path asynchronously, parses FFprobe's JSON output, and maps the parsed JSON to a
+     * result.
+     *
+     * <p>The additional arguments are inserted before the output and media-path arguments managed by
+     * this class. Processing and mapping failures are reported by {@link FFMpegJob#get()}.
+     *
+     * @param mediaPath media path to pass to FFprobe
+     * @param stdErr consumer for the process standard error
+     * @param mapper function that maps FFprobe's parsed JSON output to the job result
+     * @param additionalArguments additional arguments to pass to FFprobe
+     * @param <T> mapped job result type
+     * @return a handle for awaiting, cancelling, or obtaining the result of the running process
+     * @throws IOException if the FFprobe process cannot be started
+     */
     protected <T> FFMpegJob<T> probeGson(
             String mediaPath,
             FFMpegStreamConsumer<Void> stdErr,
@@ -133,16 +155,45 @@ public class FFprobe extends FFcommon {
         return new BasicFFMpegJob<>(future, p);
     }
 
+    /**
+     * Probes a media file asynchronously and returns FFprobe's JSON result.
+     *
+     * @param mediaPath media file to probe
+     * @param stdErr consumer for the process standard error
+     * @param additionalArguments additional arguments to pass to FFprobe
+     * @return a handle whose result is the JSON emitted by FFprobe
+     * @throws IOException if the FFprobe process cannot be started
+     */
     public FFMpegJob<String> probeJson(File mediaPath, FFMpegStreamConsumer<Void> stdErr, String... additionalArguments)
             throws IOException {
         return probeGson(mediaPath.getAbsolutePath(), stdErr, JsonElement::toString, additionalArguments);
     }
 
+    /**
+     * Probes a media file asynchronously and maps FFprobe's JSON output to an {@link FFmpegProbeResult}.
+     *
+     * @param mediaPath media file to probe
+     * @param stdErr consumer for the process standard error
+     * @param additionalArguments additional arguments to pass to FFprobe
+     * @return a handle whose result contains the detected media information
+     * @throws IOException if the FFprobe process cannot be started
+     */
     public FFMpegJob<FFmpegProbeResult> probe(
             File mediaPath, FFMpegStreamConsumer<Void> stdErr, String... additionalArguments) throws IOException {
         return probe(mediaPath, stdErr, FFmpegProbeResult.class, additionalArguments);
     }
 
+    /**
+     * Probes a media file asynchronously and deserializes FFprobe's JSON output as {@code resultClass}.
+     *
+     * @param mediaPath media file to probe
+     * @param stdErr consumer for the process standard error
+     * @param resultClass class into which the JSON output is deserialized
+     * @param additionalArguments additional arguments to pass to FFprobe
+     * @param <T> deserialized job result type
+     * @return a handle whose result is an instance of {@code resultClass}
+     * @throws IOException if the FFprobe process cannot be started
+     */
     public <T> FFMpegJob<T> probe(
             File mediaPath, FFMpegStreamConsumer<Void> stdErr, Class<T> resultClass, String... additionalArguments)
             throws IOException {
@@ -150,6 +201,19 @@ public class FFprobe extends FFcommon {
                 mediaPath.getAbsolutePath(), stdErr, elem -> gson.fromJson(elem, resultClass), additionalArguments);
     }
 
+    /**
+     * Probes a media path asynchronously and deserializes FFprobe's JSON output as {@code resultClass}.
+     *
+     * <p>This overload accepts any media path or URL supported by FFprobe.
+     *
+     * @param mediaPath media path or URL to pass to FFprobe
+     * @param stdErr consumer for the process standard error
+     * @param resultClass class into which the JSON output is deserialized
+     * @param additionalArguments additional arguments to pass to FFprobe
+     * @param <T> deserialized job result type
+     * @return a handle whose result is an instance of {@code resultClass}
+     * @throws IOException if the FFprobe process cannot be started
+     */
     public <T> FFMpegJob<T> probe(
             String mediaPath, FFMpegStreamConsumer<Void> stdErr, Class<T> resultClass, String... additionalArguments)
             throws IOException {

@@ -96,7 +96,7 @@ public interface FFMpegLogger {
      */
     static FFMpegLogger naiveLogger(Consumer<String> info, Consumer<String> error) {
         return new FFMpegLogger() {
-            private static int MAX_LINE_BUFFER = 0x1_0000;
+            private static final int MAX_LINE_BUFFER = 0x1_0000;
 
             static class State {
                 final ByteArrayOutputStream infoBuffer = new ByteArrayOutputStream(MAX_LINE_BUFFER);

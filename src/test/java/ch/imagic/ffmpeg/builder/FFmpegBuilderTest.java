@@ -11,10 +11,6 @@ import static ch.imagic.ffmpeg.builder.StreamSpecifierType.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import ch.imagic.ffmpeg.options.AudioEncodingOptions;
-import ch.imagic.ffmpeg.options.EncodingOptions;
-import ch.imagic.ffmpeg.options.MainEncodingOptions;
-import ch.imagic.ffmpeg.options.VideoEncodingOptions;
 import java.io.IOException;
 import java.net.URI;
 import java.util.List;
@@ -190,89 +186,6 @@ public class FFmpegBuilderTest {
                         "-vf",
                         "scale='trunc(ow/a/2)*2:320'",
                         "output"));
-    }
-
-    /** Tests if all the various encoding options actually get stored and used correctly */
-    @Test
-    public void testSetOptions() {
-        MainEncodingOptions main = new MainEncodingOptions("mp4", 1500L, 2L);
-        AudioEncodingOptions audio =
-                new AudioEncodingOptions(true, "aac", 1, AUDIO_SAMPLE_48000, AUDIO_FORMAT_S16, 1, 2.0);
-        VideoEncodingOptions video = new VideoEncodingOptions(true, "libx264", FPS_30, 320, 240, 1, null, null, null);
-
-        EncodingOptions options = new FFmpegBuilder()
-                .setInput("input")
-                .addOutput("output")
-                .useOptions(main)
-                .useOptions(audio)
-                .useOptions(video)
-                .buildOptions();
-
-        MainEncodingOptions actualMain = options.getMain();
-        assertEquals(main.format, actualMain.format);
-        assertEquals(main.startOffset, actualMain.startOffset);
-        assertEquals(main.duration, actualMain.duration);
-
-        AudioEncodingOptions actualAudio = options.getAudio();
-        assertEquals(audio.enabled, actualAudio.enabled);
-        assertEquals(audio.codec, actualAudio.codec);
-        assertEquals(audio.channels, actualAudio.channels);
-        assertEquals(audio.sampleRate, actualAudio.sampleRate);
-        assertEquals(audio.sampleFormat, actualAudio.sampleFormat);
-        assertEquals(audio.bitRate, actualAudio.bitRate);
-        assertEquals(audio.quality, actualAudio.quality);
-
-        VideoEncodingOptions actualVideo = options.getVideo();
-        assertEquals(video.enabled, actualVideo.enabled);
-        assertEquals(video.codec, actualVideo.codec);
-        assertEquals(video.frameRate, actualVideo.frameRate);
-        assertEquals(video.width, actualVideo.width);
-        assertEquals(video.height, actualVideo.height);
-        assertEquals(video.bitRate, actualVideo.bitRate);
-        assertEquals(video.frames, actualVideo.frames);
-        assertEquals(video.filter, actualVideo.filter);
-        assertEquals(video.preset, actualVideo.preset);
-    }
-
-    @Test
-    public void testCopyFromPreservesValuesForDefaultOptions() {
-        FFmpegOutputBuilder output = new FFmpegOutputBuilder()
-                .setFormat("mp4")
-                .setAudioCodec("aac")
-                .setAudioChannels(2)
-                .setVideoCodec("libx264")
-                .setVideoResolution(320, 240);
-
-        output.useOptions(new MainEncodingOptions(null, null, null));
-        output.useOptions(new AudioEncodingOptions(false, null, 0, 0, null, 0, null));
-        output.useOptions(new VideoEncodingOptions(false, null, null, 0, 0, 0, null, null, null));
-
-        EncodingOptions options = output.buildOptions();
-        assertEquals("mp4", options.main.format);
-        assertEquals("aac", options.audio.codec);
-        assertEquals(2, options.audio.channels);
-        assertEquals("libx264", options.video.codec);
-        assertEquals(320, options.video.width);
-        assertEquals(240, options.video.height);
-    }
-
-    @Test
-    public void testCopyFromSkipsDisabledSections() {
-        EncodingOptions disabledOptions = new EncodingOptions(
-                new MainEncodingOptions("mp4", 0L, 0L),
-                new AudioEncodingOptions(false, "aac", 2, AUDIO_SAMPLE_48000, AUDIO_FORMAT_S16, 128000, 2.0),
-                new VideoEncodingOptions(false, "libx264", FPS_30, 320, 240, 1000000, 10, "scale=320:240", "fast"));
-
-        EncodingOptions actual =
-                new FFmpegOutputBuilder().useOptions(disabledOptions).buildOptions();
-
-        assertEquals("mp4", actual.main.format);
-        assertEquals(Long.valueOf(0), actual.main.startOffset);
-        assertEquals(Long.valueOf(0), actual.main.duration);
-        assertEquals(null, actual.audio.codec);
-        assertEquals(0, actual.audio.channels);
-        assertEquals(null, actual.video.codec);
-        assertEquals(0, actual.video.width);
     }
 
     @Test

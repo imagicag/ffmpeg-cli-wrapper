@@ -5,10 +5,6 @@ import static ch.imagic.ffmpeg.FFmpegUtils.checkValidStream;
 import static ch.imagic.ffmpeg.FFmpegUtils.toTimecode;
 import static ch.imagic.ffmpeg.builder.MetadataSpecifier.checkValidKey;
 
-import ch.imagic.ffmpeg.options.AudioEncodingOptions;
-import ch.imagic.ffmpeg.options.EncodingOptions;
-import ch.imagic.ffmpeg.options.MainEncodingOptions;
-import ch.imagic.ffmpeg.options.VideoEncodingOptions;
 import ch.imagic.ffmpeg.probe.Fraction;
 import java.net.URI;
 import java.util.ArrayList;
@@ -111,48 +107,6 @@ public abstract class AbstractFFmpegStreamBuilder<T extends AbstractFFmpegStream
     }
 
     protected abstract T getThis();
-
-    public T useOptions(EncodingOptions opts) {
-        Objects.requireNonNull(opts);
-        useOptions(opts.getMain());
-
-        if (opts.getAudio().enabled) {
-            useOptions(opts.getAudio());
-        }
-        if (opts.getVideo().enabled) {
-            useOptions(opts.getVideo());
-        }
-
-        return getThis();
-    }
-
-    public T useOptions(MainEncodingOptions opts) {
-        Objects.requireNonNull(opts);
-        if (opts.format != null) format = opts.format;
-        if (opts.startOffset != null) startOffset = opts.startOffset;
-        if (opts.duration != null) duration = opts.duration;
-        return getThis();
-    }
-
-    public T useOptions(AudioEncodingOptions opts) {
-        Objects.requireNonNull(opts);
-        if (opts.enabled) audioEnabled = true;
-        if (opts.codec != null) audioCodec = opts.codec;
-        if (opts.channels != 0) audioChannels = opts.channels;
-        if (opts.sampleRate != 0) audioSampleRate = opts.sampleRate;
-        return getThis();
-    }
-
-    public T useOptions(VideoEncodingOptions opts) {
-        Objects.requireNonNull(opts);
-        if (opts.enabled) videoEnabled = true;
-        if (opts.codec != null) videoCodec = opts.codec;
-        if (opts.frameRate != null) videoFrameRate = opts.frameRate;
-        if (opts.width != 0) videoWidth = opts.width;
-        if (opts.height != 0) videoHeight = opts.height;
-        if (opts.frames != null) videoFrames = opts.frames;
-        return getThis();
-    }
 
     public T disableVideo() {
         this.videoEnabled = false;
@@ -666,15 +620,6 @@ public abstract class AbstractFFmpegStreamBuilder<T extends AbstractFFmpegStream
         requireState(parent != null, "Can not call done without parent being set");
         return parent;
     }
-
-    /**
-     * Returns a representation of this Builder that can be safely serialised.
-     *
-     * <p>NOTE: This method is horribly out of date, and its use should be rethought.
-     *
-     * @return A new EncodingOptions capturing this Builder's state
-     */
-    public abstract EncodingOptions buildOptions();
 
     protected List<String> build(int pass) {
         requireState(parent != null, "Can not build without parent being set");

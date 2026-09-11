@@ -2,10 +2,6 @@ package ch.imagic.ffmpeg.builder;
 
 import static ch.imagic.ffmpeg.FFmpegUtils.checkNotEmpty;
 
-import ch.imagic.ffmpeg.options.AudioEncodingOptions;
-import ch.imagic.ffmpeg.options.EncodingOptions;
-import ch.imagic.ffmpeg.options.MainEncodingOptions;
-import ch.imagic.ffmpeg.options.VideoEncodingOptions;
 import ch.imagic.ffmpeg.probe.FFmpegProbeResult;
 import java.net.URI;
 import java.util.List;
@@ -41,30 +37,6 @@ public class FFmpegOutputBuilder extends AbstractFFmpegStreamBuilder<FFmpegOutpu
 
     protected FFmpegOutputBuilder(FFmpegBuilder parent, URI uri) {
         super(parent, uri);
-    }
-
-    @Override
-    public FFmpegOutputBuilder useOptions(MainEncodingOptions opts) {
-        super.useOptions(opts);
-        return this;
-    }
-
-    @Override
-    public FFmpegOutputBuilder useOptions(AudioEncodingOptions opts) {
-        super.useOptions(opts);
-        if (opts.sampleFormat != null) audioSampleFormat = opts.sampleFormat;
-        if (opts.bitRate != 0) audioBitRate = opts.bitRate;
-        if (opts.quality != null) audioQuality = opts.quality;
-        return this;
-    }
-
-    @Override
-    public FFmpegOutputBuilder useOptions(VideoEncodingOptions opts) {
-        super.useOptions(opts);
-        if (opts.bitRate != 0) videoBitRate = opts.bitRate;
-        if (opts.filter != null) videoFilter = opts.filter;
-        if (opts.preset != null) videoPreset = opts.preset;
-        return this;
     }
 
     public FFmpegOutputBuilder setConstantRateFactor(double factor) {
@@ -210,37 +182,6 @@ public class FFmpegOutputBuilder extends AbstractFFmpegStreamBuilder<FFmpegOutpu
         this.audioEnabled = true;
         this.audioFilter = checkNotEmpty(filter, "filter must not be empty");
         return this;
-    }
-
-    /**
-     * Returns a representation of this Builder that can be safely serialised.
-     *
-     * <p>NOTE: This method is horribly out of date, and its use should be rethought.
-     *
-     * @return A new EncodingOptions capturing this Builder's state
-     */
-    @Override
-    public EncodingOptions buildOptions() {
-        return new EncodingOptions(
-                new MainEncodingOptions(format, startOffset, duration),
-                new AudioEncodingOptions(
-                        audioEnabled,
-                        audioCodec,
-                        audioChannels,
-                        audioSampleRate,
-                        audioSampleFormat,
-                        audioBitRate,
-                        audioQuality),
-                new VideoEncodingOptions(
-                        videoEnabled,
-                        videoCodec,
-                        videoFrameRate,
-                        videoWidth,
-                        videoHeight,
-                        videoBitRate,
-                        videoFrames,
-                        videoFilter,
-                        videoPreset));
     }
 
     @Override

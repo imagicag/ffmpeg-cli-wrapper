@@ -68,7 +68,9 @@ public class FFmpegOutputBuilder extends AbstractFFmpegStreamBuilder<FFmpegOutpu
     }
 
     public FFmpegOutputBuilder setConstantRateFactor(double factor) {
-        requireArgument(factor >= 0, "constant rate factor must be greater or equal to zero");
+        this.videoEnabled = true;
+        requireArgument(
+                factor >= 0 && Double.isFinite(factor), "constant rate factor must be a non negative finite number");
         this.constantRateFactor = factor;
         return this;
     }
@@ -81,7 +83,7 @@ public class FFmpegOutputBuilder extends AbstractFFmpegStreamBuilder<FFmpegOutpu
     }
 
     public FFmpegOutputBuilder setVideoQuality(double quality) {
-        requireArgument(quality > 0, "quality must be positive");
+        requireArgument(quality >= 0 && Double.isFinite(quality), "quality be a non negative finite number");
         this.videoEnabled = true;
         this.videoQuality = quality;
         return this;
@@ -105,6 +107,7 @@ public class FFmpegOutputBuilder extends AbstractFFmpegStreamBuilder<FFmpegOutpu
     }
 
     public FFmpegOutputBuilder setVideoBitStreamFilter(String filter) {
+        this.videoEnabled = true;
         this.videoBitStreamFilter = checkNotEmpty(filter, "filter must not be empty");
         return this;
     }
@@ -169,7 +172,7 @@ public class FFmpegOutputBuilder extends AbstractFFmpegStreamBuilder<FFmpegOutpu
     }
 
     public FFmpegOutputBuilder setAudioQuality(double quality) {
-        requireArgument(quality > 0, "quality must be positive");
+        requireArgument(quality >= 0 && Double.isFinite(quality), "quality be a non negative finite number");
         this.audioEnabled = true;
         this.audioQuality = quality;
         return this;
@@ -179,6 +182,20 @@ public class FFmpegOutputBuilder extends AbstractFFmpegStreamBuilder<FFmpegOutpu
         this.audioEnabled = true;
         this.audioBitStreamFilter = checkNotEmpty(filter, "filter must not be empty");
         return this;
+    }
+
+    public FFmpegOutputBuilder setMaxFileSize(Long bytes) {
+        if (bytes != null) {
+            if (bytes <= 0) {
+                throw new IllegalArgumentException("bytes must be positive if set");
+            }
+        }
+        this.maxFileSize = bytes;
+        return this;
+    }
+
+    public Long getMaxFileSize() {
+        return this.maxFileSize;
     }
 
     /**
@@ -294,6 +311,10 @@ public class FFmpegOutputBuilder extends AbstractFFmpegStreamBuilder<FFmpegOutpu
 
         if (constantRateFactor != null) {
             args.addAll(List.of("-crf", formatDecimalInteger(constantRateFactor)));
+        }
+
+        if (maxFileSize != null) {
+            args.addAll(List.of("-fs", maxFileSize.toString()));
         }
     }
 

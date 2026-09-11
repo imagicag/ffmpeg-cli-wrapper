@@ -4,6 +4,7 @@ import ch.imagic.ffmpeg.builder.FFmpegBuilder;
 import ch.imagic.ffmpeg.fixtures.Samples;
 import ch.imagic.ffmpeg.probe.FFmpegCodecType;
 import ch.imagic.ffmpeg.probe.FFmpegProbeResult;
+import ch.imagic.ffmpeg.probe.Fraction;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -39,6 +40,53 @@ public class RealFFmpegTest {
     Path temporaryDirectory;
 
     public RealFFmpegTest() throws IOException {}
+
+    @Test
+    public void testRawVideoRoundTripThroughFfv1() throws IOException {
+        Path originalRaw = temporaryDirectory.resolve("original.raw");
+        Path losslessVideo = temporaryDirectory.resolve("lossless.mkv");
+        Path roundTrippedRaw = temporaryDirectory.resolve("round-tripped.raw");
+
+        FFmpegBuilder generateRaw = new FFmpegBuilder()
+                .setFormat("lavfi")
+                .setInput("testsrc=size=640x360")
+                .addOutput(originalRaw.toString())
+                .setFormat("rawvideo")
+                .setVideoCodec("rawvideo")
+                .setVideoPixelFormat("bgr24")
+                .setFrames(30)
+                .done();
+        try (FFMpegJob<Void> job = ffmpeg.run(generateRaw)) {
+            job.get();
+        }
+
+        FFmpegBuilder encodeLosslessly = new FFmpegBuilder()
+                .setFormat("rawvideo")
+                .setInputFrameRate(Fraction.getFraction(1, 1))
+                .setInputPixelFormat("bgr24")
+                .setVideoSize(640, 360)
+                .setInput(originalRaw.toString())
+                .addOutput(losslessVideo.toString())
+                .setVideoCodec("ffv1")
+                .setVideoFrameRate(1, 1)
+                .done();
+        try (FFMpegJob<Void> job = ffmpeg.run(encodeLosslessly)) {
+            job.get();
+        }
+
+        FFmpegBuilder decodeRaw = new FFmpegBuilder()
+                .setInput(losslessVideo.toString())
+                .addOutput(roundTrippedRaw.toString())
+                .setFormat("rawvideo")
+                .setVideoCodec("rawvideo")
+                .setVideoPixelFormat("bgr24")
+                .done();
+        try (FFMpegJob<Void> job = ffmpeg.run(decodeRaw)) {
+            job.get();
+        }
+
+        Assertions.assertEquals(-1, Files.mismatch(originalRaw, roundTrippedRaw));
+    }
 
     @Test
     public void testMovBeforeMdatCleanWay() throws IOException, InterruptedException {

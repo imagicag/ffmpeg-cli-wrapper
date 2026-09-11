@@ -129,6 +129,12 @@ public class FFmpegStream {
     @SerializedName("tags")
     private Map<String, String> tags;
 
+    // This field will only be filled if FFProbe is invoked with "-count_packets" additional parameter!
+    // We dont specify this paramter by default because it requires ffprobe to read more data
+    // If you need this value then pass the parameter to ffprobe.
+    @SerializedName("nb_read_packets")
+    private Long nbReadPackets;
+
     @SerializedName("side_data_list")
     private FFmpegSideData[] sideDataList;
 
@@ -466,5 +472,13 @@ public class FFmpegStream {
 
     public void setSideDataList(FFmpegSideData[] sideDataList) {
         this.sideDataList = sideDataList;
+    }
+
+    public Long getNbReadPackets() {
+        return nbReadPackets;
+    }
+
+    public void setNbReadPackets(Long nbReadPackets) {
+        this.nbReadPackets = nbReadPackets;
     }
 }

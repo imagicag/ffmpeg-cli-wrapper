@@ -45,6 +45,10 @@ public class FFprobe extends FFcommon {
         this(executor, FFMpegLogger.noop(), ffmpegBinary, FFMpegProcessFactory.defaultFactory());
     }
 
+    public FFprobe(Executor executor, FFMpegLogger logger, File ffmpegBinary) throws IOException {
+        this(executor, logger, ffmpegBinary, FFMpegProcessFactory.defaultFactory());
+    }
+
     public FFprobe(File ffmpegBinary, FFMpegProcessFactory processFactory) throws IOException {
         this(getDefaultExecutor(), FFMpegLogger.noop(), ffmpegBinary, processFactory);
     }

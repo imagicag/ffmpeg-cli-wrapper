@@ -63,6 +63,9 @@ public abstract class AbstractFFmpegStreamBuilder<T extends AbstractFFmpegStream
 
     protected final List<String> metaTags = new ArrayList<>();
 
+    protected Long maxFileSize; // In bytes
+    protected String videoMovFlags;
+
     protected boolean audioEnabled = true;
     protected String audioCodec;
     protected int audioChannels;
@@ -76,9 +79,9 @@ public abstract class AbstractFFmpegStreamBuilder<T extends AbstractFFmpegStream
     protected int videoWidth;
     protected int videoHeight;
     protected String videoSize;
-    protected String videoMovFlags;
     protected Integer videoFrames;
     protected String videoPixelFormat;
+    protected String videoSync;
 
     protected boolean subtitleEnabled = true;
     protected String subtitlePreset;
@@ -286,6 +289,10 @@ public abstract class AbstractFFmpegStreamBuilder<T extends AbstractFFmpegStream
         return videoPixelFormat;
     }
 
+    public String getVideoSync() {
+        return videoSync;
+    }
+
     public boolean getSubtitleEnabled() {
         return subtitleEnabled;
     }
@@ -336,7 +343,6 @@ public abstract class AbstractFFmpegStreamBuilder<T extends AbstractFFmpegStream
     }
 
     public T setVideoMovFlags(String movflags) {
-        this.videoEnabled = true;
         this.videoMovFlags = checkNotEmpty(movflags, "movflags must not be empty");
         return getThis();
     }
@@ -352,8 +358,12 @@ public abstract class AbstractFFmpegStreamBuilder<T extends AbstractFFmpegStream
      * @see ch.imagic.ffmpeg.FFmpeg#FPS_23_976
      */
     public T setVideoFrameRate(Fraction frameRate) {
+        Objects.requireNonNull(frameRate);
+        if (frameRate.doubleValue() < 0) {
+            throw new IllegalArgumentException("frame rate must not be negative");
+        }
         this.videoEnabled = true;
-        this.videoFrameRate = Objects.requireNonNull(frameRate);
+        this.videoFrameRate = frameRate;
         return getThis();
     }
 
@@ -380,6 +390,9 @@ public abstract class AbstractFFmpegStreamBuilder<T extends AbstractFFmpegStream
      * @return this
      */
     public T setFrames(int frames) {
+        if (frames < 0) {
+            throw new IllegalArgumentException("frames must not be negative");
+        }
         this.videoEnabled = true;
         this.videoFrames = frames;
         return getThis();
@@ -432,6 +445,12 @@ public abstract class AbstractFFmpegStreamBuilder<T extends AbstractFFmpegStream
     public T setVideoPixelFormat(String format) {
         this.videoEnabled = true;
         this.videoPixelFormat = checkNotEmpty(format, "format must not be empty");
+        return getThis();
+    }
+
+    public T setVideoSync(String mode) {
+        this.videoEnabled = true;
+        this.videoSync = checkNotEmpty(mode, "mode must not be empty");
         return getThis();
     }
 
@@ -568,6 +587,9 @@ public abstract class AbstractFFmpegStreamBuilder<T extends AbstractFFmpegStream
      */
     public T setDuration(long duration, TimeUnit units) {
         Objects.requireNonNull(units);
+        if (duration < 0) {
+            throw new IllegalArgumentException("duration must not be negative");
+        }
 
         this.duration = units.toMillis(duration);
 
@@ -755,6 +777,11 @@ public abstract class AbstractFFmpegStreamBuilder<T extends AbstractFFmpegStream
             args.addAll(List.of("-t", toTimecode(duration, TimeUnit.MILLISECONDS)));
         }
 
+        //This is a global flag, not just for video.
+        if (videoMovFlags != null && !videoMovFlags.isEmpty()) {
+            args.addAll(List.of("-movflags", videoMovFlags));
+        }
+
         args.addAll(metaTags);
     }
 
@@ -788,13 +815,12 @@ public abstract class AbstractFFmpegStreamBuilder<T extends AbstractFFmpegStream
         if (videoPixelFormat != null && !videoPixelFormat.isEmpty()) {
             args.addAll(List.of("-pix_fmt", videoPixelFormat));
         }
+        if (videoSync != null) {
+            args.addAll(List.of("-vsync", videoSync));
+        }
 
         if (videoCopyInkf) {
             args.add("-copyinkf");
-        }
-
-        if (videoMovFlags != null && !videoMovFlags.isEmpty()) {
-            args.addAll(List.of("-movflags", videoMovFlags));
         }
 
         if (videoSize != null) {

@@ -85,6 +85,10 @@ public class FFmpeg extends FFcommon {
         this(executor, FFMpegLogger.noop(), ffmpegBinary, FFMpegProcessFactory.defaultFactory());
     }
 
+    public FFmpeg(Executor executor, FFMpegLogger logger, File ffmpegBinary) throws IOException {
+        this(executor, logger, ffmpegBinary, FFMpegProcessFactory.defaultFactory());
+    }
+
     public FFmpeg(File ffmpegBinary, FFMpegProcessFactory processFactory) throws IOException {
         this(getDefaultExecutor(), FFMpegLogger.noop(), ffmpegBinary, processFactory);
     }
@@ -398,6 +402,41 @@ public class FFmpeg extends FFcommon {
             throws IOException {
         Objects.requireNonNull(builder);
         return runJob(builder.build(), builder.getNoOutput(), stdOut, stderr, merger, stdin);
+    }
+
+    /**
+     * Runs the command produced by {@code builder} asynchronously, consumes standard output, and
+     * discards standard error.
+     *
+     * <p>If a consumer fails, the process is stopped as soon as possible.
+     * Processing failures are reported by {@link FFMpegJob#get()};
+     *
+     * if multiple operations fail, only the first failure is reported. Unless this method throws,
+     * {@code stdin} is closed when it is no longer needed.
+     *
+     * Note: The job will not complete unless the FFMpegStreamConsumer returns.
+     *
+     * IMPORTANT:
+     * This function assumes that the InputStream eventually runs EOF. The job will not complete
+     * unless the InputStream reading either throws an exception (Such as socket timeout) or signals EOF.
+     *
+     * @param builder builder that supplies the FFmpeg arguments
+     * @param stdOut consumer for the process standard output
+     * @param stdin input supplied to the process standard input
+     * @param <T> Job result type
+     * @return a handle for awaiting, cancelling, or obtaining the result of the running process
+     * @throws IOException if the FFmpeg process cannot be started
+     */
+    public <T> FFMpegJob<T> run(FFmpegBuilder builder, FFMpegStreamConsumer<T> stdOut, InputStream stdin)
+            throws IOException {
+        Objects.requireNonNull(builder);
+        return runJob(
+                builder.build(),
+                builder.getNoOutput(),
+                stdOut,
+                FFMpegStreamConsumer.noop(),
+                (result, ignored) -> result,
+                stdin);
     }
 
     public FFmpegBuilder builder() {

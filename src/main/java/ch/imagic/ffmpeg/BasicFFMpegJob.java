@@ -53,6 +53,8 @@ class BasicFFMpegJob<T> implements FFMpegJob<T> {
         }
         try {
             return future.get();
+        } catch (CancellationException ce) {
+            throw new IOException(ce);
         } catch (InterruptedException e) {
             throw new InterruptedIOException();
         } catch (ExecutionException e) {

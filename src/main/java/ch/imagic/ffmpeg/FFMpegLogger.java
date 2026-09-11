@@ -1,9 +1,6 @@
 package ch.imagic.ffmpeg;
 
-import java.io.ByteArrayOutputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 public interface FFMpegLogger {
@@ -80,163 +77,26 @@ public interface FFMpegLogger {
      * Only really useful in unit tests/simple main methods.
      */
     static FFMpegLogger stdLogger() {
-        return naiveLogger(System.out::println, System.err::println);
+        return naiveLogger(System.out::println, null, System.err::println);
     }
 
     /**
      * Native implementation suitable for commonly used logger frameworks such as log4j/slf4j/logback/jul.
+     *
+     * Note: stdout of ffmpeg is normally empty and sometimes used to write the output file to.
+     * Logging stdout of ffmpeg is not advisable as it may contain a media file.
+     * Logging stdout of ffprobe should not be a problem since it mostly outputs json.
+     *
      * <br>
      * Example for slf4j:
      * <p>
      * <br> private static final Logger LOGGER = LoggerFactory.getLogger(MyClass.class);
      * <br> //...
-     * <br> FFMpegLogger logger = naiveLogger(LOGGER::info, LOGGER::error);
+     * <br> FFMpegLogger logger = naiveLogger(LOGGER::info, null, LOGGER::error);
      * <br> //...
      * </p>
      */
-    static FFMpegLogger naiveLogger(Consumer<String> info, Consumer<String> error) {
-        return new FFMpegLogger() {
-            private static final int MAX_LINE_BUFFER = 0x1_0000;
-
-            static class State {
-                final ByteArrayOutputStream infoBuffer = new ByteArrayOutputStream(MAX_LINE_BUFFER);
-                final ByteArrayOutputStream errorBuffer = new ByteArrayOutputStream(MAX_LINE_BUFFER);
-            }
-
-            private final ConcurrentHashMap<Long, State> state = new ConcurrentHashMap<>();
-
-            @Override
-            public boolean wantsRawStdout() {
-                return info != null;
-            }
-
-            @Override
-            public boolean wantsRawStderr() {
-                return error != null;
-            }
-
-            @Override
-            public boolean wantsCommandLine() {
-                return info != null;
-            }
-
-            @Override
-            public boolean wantsProcessDeath() {
-                return info != null || error != null;
-            }
-
-            @Override
-            public void onCommandLine(long pid, List<String> commandLine) {
-                info.accept("Started child process with pid " + pid + " " + String.join(" ", commandLine));
-            }
-
-            private void handle(
-                    String prefix,
-                    ByteArrayOutputStream baos,
-                    long pid,
-                    byte[] rawData,
-                    int off,
-                    int len,
-                    Consumer<String> downstream) {
-                if (downstream == null) {
-                    return;
-                }
-                int start = off;
-                for (int i = 0; i < len; i++) {
-                    if (rawData[off + i] != '\n') {
-                        continue;
-                    }
-                    int mystart = start;
-                    start = off + i + 1;
-
-                    if (baos.size() == 0) {
-                        int lineSize = (off + i) - mystart;
-                        if (lineSize > MAX_LINE_BUFFER) {
-                            downstream.accept("Child pid " + pid + " produced a output line that is longer than ~64k.");
-                            continue;
-                        }
-                        downstream.accept("Child pid " + pid + prefix
-                                + new String(rawData, mystart, lineSize, StandardCharsets.UTF_8).replace("\r", ""));
-                        continue;
-                    }
-
-                    int toCopy = (off + i) - mystart;
-                    if (baos.size() + toCopy > MAX_LINE_BUFFER) {
-                        baos.reset();
-                        downstream.accept("Child pid " + pid + " produced a output line that is longer than ~64k.");
-                        continue;
-                    }
-                    baos.write(rawData, mystart, toCopy);
-                    downstream.accept("Child pid " + pid + prefix
-                            + baos.toString(StandardCharsets.UTF_8).replace("\r", ""));
-                    baos.reset();
-                }
-
-                if (start < off + len) {
-                    int toCopy = (off + len) - start;
-                    if (baos.size() + toCopy > MAX_LINE_BUFFER) {
-                        baos.reset();
-                        downstream.accept(
-                                "Child pid " + pid + " produced a unfinished output line that is longer than ~64k.");
-                        return;
-                    }
-                    baos.write(rawData, start, (off + len) - start);
-                }
-            }
-
-            @Override
-            public void onRawStdout(long pid, byte[] rawData, int off, int len) {
-                var st = state.computeIfAbsent(pid, _k -> new State());
-                synchronized (st.infoBuffer) {
-                    handle(" STDOUT: ", st.infoBuffer, pid, rawData, off, len, info);
-                }
-            }
-
-            @Override
-            public void onRawStderr(long pid, byte[] rawData, int off, int len) {
-                var st = state.computeIfAbsent(pid, _k -> new State());
-                synchronized (st.errorBuffer) {
-                    handle(" STDERR: ", st.errorBuffer, pid, rawData, off, len, error);
-                }
-            }
-
-            @Override
-            public void onProcessDeath(long pid, int exitCode) {
-                State st = state.remove(pid);
-                if (st != null) {
-                    synchronized (st.infoBuffer) {
-                        if (info != null && st.infoBuffer.size() > 0) {
-                            info.accept("Child pid " + pid + " trailing STDOUT: "
-                                    + st.infoBuffer
-                                            .toString(StandardCharsets.UTF_8)
-                                            .replace("\r", ""));
-                            st.infoBuffer.reset();
-                        }
-                    }
-                    synchronized (st.errorBuffer) {
-                        if (error != null && st.errorBuffer.size() > 0) {
-                            error.accept("Child pid " + pid + " trailing STDERR: "
-                                    + st.errorBuffer
-                                            .toString(StandardCharsets.UTF_8)
-                                            .replace("\r", ""));
-                            st.errorBuffer.reset();
-                        }
-                    }
-                }
-
-                if (exitCode == 0) {
-                    if (info != null) {
-                        info.accept("Child pid " + pid + " finished successfully");
-                    }
-                    return;
-                }
-
-                if (error == null) {
-                    return;
-                }
-
-                error.accept("Child pid " + pid + " finished with error " + exitCode);
-            }
-        };
+    static FFMpegLogger naiveLogger(Consumer<String> status, Consumer<String> stdout, Consumer<String> stderr) {
+        return new NaiveFFmpegLogger(status, stdout, stderr);
     }
 }

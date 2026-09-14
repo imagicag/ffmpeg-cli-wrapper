@@ -1,7 +1,5 @@
 package ch.imagic.ffmpeg.builder;
 
-import static ch.imagic.ffmpeg.FFmpeg.AUDIO_FORMAT_S16;
-import static ch.imagic.ffmpeg.FFmpeg.AUDIO_SAMPLE_48000;
 import static ch.imagic.ffmpeg.FFmpeg.FPS_30;
 import static ch.imagic.ffmpeg.builder.FFmpegBuilder.Verbosity;
 import static ch.imagic.ffmpeg.builder.MetadataSpecifier.*;
@@ -28,10 +26,11 @@ public class FFmpegBuilderTest {
 
         List<String> args = new FFmpegBuilder()
                 .setVerbosity(Verbosity.TRACE)
+                .setInput("input")
                 .setUserAgent(
                         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.82 Safari/537.36")
-                .setInput("input")
                 .setStartOffset(1500, TimeUnit.MILLISECONDS)
+                .done()
                 .overrideOutputFiles(true)
                 .addOutput("output")
                 .setFormat("mp4")
@@ -93,6 +92,7 @@ public class FFmpegBuilderTest {
 
         List<String> args = new FFmpegBuilder()
                 .setInput("input")
+                .done()
                 .addOutput("output")
                 .disableAudio()
                 .disableSubtitle()
@@ -105,16 +105,18 @@ public class FFmpegBuilderTest {
 
     @Test
     public void testSafe() {
-        FFmpegBuilder safeBuilder = new FFmpegBuilder().setSafe(true);
-        safeBuilder.setInput("input").addOutput("output");
+        FFmpegBuilder safeBuilder = new FFmpegBuilder();
+        FFmpegInputBuilder safeInput = safeBuilder.setInput("input").setSafe(true);
+        safeInput.done().addOutput("output");
 
-        assertEquals(true, safeBuilder.getSafe());
+        assertEquals(true, safeInput.getSafe());
         assertEquals(List.of("-y", "-v", "error", "-safe", "1", "-i", "input", "output"), safeBuilder.build());
 
-        FFmpegBuilder unsafeBuilder = new FFmpegBuilder().setSafe(false);
-        unsafeBuilder.setInput("input").addOutput("output");
+        FFmpegBuilder unsafeBuilder = new FFmpegBuilder();
+        FFmpegInputBuilder unsafeInput = unsafeBuilder.setInput("input").setSafe(false);
+        unsafeInput.done().addOutput("output");
 
-        assertEquals(false, unsafeBuilder.getSafe());
+        assertEquals(false, unsafeInput.getSafe());
         assertEquals(List.of("-y", "-v", "error", "-safe", "0", "-i", "input", "output"), unsafeBuilder.build());
     }
 
@@ -123,6 +125,7 @@ public class FFmpegBuilderTest {
         FFmpegBuilder builder = new FFmpegBuilder()
                 .setExitOnError(true)
                 .setInput("input")
+                .done()
                 .addOutput("output")
                 .done();
 
@@ -140,6 +143,7 @@ public class FFmpegBuilderTest {
 
         List<String> args = new FFmpegBuilder()
                 .setInput("input")
+                .done()
                 .addOutput("output")
                 .disableAudio()
                 .disableSubtitle()
@@ -167,6 +171,7 @@ public class FFmpegBuilderTest {
 
         List<String> args = new FFmpegBuilder()
                 .setInput("input")
+                .done()
                 .addOutput("output")
                 .setVideoResolution(320, 240)
                 .setVideoFilter("scale='trunc(ow/a/2)*2:320'")
@@ -193,6 +198,7 @@ public class FFmpegBuilderTest {
 
         List<String> args = new FFmpegBuilder()
                 .setInput("input")
+                .done()
                 .addOutput("output1")
                 .setVideoResolution(320, 240)
                 .done()
@@ -217,6 +223,7 @@ public class FFmpegBuilderTest {
                 IllegalArgumentException.class,
                 () -> new FFmpegBuilder()
                         .setInput("input")
+                        .done()
                         .addOutput("output")
                         .setVideoResolution(320, 240)
                         .setVideoResolution("ntsc")
@@ -229,6 +236,7 @@ public class FFmpegBuilderTest {
 
         List<String> args = new FFmpegBuilder()
                 .setInput("input")
+                .done()
                 .addOutput(URI.create("udp://10.1.0.102:1234"))
                 .setVideoResolution(320, 240)
                 .done()
@@ -243,6 +251,7 @@ public class FFmpegBuilderTest {
                 IllegalStateException.class,
                 () -> new FFmpegBuilder()
                         .setInput("input")
+                        .done()
                         .addOutput(URI.create("udp://10.1.0.102:1234"))
                         .setFilename("filename")
                         .done()
@@ -253,7 +262,12 @@ public class FFmpegBuilderTest {
     public void testAddEmptyFilename() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new FFmpegBuilder().setInput("input").addOutput("").done().build());
+                () -> new FFmpegBuilder()
+                        .setInput("input")
+                        .done()
+                        .addOutput("")
+                        .done()
+                        .build());
     }
 
     @Test
@@ -262,6 +276,7 @@ public class FFmpegBuilderTest {
                 IllegalArgumentException.class,
                 () -> new FFmpegBuilder()
                         .setInput("input")
+                        .done()
                         .addOutput("output")
                         .setFilename("")
                         .done()
@@ -273,6 +288,7 @@ public class FFmpegBuilderTest {
 
         List<String> args = new FFmpegBuilder()
                 .setInput("input")
+                .done()
                 .addOutput("output")
                 .addMetaTag("comment", "My Comment")
                 .addMetaTag("title", "\"Video\"")
@@ -302,6 +318,7 @@ public class FFmpegBuilderTest {
 
         List<String> args = new FFmpegBuilder()
                 .setInput("input")
+                .done()
                 .addOutput("output")
                 .addMetaTag("title", "Movie Title")
                 .addMetaTag(chapter(0), "author", "Bob")
@@ -353,16 +370,104 @@ public class FFmpegBuilderTest {
     @Test
     public void testExtraArgs() {
         List<String> args = new FFmpegBuilder()
-                .addExtraArgs("-a", "b")
                 .setInput("input")
-                .addOutput("output")
+                .addExtraArgs("-a", "b")
                 .addExtraArgs("-c", "d")
+                .done()
+                .addOutput("output")
+                .addExtraArgs("-e", "f")
                 .disableAudio()
                 .disableSubtitle()
                 .done()
                 .build();
 
-        assertEquals(args, List.of("-y", "-v", "error", "-a", "b", "-i", "input", "-an", "-sn", "-c", "d", "output"));
+        assertEquals(
+                args,
+                List.of("-y", "-v", "error", "-a", "b", "-c", "d", "-i", "input", "-an", "-sn", "-e", "f", "output"));
+    }
+
+    @Test
+    public void testInputExtraArgsApplyToIndividualInputs() {
+        FFmpegBuilder builder = new FFmpegBuilder();
+        FFmpegInputBuilder firstInput = builder.addInput("input1")
+                .setFormat("rawvideo")
+                .setInputPixelFormat("bgr24")
+                .setVideoSize(640, 360)
+                .addExtraArgs("-thread_queue_size", "512");
+        FFmpegInputBuilder secondInput =
+                firstInput.done().addInput("input2").setFormat("mpegts").setStartOffset(2, TimeUnit.SECONDS);
+
+        secondInput.done().addOutput("output");
+
+        assertEquals(List.of("-thread_queue_size", "512"), firstInput.getExtraArgs());
+        assertEquals(List.of(), secondInput.getExtraArgs());
+        assertEquals(
+                List.of(
+                        "-y",
+                        "-v",
+                        "error",
+                        "-f",
+                        "rawvideo",
+                        "-pix_fmt",
+                        "bgr24",
+                        "-video_size",
+                        "640x360",
+                        "-thread_queue_size",
+                        "512",
+                        "-i",
+                        "input1",
+                        "-ss",
+                        "00:00:02",
+                        "-f",
+                        "mpegts",
+                        "-i",
+                        "input2",
+                        "output"),
+                builder.build());
+    }
+
+    @Test
+    public void testInputExtraArgsRequireValues() {
+        FFmpegInputBuilder input = new FFmpegBuilder().addInput("input");
+
+        assertThrows(IllegalArgumentException.class, input::addExtraArgs);
+        assertThrows(IllegalArgumentException.class, () -> input.addExtraArgs(""));
+        assertThrows(NullPointerException.class, () -> input.addExtraArgs("-f", null));
+    }
+
+    @Test
+    public void testGlobalExtraArgsArePlacedBeforeInputs() {
+        FFmpegBuilder builder = new FFmpegBuilder().addExtraArgs("-benchmark").addExtraArgs("-filter_threads", "2");
+        builder.addInput("input")
+                .addExtraArgs("-thread_queue_size", "512")
+                .done()
+                .addOutput("output")
+                .done();
+
+        assertEquals(List.of("-benchmark", "-filter_threads", "2"), builder.getExtraArgs());
+        assertEquals(
+                List.of(
+                        "-y",
+                        "-v",
+                        "error",
+                        "-benchmark",
+                        "-filter_threads",
+                        "2",
+                        "-thread_queue_size",
+                        "512",
+                        "-i",
+                        "input",
+                        "output"),
+                builder.build());
+    }
+
+    @Test
+    public void testGlobalExtraArgsRequireValues() {
+        FFmpegBuilder builder = new FFmpegBuilder();
+
+        assertThrows(IllegalArgumentException.class, builder::addExtraArgs);
+        assertThrows(IllegalArgumentException.class, () -> builder.addExtraArgs(""));
+        assertThrows(NullPointerException.class, () -> builder.addExtraArgs("-flag", null));
     }
 
     @Test
@@ -375,6 +480,7 @@ public class FFmpegBuilderTest {
         FFmpegBuilder builder = new FFmpegBuilder()
                 .setVerbosity(Verbosity.TRACE)
                 .setInput("input.mp4")
+                .done()
                 .noOutput();
 
         assertEquals(true, builder.getNoOutput());
@@ -404,7 +510,9 @@ public class FFmpegBuilderTest {
     public void testMultipleInput() {
         List<String> args = new FFmpegBuilder()
                 .addInput("input1")
+                .done()
                 .addInput("input2")
+                .done()
                 .addOutput("output")
                 .done()
                 .build();
@@ -416,6 +524,7 @@ public class FFmpegBuilderTest {
     public void testAlternativeBuilderPattern() {
         List<String> args = new FFmpegBuilder()
                 .addInput("input")
+                .done()
                 .addOutput(new FFmpegOutputBuilder().setFilename("output.mp4").setVideoCodec("libx264"))
                 .addOutput(new FFmpegOutputBuilder().setFilename("output.flv").setVideoCodec("flv"))
                 .build();
@@ -440,6 +549,7 @@ public class FFmpegBuilderTest {
     public void testPresets() {
         List<String> args = new FFmpegBuilder()
                 .addInput("input")
+                .done()
                 .addOutput("output")
                 .setPreset("a")
                 .setPresetFilename("b")
@@ -463,6 +573,7 @@ public class FFmpegBuilderTest {
                 .setPassDirectory("logs/")
                 .setPassPrefix("encode")
                 .setInput("input.mp4")
+                .done()
                 .addOutput("output.mp4")
                 .setFormat("mp4")
                 .setVideoCodec("libx264")
@@ -498,6 +609,7 @@ public class FFmpegBuilderTest {
         List<String> args = new FFmpegBuilder()
                 .setPass(2)
                 .setInput("input.mp4")
+                .done()
                 .addOutput("output.mp4")
                 .setFormat("mp4")
                 .setVideoBitRate(800000)
@@ -534,6 +646,7 @@ public class FFmpegBuilderTest {
                 () -> new FFmpegBuilder()
                         .setPass(1)
                         .setInput("input.mp4")
+                        .done()
                         .addOutput("output.mp4")
                         .setVideoBitRate(800000)
                         .done()
@@ -547,6 +660,7 @@ public class FFmpegBuilderTest {
                 () -> new FFmpegBuilder()
                         .setPass(1)
                         .setInput("input.mp4")
+                        .done()
                         .addOutput("output.mp4")
                         .setFormat("mp4")
                         .done()
@@ -558,13 +672,15 @@ public class FFmpegBuilderTest {
         List<String> args = new FFmpegBuilder()
                 .overrideOutputFiles(false)
                 .setVerbosity(Verbosity.INFO)
+                .addInput("input1")
                 .setUserAgent("agent")
                 .setStartOffset(2, TimeUnit.SECONDS)
                 .setFormat("lavfi")
                 .readAtNativeFrameRate()
                 .addExtraArgs("-thread_queue_size", "512")
-                .addInput("input1")
+                .done()
                 .addInput("input2")
+                .done()
                 .setPass(2)
                 .setPassDirectory("logs/")
                 .setPassPrefix("pass")

@@ -48,8 +48,9 @@ public class RealFFmpegTest {
         Path roundTrippedRaw = temporaryDirectory.resolve("round-tripped.raw");
 
         FFmpegBuilder generateRaw = new FFmpegBuilder()
-                .setFormat("lavfi")
                 .setInput("testsrc=size=640x360")
+                .setFormat("lavfi")
+                .done()
                 .addOutput(originalRaw.toString())
                 .setFormat("rawvideo")
                 .setVideoCodec("rawvideo")
@@ -61,11 +62,12 @@ public class RealFFmpegTest {
         }
 
         FFmpegBuilder encodeLosslessly = new FFmpegBuilder()
+                .setInput(originalRaw.toString())
                 .setFormat("rawvideo")
                 .setInputFrameRate(Fraction.getFraction(1, 1))
                 .setInputPixelFormat("bgr24")
                 .setVideoSize(640, 360)
-                .setInput(originalRaw.toString())
+                .done()
                 .addOutput(losslessVideo.toString())
                 .setVideoCodec("ffv1")
                 .setVideoFrameRate(1, 1)
@@ -76,6 +78,7 @@ public class RealFFmpegTest {
 
         FFmpegBuilder decodeRaw = new FFmpegBuilder()
                 .setInput(losslessVideo.toString())
+                .done()
                 .addOutput(roundTrippedRaw.toString())
                 .setFormat("rawvideo")
                 .setVideoCodec("rawvideo")
@@ -89,10 +92,184 @@ public class RealFFmpegTest {
     }
 
     @Test
+    public void testConcatRawVideosWithDifferentResolutions() throws IOException {
+        Path smallRaw = temporaryDirectory.resolve("small.raw");
+        Path largeRaw = temporaryDirectory.resolve("large.raw");
+        Path concatenatedVideo = temporaryDirectory.resolve("concatenated.mkv");
+
+        FFmpegBuilder generateSmallRaw = new FFmpegBuilder()
+                .setInput("testsrc=size=500x500:rate=1")
+                .setFormat("lavfi")
+                .done()
+                .addOutput(smallRaw.toString())
+                .setFormat("rawvideo")
+                .setVideoCodec("rawvideo")
+                .setVideoPixelFormat("bgr24")
+                .setFrames(10)
+                .done();
+        try (FFMpegJob<Void> job = ffmpeg.run(generateSmallRaw)) {
+            job.get();
+        }
+
+        FFmpegBuilder generateLargeRaw = new FFmpegBuilder()
+                .setInput("testsrc=size=1000x1000:rate=1")
+                .setFormat("lavfi")
+                .done()
+                .addOutput(largeRaw.toString())
+                .setFormat("rawvideo")
+                .setVideoCodec("rawvideo")
+                .setVideoPixelFormat("bgr24")
+                .setFrames(10)
+                .done();
+        try (FFMpegJob<Void> job = ffmpeg.run(generateLargeRaw)) {
+            job.get();
+        }
+
+        FFmpegBuilder concatenate = new FFmpegBuilder()
+                .addInput(smallRaw.toString())
+                .setFormat("rawvideo")
+                .setInputFrameRate(1)
+                .setInputPixelFormat("bgr24")
+                .setVideoSize(500, 500)
+                .done()
+                .addInput(largeRaw.toString())
+                .setFormat("rawvideo")
+                .setInputFrameRate(1)
+                .setInputPixelFormat("bgr24")
+                .setVideoSize(1000, 1000)
+                .done()
+                .setComplexFilter("[0:v]scale=1000:1000[small];[small][1:v]concat=n=2:v=1:a=0[video]")
+                .addOutput(concatenatedVideo.toString())
+                .setVideoCodec("ffv1")
+                .addExtraArgs("-map", "[video]")
+                .done();
+        try (FFMpegJob<Void> job = ffmpeg.run(concatenate)) {
+            job.get();
+        }
+
+        FFmpegProbeResult result = ffprobe.probe(
+                        concatenatedVideo.toFile(), FFMpegStreamConsumer.noop(), "-count_packets")
+                .get();
+        var video = result.getStreams().stream()
+                .filter(stream -> stream.getCodecType() == FFmpegCodecType.VIDEO)
+                .findFirst()
+                .orElseThrow();
+
+        Assertions.assertEquals("ffv1", video.getCodecName());
+        Assertions.assertEquals(1000, video.getWidth());
+        Assertions.assertEquals(1000, video.getHeight());
+        Assertions.assertEquals(20L, video.getNbReadPackets());
+    }
+
+    @Test
+    public void testTranscodeWithOutputDimensionsFrameRateAndMaximumFileSize() throws IOException {
+        Path output = temporaryDirectory.resolve("resized-and-limited.avi");
+        long maximumFileSize = 100_000;
+
+        FFmpegBuilder builder = new FFmpegBuilder()
+                .setInput(Samples.BIG_BUCK_BUNNY_720P_1MB)
+                .done()
+                .addOutput(output.toString())
+                .disableAudio()
+                .setVideoCodec("mpeg4")
+                .setMaxFileSize(maximumFileSize)
+                .setVideoWidth(320)
+                .setVideoHeight(180)
+                .setVideoFrameRate(12.5)
+                .done();
+        try (FFMpegJob<Void> job = ffmpeg.run(builder)) {
+            job.get();
+        }
+
+        FFmpegProbeResult result = ffprobe.probe(output.toFile()).get();
+        var video = result.getStreams().stream()
+                .filter(stream -> stream.getCodecType() == FFmpegCodecType.VIDEO)
+                .findFirst()
+                .orElseThrow();
+
+        Assertions.assertEquals(320, video.getWidth());
+        Assertions.assertEquals(180, video.getHeight());
+        Assertions.assertEquals(Fraction.getFraction(25, 2), video.getAvgFrameRate());
+        Assertions.assertTrue(result.getFormat().getSize() <= maximumFileSize + 4096, "Unexpected container overhead");
+    }
+
+    @Test
+    public void testTranscodeWithInputDuration() throws IOException {
+        Path output = temporaryDirectory.resolve("input-duration.avi");
+
+        FFmpegBuilder builder = new FFmpegBuilder()
+                .setInput(Samples.BIG_BUCK_BUNNY_720P_1MB)
+                .setInputDuration(1, TimeUnit.SECONDS)
+                .done()
+                .addOutput(output.toString())
+                .disableAudio()
+                .setVideoCodec("mpeg4")
+                .done();
+        try (FFMpegJob<Void> job = ffmpeg.run(builder)) {
+            job.get();
+        }
+
+        FFmpegProbeResult result = ffprobe.probe(output.toFile()).get();
+
+        Assertions.assertEquals(1.0, result.getFormat().getDuration(), 0.1);
+    }
+
+    @Test
+    public void testTwoPassTranscode() throws IOException {
+        Path output = temporaryDirectory.resolve("two-pass.avi");
+        String passLogPrefix = temporaryDirectory.resolve("two-pass-log").toString();
+
+        FFmpegBuilder firstPass = new FFmpegBuilder()
+                .setPass(1)
+                .setPassPrefix(passLogPrefix)
+                .setInput(Samples.BIG_BUCK_BUNNY_720P_1MB)
+                .setInputDuration(1, TimeUnit.SECONDS)
+                .done()
+                .addOutput(output.toString())
+                .setFormat("avi")
+                .disableAudio()
+                .setVideoCodec("mpeg4")
+                .setVideoResolution(320, 180)
+                .setVideoBitRate(200_000)
+                .done();
+        try (FFMpegJob<Void> job = ffmpeg.run(firstPass)) {
+            job.get();
+        }
+
+        FFmpegBuilder secondPass = new FFmpegBuilder()
+                .setPass(2)
+                .setPassPrefix(passLogPrefix)
+                .setInput(Samples.BIG_BUCK_BUNNY_720P_1MB)
+                .setInputDuration(1, TimeUnit.SECONDS)
+                .done()
+                .addOutput(output.toString())
+                .setFormat("avi")
+                .disableAudio()
+                .setVideoCodec("mpeg4")
+                .setVideoResolution(320, 180)
+                .setVideoBitRate(200_000)
+                .done();
+        try (FFMpegJob<Void> job = ffmpeg.run(secondPass)) {
+            job.get();
+        }
+
+        FFmpegProbeResult result = ffprobe.probe(output.toFile()).get();
+        var video = result.getStreams().stream()
+                .filter(stream -> stream.getCodecType() == FFmpegCodecType.VIDEO)
+                .findFirst()
+                .orElseThrow();
+
+        Assertions.assertEquals("mpeg4", video.getCodecName());
+        Assertions.assertEquals(1.0, result.getFormat().getDuration(), 0.1);
+        Assertions.assertTrue(result.getFormat().getSize() > 0);
+    }
+
+    @Test
     public void testMovBeforeMdatCleanWay() throws IOException, InterruptedException {
         FFmpegBuilder builder = new FFmpegBuilder()
                 .setVerbosity(FFmpegBuilder.Verbosity.TRACE)
                 .setInput(Samples.BIG_BUCK_BUNNY_720P_1MB)
+                .done()
                 .addStdoutOutput()
                 .setDuration(0, TimeUnit.MILLISECONDS)
                 .setFormat("null")
@@ -122,6 +299,7 @@ public class RealFFmpegTest {
         FFmpegBuilder builder = new FFmpegBuilder()
                 .setVerbosity(FFmpegBuilder.Verbosity.TRACE)
                 .setInput(Samples.BIG_BUCK_BUNNY_720P_1MB)
+                .done()
                 .noOutput();
 
         try (FFMpegJob<Boolean> job = ffmpeg.runCaptureStderr(builder, input -> {
@@ -147,6 +325,7 @@ public class RealFFmpegTest {
         FFmpegBuilder builder = new FFmpegBuilder()
                 .setVerbosity(FFmpegBuilder.Verbosity.TRACE)
                 .setInput(Samples.BIG_BUCK_BUNNY_720P_1MB)
+                .done()
                 .noOutput();
 
         try (FFMpegJob<Boolean> job = ffmpeg.runCaptureStderr(builder, input -> {
@@ -173,6 +352,7 @@ public class RealFFmpegTest {
     public void testTranscodeFromInputStreamToOutputStream() throws IOException {
         FFmpegBuilder builder = new FFmpegBuilder()
                 .setInput("-")
+                .done()
                 .addStdoutOutput()
                 .setFormat("avi")
                 .done();
@@ -254,6 +434,7 @@ public class RealFFmpegTest {
         FFmpegBuilder builder = new FFmpegBuilder()
                 .setVerbosity(FFmpegBuilder.Verbosity.INFO)
                 .setInput(Samples.BIG_BUCK_BUNNY_720P_1MB)
+                .done()
                 .addStdoutOutput()
                 .setFormat("avi")
                 .done();

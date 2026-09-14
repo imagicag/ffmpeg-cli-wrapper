@@ -46,11 +46,12 @@ public class ExamplesTest {
         ffmpeg = new FFmpeg(new File("ffmpeg\\win64\\bin\\ffmpeg.exe"), runFunc);
 
         FFmpegBuilder builder = new FFmpegBuilder()
-                .addExtraArgs("-rtbufsize", "1500M")
-                .addExtraArgs("-re")
-                .setFormat("dshow")
                 .setInput(
                         "video=\"Microsoft Camera Rear\":audio=\"Microphone Array (Realtek High Definition Audio(SST))\"")
+                .setFormat("dshow")
+                .addExtraArgs("-rtbufsize", "1500M")
+                .addExtraArgs("-re")
+                .done()
                 .addOutput("rtmp://a.rtmp.youtube.com/live2/1234-5678")
                 .setFormat("flv")
                 .addExtraArgs("-bufsize", "4000k")
@@ -88,6 +89,7 @@ public class ExamplesTest {
     public void testExample2() throws IOException {
         FFmpegBuilder builder = new FFmpegBuilder()
                 .setInput("input.mkv")
+                .done()
                 .addOutput("output.ogv")
                 .setVideoCodec("libtheora")
                 .addExtraArgs("-qscale:v", "7")
@@ -112,6 +114,7 @@ public class ExamplesTest {
     public void testExample3() throws IOException {
         FFmpegBuilder builder = new FFmpegBuilder()
                 .setInput("sample.avi")
+                .done()
                 .addOutput("thumbnail.png")
                 .setFrames(1)
                 .setVideoFilter("select='gte(n\\,10)',scale=200:-1")
@@ -132,6 +135,7 @@ public class ExamplesTest {
     public void testExample4() throws IOException {
         FFmpegBuilder builder = new FFmpegBuilder()
                 .setInput("rtsp://192.168.1.1:1234/")
+                .done()
                 .addOutput("img%03d.jpg")
                 .setFormat("image2")
                 .done();
@@ -148,6 +152,7 @@ public class ExamplesTest {
     public void testExample6() throws IOException {
         FFmpegBuilder builder = new FFmpegBuilder()
                 .addInput("image%03d.png")
+                .done()
                 .addOutput("output.mp4")
                 .setVideoFrameRate(FFmpeg.FPS_24)
                 .done();
@@ -163,7 +168,9 @@ public class ExamplesTest {
     public void testExample7() throws IOException {
         FFmpegBuilder builder = new FFmpegBuilder()
                 .addInput("original.mp4")
+                .done()
                 .addInput("spot.mp4")
+                .done()
                 .setComplexFilter(
                         "[1:v]scale=368:207,setpts=PTS-STARTPTS+5/TB [ov]; "
                                 + "[0:v][ov] overlay=x=(main_w-overlay_w)/2:y=(main_h-overlay_h)/2:enable='between(t,5,15)' [v]")
@@ -200,6 +207,7 @@ public class ExamplesTest {
     public void testExample8() throws IOException {
         FFmpegBuilder builder = new FFmpegBuilder()
                 .addInput("original.mp4")
+                .done()
                 .setVideoFilter("select='gte(n\\,10)',scale=200:-1")
                 .addOutput("hevc-video.mp4")
                 .addExtraArgs("-tag:v", "hvc1")
@@ -224,6 +232,7 @@ public class ExamplesTest {
         FFmpegBuilder builder = new FFmpegBuilder()
                 .setVerbosity(FFmpegBuilder.Verbosity.DEBUG)
                 .setInput("input.mp3")
+                .done()
                 .overrideOutputFiles(true) // Override the output if it exists
                 .addOutput("left.mp3")
                 .addExtraArgs("-map_channel", "0.0.0")
@@ -259,10 +268,10 @@ public class ExamplesTest {
         ArrayList<String> streams = new ArrayList<>();
         FFmpegBuilder builder = new FFmpegBuilder();
 
-        builder.addInput("audio.webm").setFormat("webm_dash_manifest");
+        builder.addInput("audio.webm").setFormat("webm_dash_manifest").done();
 
         for (int i = 1; i <= 3; i++) {
-            builder.addInput(String.format("video_%d.webm", i)).setFormat("webm_dash_manifest");
+            builder.addInput(String.format("video_%d.webm", i)).done();
             streams.add(String.format("%d", i));
         }
 
@@ -288,8 +297,11 @@ public class ExamplesTest {
     @Test
     @Disabled("because this test will invoke /path/to/ffmpeg.")
     public void testExample11() throws IOException, InterruptedException {
-        FFmpegBuilder builder =
-                new FFmpegBuilder().setInput("input").addOutput("output.mp4").done();
+        FFmpegBuilder builder = new FFmpegBuilder()
+                .setInput("input")
+                .done()
+                .addOutput("output.mp4")
+                .done();
 
         List<String> args = new ArrayList<>();
         args.add("/path/to/ffmpeg");
@@ -311,6 +323,7 @@ public class ExamplesTest {
         FFmpegBuilder builder = new FFmpegBuilder()
                 .setInput("input.mp4")
                 .setStartOffset(1, TimeUnit.MINUTES)
+                .done()
                 .addOutput("output.mp4")
                 .setDuration(1, TimeUnit.MINUTES)
                 .setVideoCodec("copy")

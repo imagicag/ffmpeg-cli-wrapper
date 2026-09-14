@@ -70,7 +70,9 @@ public class EncodingExample {
     FFmpegProbeResult input = ffprobe.probe(new File("input.mp4")).get();
 
     FFmpegBuilder builder = new FFmpegBuilder()
-        .setInput(input)           // Target-size encoding needs the probed duration
+        .setInput(input.getFormat().getFilename())
+          .setInputProbe(input)    // Target-size encoding needs the probed duration
+          .done()
         .overrideOutputFiles(true) // Override the output if it exists
         .addOutput("output.mp4")  // Filename for the destination
           .setFormat("mp4")       // Format is inferred from filename, or can be set
@@ -120,6 +122,7 @@ public class QuickstartExample {
     FFmpegBuilder builder = new FFmpegBuilder()
         .setVerbosity(FFmpegBuilder.Verbosity.TRACE)
         .setInput("input.mp4")
+          .done()
         .addStdoutOutput()
           .setDuration(0, TimeUnit.MILLISECONDS)
           .setFormat("null")

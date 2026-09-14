@@ -43,7 +43,9 @@ public class ReadmeTest {
 
         try {
             FFmpegBuilder builder = new FFmpegBuilder()
-                    .setInput(input)
+                    .setInput(input.getFormat().getFilename())
+                    .setInputProbe(input)
+                    .done()
                     .overrideOutputFiles(true)
                     .addOutput(outputPath.toString())
                     .setFormat("mp4")

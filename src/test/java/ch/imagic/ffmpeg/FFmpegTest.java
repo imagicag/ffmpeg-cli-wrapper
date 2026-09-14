@@ -254,7 +254,11 @@ public class FFmpegTest {
     }
 
     private static FFmpegBuilder builder() {
-        return new FFmpegBuilder().setInput("input.mp4").addOutput("output.mp4").done();
+        return new FFmpegBuilder()
+                .setInput("input.mp4")
+                .done()
+                .addOutput("output.mp4")
+                .done();
     }
 
     private static MockProcess process(String stdout, String stderr, int exitCode) {

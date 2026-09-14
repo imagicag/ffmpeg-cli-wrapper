@@ -13,7 +13,9 @@ public class FFmpegOutputBuilderTest {
     @Test
     public void testTargetSizeCalculatesVideoBitRate() {
         List<String> args = new FFmpegBuilder()
-                .setInput(probe("input.mp4", 10))
+                .setInput("input.mp4")
+                .setInputProbe(probe("input.mp4", 10))
+                .done()
                 .addOutput("output.mp4")
                 .setTargetSize(1_000_000)
                 .setPassPaddingBitrate(1024)
@@ -29,7 +31,9 @@ public class FFmpegOutputBuilderTest {
     @Test
     public void testTargetSizeCalculatesAudioBitRateForAudioOnlyOutput() {
         List<String> args = new FFmpegBuilder()
-                .setInput(probe("input.wav", 10))
+                .setInput("input.wav")
+                .setInputProbe(probe("input.wav", 10))
+                .done()
                 .addOutput("output.m4a")
                 .setTargetSize(1_000_000)
                 .setPassPaddingBitrate(1024)
@@ -58,6 +62,7 @@ public class FFmpegOutputBuilderTest {
                 IllegalStateException.class,
                 () -> new FFmpegBuilder()
                         .setInput("input.mp4")
+                        .done()
                         .addOutput("output.mp4")
                         .setTargetSize(1_000_000)
                         .done()
@@ -69,8 +74,12 @@ public class FFmpegOutputBuilderTest {
         assertThrows(
                 IllegalStateException.class,
                 () -> new FFmpegBuilder()
-                        .addInput(probe("input1.mp4", 10))
-                        .addInput(probe("input2.mp4", 10))
+                        .addInput("input1.mp4")
+                        .setInputProbe(probe("input1.mp4", 10))
+                        .done()
+                        .addInput("input2.mp4")
+                        .setInputProbe(probe("input2.mp4", 10))
+                        .done()
                         .addOutput("output.mp4")
                         .setTargetSize(1_000_000)
                         .done()
@@ -82,7 +91,9 @@ public class FFmpegOutputBuilderTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new FFmpegBuilder()
-                        .setInput(probe("input.mp4", 10))
+                        .setInput("input.mp4")
+                        .setInputProbe(probe("input.mp4", 10))
+                        .done()
                         .addOutput("output.mp4")
                         .setTargetSize(1_000_000)
                         .setConstantRateFactor(23)
@@ -96,6 +107,7 @@ public class FFmpegOutputBuilderTest {
                 IllegalStateException.class,
                 () -> new FFmpegBuilder()
                         .setInput("input.mp4")
+                        .done()
                         .addOutput(new FFmpegOutputBuilder().setVideoCodec("libx264"))
                         .build());
     }
@@ -106,7 +118,9 @@ public class FFmpegOutputBuilderTest {
                 IllegalStateException.class,
                 () -> new FFmpegBuilder()
                         .addInput("input1.mp4")
+                        .done()
                         .addInput("input2.mp4")
+                        .done()
                         .addOutput("output.mp4")
                         .setVideoFilter("scale=320:240")
                         .done()
@@ -119,6 +133,7 @@ public class FFmpegOutputBuilderTest {
                 IllegalStateException.class,
                 () -> new FFmpegBuilder()
                         .setInput("input.mp4")
+                        .done()
                         .addOutput("output.mp4")
                         .setVideoBitRate(800000)
                         .setVideoQuality(2)
@@ -130,6 +145,7 @@ public class FFmpegOutputBuilderTest {
     public void testVideoBFrames() {
         FFmpegOutputBuilder output = new FFmpegBuilder()
                 .setInput("input.mp4")
+                .done()
                 .addOutput("output.mp4")
                 .setVideoBFrames(0);
 
@@ -150,6 +166,7 @@ public class FFmpegOutputBuilderTest {
                 IllegalStateException.class,
                 () -> new FFmpegBuilder()
                         .setInput("input.mp4")
+                        .done()
                         .addOutput("output.mp4")
                         .setAudioBitRate(128000)
                         .setAudioQuality(2)

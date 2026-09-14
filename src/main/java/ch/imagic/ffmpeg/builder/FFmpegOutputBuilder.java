@@ -775,10 +775,10 @@ public class FFmpegOutputBuilder {
 
             requireArgument(constantRateFactor == null, "Target size can not be used with constantRateFactor");
 
-            String firstInput = parent.inputs.iterator().next();
-            FFmpegProbeResult input = parent.inputProbes.get(firstInput);
+            FFmpegInputBuilder firstInput = parent.inputs.iterator().next();
+            FFmpegProbeResult input = firstInput.getInputProbe();
 
-            requireState(input != null, "Target size must be used with setInput(FFmpegProbeResult)");
+            requireState(input != null, "Target size requires an input probe");
 
             // TODO factor in start time and/or number of frames
             double durationInSeconds = input.getFormat().getDuration();

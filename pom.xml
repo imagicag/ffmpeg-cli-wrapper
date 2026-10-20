@@ -2,7 +2,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>ch.imagic</groupId>
     <artifactId>ffmpeg-java</artifactId>
-    <version>0.1.0</version>
+    <version>0.1.1</version>
 
     <name>FFmpeg Wrapper</name>
     <description>Simple Java wrapper around FFmpeg command-line interface</description>

@@ -135,6 +135,12 @@ public class FFmpegStream {
     @SerializedName("nb_read_packets")
     private Long nbReadPackets;
 
+    // This field will only be filled if FFprobe is invoked with the "-count_frames" additional parameter.
+    // We do not specify this parameter by default because it requires FFprobe to read and decode the entire stream.
+    // If you need this value then pass the parameter to FFprobe.
+    @SerializedName("nb_read_frames")
+    private Long nbReadFrames;
+
     @SerializedName("side_data_list")
     private FFmpegSideData[] sideDataList;
 
@@ -480,5 +486,13 @@ public class FFmpegStream {
 
     public void setNbReadPackets(Long nbReadPackets) {
         this.nbReadPackets = nbReadPackets;
+    }
+
+    public Long getNbReadFrames() {
+        return nbReadFrames;
+    }
+
+    public void setNbReadFrames(Long nbReadFrames) {
+        this.nbReadFrames = nbReadFrames;
     }
 }

@@ -42,6 +42,46 @@ public class RealFFmpegTest {
     public RealFFmpegTest() throws IOException {}
 
     @Test
+    public void testProbeCountsDecodedFrames() throws IOException {
+        Path output = temporaryDirectory.resolve("count-frames.mkv");
+
+        FFmpegBuilder generateVideo = new FFmpegBuilder()
+                .setInput("testsrc=size=320x240:rate=25")
+                .setFormat("lavfi")
+                .done()
+                .addOutput(output.toString())
+                .setFormat("matroska")
+                .setVideoCodec("ffv1")
+                .setFrames(44)
+                .done();
+        try (FFMpegJob<Void> job = ffmpeg.run(generateVideo)) {
+            job.get();
+        }
+
+        try (FFMpegJob<FFmpegProbeResult> job = ffprobe.probe(output.toFile())) {
+            var video = job.get().getStreams().stream()
+                    .filter(stream -> stream.getCodecType() == FFmpegCodecType.VIDEO)
+                    .findFirst()
+                    .orElseThrow();
+
+            Assertions.assertNull(video.getNbReadFrames());
+        }
+
+        try (FFMpegJob<FFmpegProbeResult> job = ffprobe.probe(
+                output.toFile(), FFMpegStreamConsumer.noop(), "-select_streams", "v:0", "-count_frames")) {
+            var video = job.get().getStreams().stream()
+                    .filter(stream -> stream.getCodecType() == FFmpegCodecType.VIDEO)
+                    .findFirst()
+                    .orElseThrow();
+
+            Assertions.assertEquals("ffv1", video.getCodecName());
+            Assertions.assertEquals(320, video.getWidth());
+            Assertions.assertEquals(240, video.getHeight());
+            Assertions.assertEquals(44L, video.getNbReadFrames());
+        }
+    }
+
+    @Test
     public void testRawVideoRoundTripThroughFfv1() throws IOException {
         Path originalRaw = temporaryDirectory.resolve("original.raw");
         Path losslessVideo = temporaryDirectory.resolve("lossless.mkv");

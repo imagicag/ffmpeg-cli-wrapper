@@ -7,16 +7,15 @@ import ch.imagic.ffmpeg.process.FFMpegProcessFactory;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 /**
@@ -103,6 +102,94 @@ public class FFprobe extends FFcommon {
     }
 
     /**
+     * Runs FFProbe with maximum control over input and output parameters.
+     * Some FFProbe commands do not use an input file. This function is for those commands.
+     * For example "ffprobe -v quiet -show_pixel_formats -of json" would list supported pixel formats and does require an input file.
+     */
+    public <A, B, R> FFMpegJob<R> run(
+            FFMpegStreamConsumer<A> stderr,
+            FFMpegStreamConsumer<B> stdout,
+            BiFunction<A, B, R> merger,
+            InputStream stdin,
+            String... arguments)
+            throws IOException {
+        InputStream toClose = stdin;
+        FFMpegProcess toCloseProcess = null;
+        try {
+            List<String> args = new ArrayList<>(List.of(getAbsolutePath()));
+            if (strict != null) {
+                args.addAll(List.of("-strict", strict.toString()));
+            }
+            args.addAll(Arrays.asList(arguments));
+
+            CompletableFuture<R> future = new CompletableFuture<>();
+            FFMpegProcess p = runFunc.createProcess(executor, logger, List.copyOf(args));
+            toCloseProcess = p;
+            if (p == null) {
+                throw new IllegalStateException("FFMpegProcessFactory returned null");
+            }
+            Thread thr = Thread.currentThread();
+            executor.execute(() -> {
+                try (p;
+                        stdin) {
+                    if (thr == Thread.currentThread()) {
+                        throw new IllegalStateException("Bad executor");
+                    }
+
+                    // We don't need to consume the entire input if ffprobe is done earlier.
+                    var stdinReader = pipe1(stdin, FFMpegStreamConsumer.toOutputStream(p.stdin()), false);
+
+                    var errorReader = pipe1(p.stderr(), stderr, true);
+                    var outReader = pipe1(p.stdout(), stdout, true);
+
+                    waitAndThrowOnError(errorReader);
+                    waitAndThrowOnError(outReader);
+
+                    throwOnError(p);
+
+                    checkNowAndThrowOnError(stdinReader);
+                    if (!stdinReader.isDone()) {
+                        stdin.close();
+                    }
+                    waitAndIgnoreError(stdinReader);
+
+                    future.complete(merger.apply(errorReader.get(), outReader.get()));
+                } catch (Throwable t) {
+                    future.completeExceptionally(t);
+                }
+            });
+            toClose = null;
+            toCloseProcess = null;
+            return new BasicFFMpegJob<>(future, p, stdin);
+        } finally {
+            closeSilently(toClose);
+            closeSilently(toCloseProcess);
+        }
+    }
+
+    public FFMpegJob<String> runJson(FFMpegStreamConsumer<Void> stderr, InputStream stdin, String... arguments)
+            throws IOException {
+        return runGson(stderr, JsonElement::toString, stdin, arguments);
+    }
+
+    public <T> FFMpegJob<T> run(
+            FFMpegStreamConsumer<Void> stderr, Class<T> resultClass, InputStream stdin, String... arguments)
+            throws IOException {
+        return runGson(stderr, elem -> gson.fromJson(elem, resultClass), stdin, arguments);
+    }
+
+    private <T> FFMpegJob<T> runGson(
+            FFMpegStreamConsumer<Void> stderr, Function<JsonElement, T> mapper, InputStream stdin, String... arguments)
+            throws IOException {
+        return run(
+                stderr,
+                FFMpegStreamConsumer.withReader(reader -> mapper.apply(JsonParser.parseReader(reader))),
+                (a, b) -> b,
+                stdin,
+                arguments);
+    }
+
+    /**
      * Probes a media path asynchronously, parses FFprobe's JSON output, and maps the parsed JSON to a
      * result.
      *
@@ -124,71 +211,11 @@ public class FFprobe extends FFcommon {
             InputStream stdin,
             String... additionalArguments)
             throws IOException {
-        InputStream toClose = stdin;
-        FFMpegProcess toCloseProcess = null;
-        try {
-            Objects.requireNonNull(mapper);
-            List<String> args = new ArrayList<>();
-
-            // TODO Add:
-            // .add("--show_packets")
-            // .add("--show_frames")
-
-            args.addAll(List.of(getAbsolutePath(), "-v", "quiet"));
-            if (strict != null) {
-                args.addAll(List.of("-strict", strict.toString()));
-            }
-            args.addAll(Arrays.asList(additionalArguments));
-            args.addAll(List.of(
-                    "-print_format",
-                    "json",
-                    "-show_error",
-                    "-show_format",
-                    "-show_streams",
-                    "-show_chapters",
-                    mediaPath));
-
-            CompletableFuture<T> future = new CompletableFuture<>();
-            FFMpegProcess p = runFunc.createProcess(executor, logger, List.copyOf(args));
-            toCloseProcess = p;
-            if (p == null) {
-                throw new IllegalStateException("FFMpegProcessFactory returned null");
-            }
-            Thread thr = Thread.currentThread();
-            executor.execute(() -> {
-                try (p;
-                        stdin;
-                        BufferedReader r = p.stdoutReader()) {
-                    if (thr == Thread.currentThread()) {
-                        throw new IllegalStateException("Bad executor");
-                    }
-
-                    // We don't need to consume the entire input if ffprobe is done earlier.
-                    var stdinReader = pipe1(stdin, FFMpegStreamConsumer.toOutputStream(p.stdin()), false);
-
-                    var errorReader = pipe1(p.stderr(), stdErr, true);
-                    JsonElement element = JsonParser.parseReader(r);
-
-                    throwOnError(p);
-                    waitAndThrowOnError(errorReader);
-                    checkNowAndThrowOnError(stdinReader);
-                    if (!stdinReader.isDone()) {
-                        stdin.close();
-                    }
-                    waitAndIgnoreError(stdinReader);
-
-                    future.complete(mapper.apply(element));
-                } catch (Throwable t) {
-                    future.completeExceptionally(t);
-                }
-            });
-            toClose = null;
-            toCloseProcess = null;
-            return new BasicFFMpegJob<>(future, p, stdin);
-        } finally {
-            closeSilently(toClose);
-            closeSilently(toCloseProcess);
-        }
+        List<String> args = new ArrayList<>(List.of("-v", "quiet"));
+        args.addAll(Arrays.asList(additionalArguments));
+        args.addAll(List.of(
+                "-print_format", "json", "-show_error", "-show_format", "-show_streams", "-show_chapters", mediaPath));
+        return runGson(stdErr, mapper, stdin, args.toArray(String[]::new));
     }
 
     /**

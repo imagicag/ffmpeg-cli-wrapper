@@ -245,10 +245,10 @@ public class FFprobeTest {
                         Mockito.any(),
                         Mockito.eq(List.of(
                                 ffprobe.getPath().getAbsolutePath(),
-                                "-v",
-                                "quiet",
                                 "-strict",
                                 "experimental",
+                                "-v",
+                                "quiet",
                                 "-print_format",
                                 "json",
                                 "-show_error",

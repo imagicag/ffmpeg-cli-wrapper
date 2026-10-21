@@ -130,13 +130,13 @@ public class FFmpegStream {
     private Map<String, String> tags;
 
     // This field will only be filled if FFProbe is invoked with "-count_packets" additional parameter!
-    // We dont specify this paramter by default because it requires ffprobe to read more data
-    // If you need this value then pass the parameter to ffprobe.
+    // We don't specify this parameter by default because it requires FFprobe to read more data.
+    // If you need this value then pass the parameter to FFprobe.
     @SerializedName("nb_read_packets")
     private Long nbReadPackets;
 
-    // This field will only be filled if FFprobe is invoked with the "-count_frames" additional parameter.
-    // We do not specify this parameter by default because it requires FFprobe to read and decode the entire stream.
+    // This field will only be filled if FFprobe is invoked with the "-count_frames" additional parameter!
+    // We don't specify this parameter by default because it requires FFprobe to read more data.
     // If you need this value then pass the parameter to FFprobe.
     @SerializedName("nb_read_frames")
     private Long nbReadFrames;

@@ -52,6 +52,7 @@ public class FFmpegOutputBuilder {
     protected Integer videoFrames;
     protected String videoPixelFormat;
     protected String videoSync;
+    protected String fpsMode;
 
     protected boolean subtitleEnabled = true;
     protected String subtitlePreset;
@@ -230,8 +231,17 @@ public class FFmpegOutputBuilder {
         return videoPixelFormat;
     }
 
+    /**
+     * @deprecated the -vsync option was removed from ffmpeg, use {@link #getFpsMode()} instead.
+     * Ancient versions of ffmpeg may still accept it.
+     */
+    @Deprecated
     public String getVideoSync() {
         return videoSync;
+    }
+
+    public String getFpsMode() {
+        return fpsMode;
     }
 
     public boolean getSubtitleEnabled() {
@@ -466,9 +476,30 @@ public class FFmpegOutputBuilder {
         return this;
     }
 
+    /**
+     * Emits the -vsync option.
+     *
+     * @param mode the video sync mode
+     * @return this
+     * @deprecated the -vsync option was removed from ffmpeg, use {@link #setFpsMode(String)} instead.
+     * Ancient versions of ffmpeg may still accept it.
+     */
+    @Deprecated
     public FFmpegOutputBuilder setVideoSync(String mode) {
         this.videoEnabled = true;
         this.videoSync = checkNotEmpty(mode, "mode must not be empty");
+        return this;
+    }
+
+    /**
+     * Emits the -fps_mode option, the replacement of -vsync.
+     *
+     * @param mode the fps mode (passthrough, cfr, vfr, auto)
+     * @return this
+     */
+    public FFmpegOutputBuilder setFpsMode(String mode) {
+        this.videoEnabled = true;
+        this.fpsMode = checkNotEmpty(mode, "mode must not be empty");
         return this;
     }
 
@@ -951,6 +982,9 @@ public class FFmpegOutputBuilder {
         }
         if (videoSync != null) {
             args.addAll(List.of("-vsync", videoSync));
+        }
+        if (fpsMode != null) {
+            args.addAll(List.of("-fps_mode", fpsMode));
         }
 
         if (videoCopyInkf) {

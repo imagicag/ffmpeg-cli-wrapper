@@ -46,7 +46,7 @@ Maven:
 <dependency>
   <groupId>ch.imagic</groupId>
   <artifactId>ffmpeg-java</artifactId>
-  <version>0.1.0</version>
+  <version>0.1.3</version>
 </dependency>
 ```
 ### Video Encoding
